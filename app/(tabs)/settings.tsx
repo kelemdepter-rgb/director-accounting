@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { confirm } from '@/lib/confirm';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function SettingsTab() {
@@ -12,22 +13,21 @@ export default function SettingsTab() {
   const signOut = useAuthStore((s) => s.signOut);
   const [signingOut, setSigningOut] = useState(false);
 
-  const onSignOut = () => {
-    Alert.alert(t('auth.signOut'), t('settings.signOutConfirm'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('auth.signOut'),
-        style: 'destructive',
-        onPress: async () => {
-          setSigningOut(true);
-          try {
-            await signOut();
-          } finally {
-            setSigningOut(false);
-          }
-        },
-      },
-    ]);
+  const onSignOut = async () => {
+    const ok = await confirm({
+      title: t('auth.signOut'),
+      message: t('settings.signOutConfirm'),
+      confirmLabel: t('auth.signOut'),
+      cancelLabel: t('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) return;
+    setSigningOut(true);
+    try {
+      await signOut();
+    } finally {
+      setSigningOut(false);
+    }
   };
 
   return (

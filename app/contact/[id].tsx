@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
-  Alert,
   SafeAreaView,
   ScrollView,
   Text,
@@ -14,6 +13,7 @@ import { ContactForm } from '@/components/ContactForm';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useContact, useDeleteContact, useUpdateContact } from '@/hooks/useContacts';
+import { confirm, notify } from '@/lib/confirm';
 import { contactSchema } from '@/schemas/contact';
 
 export default function ContactDetailScreen() {
@@ -49,22 +49,21 @@ export default function ContactDetailScreen() {
 
   const contact = contactQ.data;
 
-  const onDelete = () => {
-    Alert.alert(t('contacts.delete'), t('contacts.deleteConfirm'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('contacts.delete'),
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteContact.mutateAsync(contact.id);
-            router.back();
-          } catch (err) {
-            Alert.alert(t('app.name'), (err as Error).message ?? t('errors.unknown'));
-          }
-        },
-      },
-    ]);
+  const onDelete = async () => {
+    const ok = await confirm({
+      title: t('contacts.delete'),
+      message: t('contacts.deleteConfirm'),
+      confirmLabel: t('contacts.delete'),
+      cancelLabel: t('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      await deleteContact.mutateAsync(contact.id);
+      router.back();
+    } catch (err) {
+      notify(t('app.name'), (err as Error).message ?? t('errors.unknown'));
+    }
   };
 
   return (
@@ -122,7 +121,7 @@ export default function ContactDetailScreen() {
                 });
                 setEditing(false);
               } catch (err) {
-                Alert.alert(t('app.name'), (err as Error).message ?? t('errors.unknown'));
+                notify(t('app.name'), (err as Error).message ?? t('errors.unknown'));
               }
             }}
           />

@@ -1,10 +1,11 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Alert, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView, ScrollView, Text, View } from 'react-native';
 
 import { ContactForm } from '@/components/ContactForm';
 import { Button } from '@/components/ui/Button';
 import { useCreateContact } from '@/hooks/useContacts';
+import { notify } from '@/lib/confirm';
 import { contactSchema } from '@/schemas/contact';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -37,7 +38,7 @@ export default function NewContactScreen() {
           submitting={createContact.isPending}
           onSubmit={async (rawValues) => {
             if (!userId) {
-              Alert.alert(t('app.name'), t('errors.unknown'));
+              notify(t('app.name'), t('errors.unknown'));
               return;
             }
             const parsed = contactSchema.safeParse(rawValues);
@@ -52,7 +53,7 @@ export default function NewContactScreen() {
               });
               router.back();
             } catch (err) {
-              Alert.alert(t('app.name'), (err as Error).message ?? t('errors.unknown'));
+              notify(t('app.name'), (err as Error).message ?? t('errors.unknown'));
             }
           }}
         />

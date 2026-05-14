@@ -1,19 +1,17 @@
-import { SafeAreaView, Text, View } from 'react-native';
+import { Redirect } from 'expo-router';
 
-export default function WelcomeScreen() {
-  return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-neutral-950">
-      <View className="flex-1 items-center justify-center px-6">
-        <Text
-          accessibilityRole="header"
-          className="text-3xl font-bold text-brand-600 dark:text-brand-300"
-        >
-          Director Accounting
-        </Text>
-        <Text className="mt-3 text-center text-base text-neutral-600 dark:text-neutral-400">
-          Project scaffold ready. Step 1 verification screen.
-        </Text>
-      </View>
-    </SafeAreaView>
-  );
+import { useAuthStore } from '@/stores/authStore';
+
+/**
+ * Root route — redirects to the correct destination based on the current
+ * auth state. The actual auth bootstrap happens in `app/_layout.tsx`, so by
+ * the time this renders, `status` is no longer `'loading'`.
+ */
+export default function Index() {
+  const status = useAuthStore((s) => s.status);
+
+  if (status === 'authenticated') {
+    return <Redirect href="/(tabs)" />;
+  }
+  return <Redirect href="/(auth)/login" />;
 }

@@ -2,6 +2,17 @@
   "app": {
     "name": "Director Accounting"
   },
+  "tabs": {
+    "home": "Home",
+    "contacts": "Contacts",
+    "settings": "Settings"
+  },
+  "home": {
+    "todayIncome": "Today's income",
+    "todayExpense": "Today's expense",
+    "outstandingDebt": "Outstanding debt",
+    "upcomingHint": "Transactions and debt summaries will appear here in Step 5."
+  },
   "auth": {
     "signIn": "Sign in",
     "signUp": "Create account",
@@ -27,11 +38,47 @@
     "confirmEmailNotice": "Please check your email for a confirmation link before signing in.",
     "googleNotConfigured": "Google sign-in is not configured yet."
   },
+  "contacts": {
+    "searchPlaceholder": "Search contacts",
+    "addNew": "+ New",
+    "edit": "Edit",
+    "delete": "Delete contact",
+    "deleteConfirm": "Delete this contact permanently? This cannot be undone.",
+    "empty": "No contacts yet",
+    "emptyDescription": "Tap + to add your first contact, or pick someone from your phone book.",
+    "emptyPhoneHint": "No matches in your phone book.",
+    "noMatches": "No matches.",
+    "fullName": "Full name",
+    "phoneNumber": "Phone",
+    "occupation": "Occupation",
+    "notes": "Notes",
+    "fromPhone": "From phone book",
+    "fromPhoneTag": "Phone",
+    "savedTag": "Saved",
+    "permissionTitle": "Access your contacts",
+    "permissionExplain": "We use your phone book only to help you find people you transact with. Nothing is uploaded to the server until you explicitly save them.",
+    "permissionGrant": "Allow",
+    "permissionDeny": "Not now",
+    "permissionDenied": "You previously denied access. To re-enable, open your device Settings.",
+    "notFound": "Contact not found.",
+    "noExtraInfo": "No additional information.",
+    "balanceHeading": "Outstanding balance",
+    "balancePlaceholder": "Debt totals will appear here in Step 5."
+  },
+  "settings": {
+    "account": "Account",
+    "signOutConfirm": "Sign out of this device?",
+    "morePlaceholder": "More settings coming",
+    "morePlaceholderHint": "Theme, language, and default currency options arrive in Step 6."
+  },
   "validation": {
     "emailInvalid": "Enter a valid email address.",
     "passwordTooShort": "Password must be at least 8 characters.",
     "passwordWeak": "Password must contain uppercase, lowercase, and a number.",
-    "passwordsDoNotMatch": "Passwords do not match."
+    "passwordsDoNotMatch": "Passwords do not match.",
+    "required": "This field is required.",
+    "tooLong": "This is too long.",
+    "phoneInvalid": "Phone must be 3-30 characters."
   },
   "errors": {
     "unknown": "Something went wrong. Please try again.",

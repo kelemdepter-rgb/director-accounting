@@ -9,12 +9,10 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { signUpSchema, type SignUpValues } from '@/schemas/auth';
 import { useAuthStore } from '@/stores/authStore';
-import { useSettingsStore } from '@/stores/settingsStore';
 
 export default function RegisterScreen() {
   const { t } = useTranslation();
   const router = useRouter();
-  const appDisplayName = useSettingsStore((s) => s.appDisplayName);
   const signUp = useAuthStore((s) => s.signUp);
   const signInWithGoogle = useAuthStore((s) => s.signInWithGoogle);
   const errorKey = useAuthStore((s) => s.errorKey);
@@ -66,7 +64,7 @@ export default function RegisterScreen() {
       >
         <View className="mx-auto w-full max-w-md">
           <Text className="text-xs uppercase tracking-wider text-brand-600 dark:text-brand-300">
-            {appDisplayName}
+            {t('app.name')}
           </Text>
           <Text
             accessibilityRole="header"

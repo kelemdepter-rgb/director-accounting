@@ -72,7 +72,7 @@ function mapAuthError(error: AuthError | { message?: string; code?: string }): s
 
 function buildRedirectUri(path: string): string {
   return AuthSession.makeRedirectUri({
-    scheme: 'directoraccounting',
+    scheme: 'directorbook',
     path,
   });
 }

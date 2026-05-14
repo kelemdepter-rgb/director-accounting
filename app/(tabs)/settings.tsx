@@ -5,7 +5,6 @@ import { Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
 import { CurrencyPicker } from '@/components/CurrencyPicker';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
 import { confirm } from '@/lib/confirm';
 import { useAuthStore } from '@/stores/authStore';
 import {
@@ -22,6 +21,7 @@ const THEME_OPTIONS: { value: Theme; key: string }[] = [
 
 const LANGUAGE_OPTIONS: { value: Language; label: string }[] = [
   { value: 'en', label: 'English' },
+  { value: 'tr', label: 'Türkçe' },
   { value: 'ug', label: 'ئۇيغۇرچە' },
 ];
 
@@ -73,13 +73,10 @@ export default function SettingsTab() {
   const theme = useSettingsStore((s) => s.theme);
   const language = useSettingsStore((s) => s.language);
   const defaultCurrency = useSettingsStore((s) => s.defaultCurrency);
-  const appDisplayName = useSettingsStore((s) => s.appDisplayName);
   const setTheme = useSettingsStore((s) => s.setTheme);
   const setLanguage = useSettingsStore((s) => s.setLanguage);
   const setDefaultCurrency = useSettingsStore((s) => s.setDefaultCurrency);
-  const setAppDisplayName = useSettingsStore((s) => s.setAppDisplayName);
 
-  const [pendingName, setPendingName] = useState(appDisplayName);
   const [signingOut, setSigningOut] = useState(false);
 
   const onSignOut = async () => {
@@ -113,6 +110,24 @@ export default function SettingsTab() {
 
         <Card>
           <Text className="mb-3 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
+            {t('settings.language')}
+          </Text>
+          <SegmentedControl<Language>
+            options={LANGUAGE_OPTIONS}
+            value={language}
+            onChange={(next) => void setLanguage(next)}
+            renderLabel={(option) =>
+              LANGUAGE_OPTIONS.find((l) => l.value === option.value)?.label ?? option.value
+            }
+            accessibilityLabel={t('settings.language')}
+          />
+          <Text className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+            {t('settings.languageHint')}
+          </Text>
+        </Card>
+
+        <Card>
+          <Text className="mb-3 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
             {t('settings.theme')}
           </Text>
           <SegmentedControl<Theme>
@@ -131,21 +146,6 @@ export default function SettingsTab() {
 
         <Card>
           <Text className="mb-3 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
-            {t('settings.language')}
-          </Text>
-          <SegmentedControl<Language>
-            options={LANGUAGE_OPTIONS}
-            value={language}
-            onChange={(next) => void setLanguage(next)}
-            renderLabel={(option) =>
-              LANGUAGE_OPTIONS.find((l) => l.value === option.value)?.label ?? option.value
-            }
-            accessibilityLabel={t('settings.language')}
-          />
-        </Card>
-
-        <Card>
-          <Text className="mb-3 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
             {t('settings.defaultCurrency')}
           </Text>
           <CurrencyPicker
@@ -154,39 +154,6 @@ export default function SettingsTab() {
           />
           <Text className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
             {t('settings.defaultCurrencyHint')}
-          </Text>
-        </Card>
-
-        <Card>
-          <Text className="mb-3 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
-            {t('settings.appDisplayName')}
-          </Text>
-          <Input
-            value={pendingName}
-            onChangeText={setPendingName}
-            placeholder="Director Accounting"
-            autoCapitalize="words"
-          />
-          <View className="mt-3 flex-row gap-3">
-            <View className="flex-1">
-              <Button
-                label={t('common.cancel')}
-                variant="ghost"
-                onPress={() => setPendingName(appDisplayName)}
-                fullWidth
-              />
-            </View>
-            <View className="flex-1">
-              <Button
-                label={t('common.save')}
-                onPress={() => void setAppDisplayName(pendingName)}
-                disabled={pendingName.trim() === appDisplayName || pendingName.trim().length === 0}
-                fullWidth
-              />
-            </View>
-          </View>
-          <Text className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
-            {t('settings.appDisplayNameHint')}
           </Text>
         </Card>
 

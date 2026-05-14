@@ -1,6 +1,7 @@
 {
   "app": {
-    "name": "Director Accounting"
+    "name": "DirectorBook",
+    "tagline": "Bookkeeping made simple."
   },
   "tabs": {
     "home": "Home",
@@ -10,16 +11,15 @@
   "home": {
     "todayIncome": "Today's income",
     "todayExpense": "Today's expense",
-    "outstandingDebt": "Outstanding debt (net)",
-    "outstandingHint": "+ owed to you · − you owe",
-    "recentTransactions": "Recent transactions",
-    "noTransactionsYet": "No transactions yet",
-    "noTransactionsHint": "Tap the + button to record your first income, expense, or debt.",
-    "upcomingHint": "More cards will appear here as you record activity."
+    "outstandingDebt": "Outstanding balance",
+    "outstandingHint": "Positive — owed to you. Negative — you owe.",
+    "recentTransactions": "Recent activity",
+    "noTransactionsYet": "Nothing recorded yet",
+    "noTransactionsHint": "Tap the + button to log your first income, expense, or debt."
   },
   "quickAdd": {
     "pickerTitle": "What would you like to record?",
-    "openPicker": "+ Add",
+    "openPicker": "+ Record",
     "income": "Income received",
     "incomeHint": "Money that came in.",
     "expense": "Expense paid",
@@ -30,7 +30,7 @@
     "borrowHint": "You owe someone (payable).",
     "amount": "Amount",
     "currency": "Currency",
-    "description": "Description",
+    "description": "Note",
     "descriptionPlaceholder": "Optional",
     "contactRequired": "Contact (required)",
     "contactOptional": "Contact (optional)"
@@ -43,12 +43,12 @@
     "settled": "Settled",
     "settleInFull": "✓ Settle in full",
     "partialPayment": "💵 Partial payment",
-    "payments": "Payments",
+    "payments": "Payment history",
     "noPaymentsYet": "No payments recorded yet.",
     "noteOptional": "Note (optional)",
-    "fullAmountHint": "Will record {{amount}} and mark the debt as settled.",
+    "fullAmountHint": "This records {{amount}} and marks the debt as settled.",
     "partialAmountHint": "Remaining balance: {{amount}}",
-    "exceedsRemaining": "Amount cannot exceed the remaining {{remaining}}.",
+    "exceedsRemaining": "Amount can't exceed the remaining {{remaining}}.",
     "openedOn": "Opened on {{date}}",
     "delete": "Delete debt",
     "deleteConfirm": "Delete this debt and all its payments permanently?",
@@ -76,9 +76,9 @@
     "or": "or",
     "welcome": "Welcome back",
     "createYourAccount": "Create your account",
-    "loginSubtitle": "Sign in to manage your finances.",
-    "registerSubtitle": "It only takes a minute. Your data is end-to-end protected.",
-    "confirmEmailNotice": "Please check your email for a confirmation link before signing in.",
+    "loginSubtitle": "Sign in to keep your books up to date.",
+    "registerSubtitle": "It takes a minute, and your data is end-to-end protected.",
+    "confirmEmailNotice": "Please confirm your email — we just sent you a link. Then come back here to sign in.",
     "googleNotConfigured": "Google sign-in is not configured yet."
   },
   "contacts": {
@@ -86,7 +86,7 @@
     "addNew": "+ New",
     "edit": "Edit",
     "delete": "Delete contact",
-    "deleteConfirm": "Delete this contact permanently? Their transactions will keep the history but lose the link.",
+    "deleteConfirm": "Delete this contact permanently? Past transactions stay in your history but lose the link.",
     "empty": "No contacts yet",
     "emptyDescription": "Tap + to add your first contact, or pick someone from your phone book.",
     "emptyPhoneHint": "No matches in your phone book.",
@@ -99,14 +99,14 @@
     "fromPhoneTag": "Phone",
     "savedTag": "Saved",
     "permissionTitle": "Access your contacts",
-    "permissionExplain": "We use your phone book only to help you find people you transact with. Nothing is uploaded to the server until you explicitly save them.",
+    "permissionExplain": "We use your phone book only to help you find people you transact with. Nothing is uploaded to the server until you explicitly save a contact.",
     "permissionGrant": "Allow",
     "permissionDeny": "Not now",
     "permissionDenied": "You previously denied access. To re-enable, open your device Settings.",
     "notFound": "Contact not found.",
     "noExtraInfo": "No additional information.",
     "balanceHeading": "Outstanding balance",
-    "noActiveDebts": "No outstanding debts with this contact.",
+    "noActiveDebts": "No outstanding balance with this contact.",
     "transactionHistory": "Transaction history",
     "noTransactions": "No transactions yet with this contact."
   },
@@ -117,21 +117,20 @@
     "themeSystem": "System",
     "themeLight": "Light",
     "themeDark": "Dark",
-    "themeHint": "Choose how the app looks. System matches your device.",
+    "themeHint": "Choose how the app looks. System follows your device.",
     "language": "Language",
+    "languageHint": "Changes everywhere in the app instantly.",
     "defaultCurrency": "Default currency",
-    "defaultCurrencyHint": "Pre-selected when you record income, expenses, or debts.",
-    "appDisplayName": "App display name",
-    "appDisplayNameHint": "Shown on the sign-in screen and in the page header."
+    "defaultCurrencyHint": "Pre-selected when you record a new income, expense, or debt."
   },
   "validation": {
     "emailInvalid": "Enter a valid email address.",
     "passwordTooShort": "Password must be at least 8 characters.",
-    "passwordWeak": "Password must contain uppercase, lowercase, and a number.",
+    "passwordWeak": "Password must contain an uppercase letter, a lowercase letter, and a digit.",
     "passwordsDoNotMatch": "Passwords do not match.",
     "required": "This field is required.",
     "tooLong": "This is too long.",
-    "phoneInvalid": "Phone must be 3-30 characters.",
+    "phoneInvalid": "Phone must be between 3 and 30 characters.",
     "amountInvalid": "Enter a positive amount (up to 2 decimals).",
     "currencyInvalid": "Currency must be a 3-letter code.",
     "contactRequired": "Pick a contact for this debt."

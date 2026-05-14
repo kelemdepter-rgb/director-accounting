@@ -1,19 +1,19 @@
 {
   "expo": {
-    "name": "Director Accounting",
-    "slug": "director-accounting",
+    "name": "DirectorBook",
+    "slug": "directorbook",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "directoraccounting",
+    "scheme": "directorbook",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.directoraccounting.app"
+      "bundleIdentifier": "com.directorbook.app"
     },
     "android": {
-      "package": "com.directoraccounting.app",
+      "package": "com.directorbook.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -33,7 +33,7 @@
       [
         "expo-contacts",
         {
-          "contactsPermission": "Director Accounting uses your contacts to quickly find people you transact with. Nothing is uploaded until you save a contact."
+          "contactsPermission": "DirectorBook uses your contacts to quickly find the people you transact with. Nothing is uploaded until you save a contact."
         }
       ],
       [

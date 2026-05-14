@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { useWindowDimensions } from 'react-native';
 
 import { useAuthStore } from '@/stores/authStore';
-import { useSettingsStore } from '@/stores/settingsStore';
 
 /** Tablet/desktop breakpoint where the tab bar moves to the left as a sidebar. */
 const SIDEBAR_BREAKPOINT = 768;
@@ -12,7 +11,6 @@ const SIDEBAR_BREAKPOINT = 768;
 export default function TabsLayout() {
   const { t } = useTranslation();
   const status = useAuthStore((s) => s.status);
-  const appDisplayName = useSettingsStore((s) => s.appDisplayName);
   const { width } = useWindowDimensions();
   const isWide = width >= SIDEBAR_BREAKPOINT;
 
@@ -24,7 +22,7 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: true,
-        headerTitle: appDisplayName,
+        headerTitle: t('app.name'),
         tabBarActiveTintColor: '#4f46e5',
         tabBarInactiveTintColor: '#6b7280',
         // Bottom on phones; left rail on tablets and web.

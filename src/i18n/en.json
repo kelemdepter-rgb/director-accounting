@@ -10,8 +10,51 @@
   "home": {
     "todayIncome": "Today's income",
     "todayExpense": "Today's expense",
-    "outstandingDebt": "Outstanding debt",
-    "upcomingHint": "Transactions and debt summaries will appear here in Step 5."
+    "outstandingDebt": "Outstanding debt (net)",
+    "outstandingHint": "+ owed to you · − you owe",
+    "recentTransactions": "Recent transactions",
+    "noTransactionsYet": "No transactions yet",
+    "noTransactionsHint": "Tap the + button to record your first income, expense, or debt.",
+    "upcomingHint": "More cards will appear here as you record activity."
+  },
+  "quickAdd": {
+    "pickerTitle": "What would you like to record?",
+    "openPicker": "+ Add",
+    "income": "Income received",
+    "incomeHint": "Money that came in.",
+    "expense": "Expense paid",
+    "expenseHint": "Money that went out.",
+    "lend": "Money lent",
+    "lendHint": "Someone owes you (receivable).",
+    "borrow": "Money borrowed",
+    "borrowHint": "You owe someone (payable).",
+    "amount": "Amount",
+    "currency": "Currency",
+    "description": "Description",
+    "descriptionPlaceholder": "Optional",
+    "contactRequired": "Contact (required)",
+    "contactOptional": "Contact (optional)"
+  },
+  "debts": {
+    "receivable": "Receivable",
+    "payable": "Payable",
+    "principal": "Principal",
+    "paidOf": "{{paid}} paid of {{principal}}",
+    "settled": "Settled",
+    "settleInFull": "✓ Settle in full",
+    "partialPayment": "💵 Partial payment",
+    "payments": "Payments",
+    "noPaymentsYet": "No payments recorded yet.",
+    "noteOptional": "Note (optional)",
+    "fullAmountHint": "Will record {{amount}} and mark the debt as settled.",
+    "partialAmountHint": "Remaining balance: {{amount}}",
+    "exceedsRemaining": "Amount cannot exceed the remaining {{remaining}}.",
+    "openedOn": "Opened on {{date}}",
+    "delete": "Delete debt",
+    "deleteConfirm": "Delete this debt and all its payments permanently?",
+    "notFound": "Debt not found.",
+    "activeHeading": "Active debts",
+    "settledHeading": "Settled debts"
   },
   "auth": {
     "signIn": "Sign in",
@@ -43,7 +86,7 @@
     "addNew": "+ New",
     "edit": "Edit",
     "delete": "Delete contact",
-    "deleteConfirm": "Delete this contact permanently? This cannot be undone.",
+    "deleteConfirm": "Delete this contact permanently? Their transactions will keep the history but lose the link.",
     "empty": "No contacts yet",
     "emptyDescription": "Tap + to add your first contact, or pick someone from your phone book.",
     "emptyPhoneHint": "No matches in your phone book.",
@@ -63,7 +106,9 @@
     "notFound": "Contact not found.",
     "noExtraInfo": "No additional information.",
     "balanceHeading": "Outstanding balance",
-    "balancePlaceholder": "Debt totals will appear here in Step 5."
+    "noActiveDebts": "No outstanding debts with this contact.",
+    "transactionHistory": "Transaction history",
+    "noTransactions": "No transactions yet with this contact."
   },
   "settings": {
     "account": "Account",
@@ -78,7 +123,10 @@
     "passwordsDoNotMatch": "Passwords do not match.",
     "required": "This field is required.",
     "tooLong": "This is too long.",
-    "phoneInvalid": "Phone must be 3-30 characters."
+    "phoneInvalid": "Phone must be 3-30 characters.",
+    "amountInvalid": "Enter a positive amount (up to 2 decimals).",
+    "currencyInvalid": "Currency must be a 3-letter code.",
+    "contactRequired": "Pick a contact for this debt."
   },
   "errors": {
     "unknown": "Something went wrong. Please try again.",
@@ -92,6 +140,8 @@
     "loading": "Loading…",
     "cancel": "Cancel",
     "save": "Save",
-    "retry": "Retry"
+    "retry": "Retry",
+    "choose": "Choose",
+    "tapToChange": "Tap to change"
   }
 }

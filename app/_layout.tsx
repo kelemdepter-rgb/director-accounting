@@ -7,12 +7,19 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
+import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { useAuthStore } from '@/stores/authStore';
 
 // Keep the splash up until the auth bootstrap completes.
 SplashScreen.preventAutoHideAsync().catch(() => {
   // Ignore: splash may already be hidden on web.
 });
+
+function RealtimeBridge() {
+  const status = useAuthStore((s) => s.status);
+  useRealtimeSync(status === 'authenticated');
+  return null;
+}
 
 export default function RootLayout() {
   const initialize = useAuthStore((s) => s.initialize);
@@ -54,6 +61,7 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <RealtimeBridge />
       <StatusBar style="auto" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
@@ -61,6 +69,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="contact/new" options={{ presentation: 'modal' }} />
         <Stack.Screen name="contact/[id]" />
+        <Stack.Screen name="debt/[id]" />
       </Stack>
     </QueryClientProvider>
   );

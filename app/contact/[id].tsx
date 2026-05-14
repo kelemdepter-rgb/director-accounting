@@ -1,20 +1,24 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  ActivityIndicator,
-  SafeAreaView,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, SafeAreaView, ScrollView, Text, View } from 'react-native';
 
 import { ContactForm } from '@/components/ContactForm';
+import { DebtCard } from '@/components/DebtCard';
+import { QuickAddPicker } from '@/components/QuickAddPicker';
+import { QuickAddSheet, type QuickAddMode } from '@/components/QuickAddSheet';
+import { TransactionListItem } from '@/components/TransactionListItem';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useContact, useDeleteContact, useUpdateContact } from '@/hooks/useContacts';
+import { useDebts } from '@/hooks/useDebts';
+import { useTransactions } from '@/hooks/useTransactions';
 import { confirm, notify } from '@/lib/confirm';
 import { contactSchema } from '@/schemas/contact';
+import { formatMoney } from '@/utils/currency';
+import { aggregateOutstandingByCurrency } from '@/utils/debtCalculation';
+
+const DEFAULT_CURRENCY = process.env.EXPO_PUBLIC_DEFAULT_CURRENCY ?? 'USD';
 
 export default function ContactDetailScreen() {
   const { t } = useTranslation();
@@ -24,8 +28,25 @@ export default function ContactDetailScreen() {
   const contactQ = useContact(id);
   const updateContact = useUpdateContact();
   const deleteContact = useDeleteContact();
+  const debtsQ = useDebts({ contactId: id });
+  const txnQ = useTransactions({ contactId: id, limit: 50 });
 
   const [editing, setEditing] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [sheetMode, setSheetMode] = useState<QuickAddMode | null>(null);
+
+  const activeDebts = useMemo(
+    () => (debtsQ.data ?? []).filter((d) => d.status === 'active'),
+    [debtsQ.data],
+  );
+  const settledDebts = useMemo(
+    () => (debtsQ.data ?? []).filter((d) => d.status === 'settled'),
+    [debtsQ.data],
+  );
+  const balances = useMemo(
+    () => aggregateOutstandingByCurrency(debtsQ.data ?? []),
+    [debtsQ.data],
+  );
 
   if (contactQ.isLoading) {
     return (
@@ -148,9 +169,98 @@ export default function ContactDetailScreen() {
               <Text className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                 {t('contacts.balanceHeading')}
               </Text>
-              <Text className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
-                {t('contacts.balancePlaceholder')}
+              {Object.keys(balances).length === 0 ? (
+                <Text className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+                  {t('contacts.noActiveDebts')}
+                </Text>
+              ) : (
+                <View className="mt-2 gap-1">
+                  {Object.entries(balances).map(([currency, totals]) => (
+                    <View key={currency} className="flex-row items-center justify-between">
+                      <Text className="text-xs text-neutral-500 dark:text-neutral-400">
+                        {currency}
+                      </Text>
+                      <View className="flex-row gap-3">
+                        {totals.receivable > 0 ? (
+                          <Text className="text-sm font-semibold text-receivable">
+                            ↗ {formatMoney(totals.receivable, currency)}
+                          </Text>
+                        ) : null}
+                        {totals.payable > 0 ? (
+                          <Text className="text-sm font-semibold text-payable">
+                            ↙ {formatMoney(totals.payable, currency)}
+                          </Text>
+                        ) : null}
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            <Button
+              label={t('quickAdd.openPicker')}
+              onPress={() => setPickerOpen(true)}
+              fullWidth
+            />
+
+            {activeDebts.length > 0 ? (
+              <View className="gap-3">
+                <Text className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                  {t('debts.activeHeading')}
+                </Text>
+                {activeDebts.map((d) => (
+                  <DebtCard
+                    key={d.id}
+                    debt={d}
+                    contactName={contact.full_name}
+                    onPress={(debt) =>
+                      router.push({ pathname: '/debt/[id]', params: { id: debt.id } })
+                    }
+                  />
+                ))}
+              </View>
+            ) : null}
+
+            {settledDebts.length > 0 ? (
+              <View className="gap-3">
+                <Text className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                  {t('debts.settledHeading')}
+                </Text>
+                {settledDebts.map((d) => (
+                  <DebtCard
+                    key={d.id}
+                    debt={d}
+                    contactName={contact.full_name}
+                    onPress={(debt) =>
+                      router.push({ pathname: '/debt/[id]', params: { id: debt.id } })
+                    }
+                  />
+                ))}
+              </View>
+            ) : null}
+
+            <View className="gap-3">
+              <Text className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                {t('contacts.transactionHistory')}
               </Text>
+              {txnQ.isLoading ? (
+                <ActivityIndicator color="#4f46e5" />
+              ) : (txnQ.data ?? []).length === 0 ? (
+                <Text className="text-sm text-neutral-500 dark:text-neutral-400">
+                  {t('contacts.noTransactions')}
+                </Text>
+              ) : (
+                <View className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
+                  {(txnQ.data ?? []).map((tx) => (
+                    <TransactionListItem
+                      key={tx.id}
+                      transaction={tx}
+                      contactName={contact.full_name}
+                    />
+                  ))}
+                </View>
+              )}
             </View>
 
             <Button
@@ -163,6 +273,22 @@ export default function ContactDetailScreen() {
           </>
         )}
       </ScrollView>
+
+      <QuickAddPicker
+        visible={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onPick={(mode) => {
+          setPickerOpen(false);
+          setSheetMode(mode);
+        }}
+      />
+      <QuickAddSheet
+        visible={!!sheetMode}
+        mode={sheetMode}
+        onClose={() => setSheetMode(null)}
+        defaultCurrency={DEFAULT_CURRENCY}
+        initialContact={contact}
+      />
     </SafeAreaView>
   );
 }
@@ -177,3 +303,4 @@ function Field({ label, value }: { label: string; value: string }) {
     </View>
   );
 }
+

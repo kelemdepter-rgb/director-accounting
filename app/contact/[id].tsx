@@ -15,15 +15,15 @@ import { useDebts } from '@/hooks/useDebts';
 import { useTransactions } from '@/hooks/useTransactions';
 import { confirm, notify } from '@/lib/confirm';
 import { contactSchema } from '@/schemas/contact';
+import { useSettingsStore } from '@/stores/settingsStore';
 import { formatMoney } from '@/utils/currency';
 import { aggregateOutstandingByCurrency } from '@/utils/debtCalculation';
-
-const DEFAULT_CURRENCY = process.env.EXPO_PUBLIC_DEFAULT_CURRENCY ?? 'USD';
 
 export default function ContactDetailScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const defaultCurrency = useSettingsStore((s) => s.defaultCurrency);
 
   const contactQ = useContact(id);
   const updateContact = useUpdateContact();
@@ -286,7 +286,7 @@ export default function ContactDetailScreen() {
         visible={!!sheetMode}
         mode={sheetMode}
         onClose={() => setSheetMode(null)}
-        defaultCurrency={DEFAULT_CURRENCY}
+        defaultCurrency={defaultCurrency}
         initialContact={contact}
       />
     </SafeAreaView>

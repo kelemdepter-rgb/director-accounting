@@ -4,13 +4,16 @@ import '@/i18n';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SplashScreen, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import i18n from 'i18next';
+import { useColorScheme } from 'nativewind';
 import { useEffect, useMemo } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { useAuthStore } from '@/stores/authStore';
+import { useSettingsStore } from '@/stores/settingsStore';
 
-// Keep the splash up until the auth bootstrap completes.
+// Keep the splash up until the auth + settings bootstrap completes.
 SplashScreen.preventAutoHideAsync().catch(() => {
   // Ignore: splash may already be hidden on web.
 });
@@ -21,9 +24,34 @@ function RealtimeBridge() {
   return null;
 }
 
+/**
+ * Applies persisted user settings (theme + language) to the runtime.
+ * - Theme: NativeWind's `setColorScheme` accepts 'light' | 'dark' | 'system'.
+ * - Language: i18next's `changeLanguage` swaps the active locale immediately.
+ */
+function SettingsBridge() {
+  const theme = useSettingsStore((s) => s.theme);
+  const language = useSettingsStore((s) => s.language);
+  const { setColorScheme } = useColorScheme();
+
+  useEffect(() => {
+    setColorScheme(theme);
+  }, [theme, setColorScheme]);
+
+  useEffect(() => {
+    if (i18n.language !== language) {
+      void i18n.changeLanguage(language);
+    }
+  }, [language]);
+
+  return null;
+}
+
 export default function RootLayout() {
-  const initialize = useAuthStore((s) => s.initialize);
-  const status = useAuthStore((s) => s.status);
+  const initializeAuth = useAuthStore((s) => s.initialize);
+  const hydrateSettings = useSettingsStore((s) => s.hydrate);
+  const authStatus = useAuthStore((s) => s.status);
+  const settingsReady = useSettingsStore((s) => s.initialized);
 
   const queryClient = useMemo(
     () =>
@@ -40,18 +68,21 @@ export default function RootLayout() {
   );
 
   useEffect(() => {
-    void initialize();
-  }, [initialize]);
+    void hydrateSettings();
+    void initializeAuth();
+  }, [hydrateSettings, initializeAuth]);
+
+  const ready = authStatus !== 'loading' && settingsReady;
 
   useEffect(() => {
-    if (status !== 'loading') {
+    if (ready) {
       SplashScreen.hideAsync().catch(() => {
         // ignore
       });
     }
-  }, [status]);
+  }, [ready]);
 
-  if (status === 'loading') {
+  if (!ready) {
     return (
       <View className="flex-1 items-center justify-center bg-white dark:bg-neutral-950">
         <ActivityIndicator size="large" color="#4f46e5" />
@@ -61,6 +92,7 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <SettingsBridge />
       <RealtimeBridge />
       <StatusBar style="auto" />
       <Stack screenOptions={{ headerShown: false }}>

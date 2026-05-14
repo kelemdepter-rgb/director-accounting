@@ -113,8 +113,16 @@
   "settings": {
     "account": "Account",
     "signOutConfirm": "Sign out of this device?",
-    "morePlaceholder": "More settings coming",
-    "morePlaceholderHint": "Theme, language, and default currency options arrive in Step 6."
+    "theme": "Theme",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeHint": "Choose how the app looks. System matches your device.",
+    "language": "Language",
+    "defaultCurrency": "Default currency",
+    "defaultCurrencyHint": "Pre-selected when you record income, expenses, or debts.",
+    "appDisplayName": "App display name",
+    "appDisplayNameHint": "Shown on the sign-in screen and in the page header."
   },
   "validation": {
     "emailInvalid": "Enter a valid email address.",

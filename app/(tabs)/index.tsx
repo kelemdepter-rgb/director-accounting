@@ -17,10 +17,9 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { useContacts } from '@/hooks/useContacts';
 import { useSummary } from '@/hooks/useSummary';
 import { useTransactions } from '@/hooks/useTransactions';
+import { useSettingsStore } from '@/stores/settingsStore';
 import type { ContactRow } from '@/types/database';
 import { formatMoney } from '@/utils/currency';
-
-const DEFAULT_CURRENCY = process.env.EXPO_PUBLIC_DEFAULT_CURRENCY ?? 'USD';
 
 function SummaryRow({
   label,
@@ -58,6 +57,7 @@ function SummaryRow({
 
 export default function HomeScreen() {
   const { t } = useTranslation();
+  const defaultCurrency = useSettingsStore((s) => s.defaultCurrency);
   const summaryQ = useSummary();
   const txnQ = useTransactions({ limit: 25 });
   const contactsQ = useContacts({ enabled: true });
@@ -189,7 +189,7 @@ export default function HomeScreen() {
         visible={!!sheetMode}
         mode={sheetMode}
         onClose={closeSheet}
-        defaultCurrency={DEFAULT_CURRENCY}
+        defaultCurrency={defaultCurrency}
       />
     </SafeAreaView>
   );

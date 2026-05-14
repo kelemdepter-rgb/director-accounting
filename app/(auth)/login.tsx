@@ -9,10 +9,12 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { signInSchema, type SignInValues } from '@/schemas/auth';
 import { useAuthStore } from '@/stores/authStore';
+import { useSettingsStore } from '@/stores/settingsStore';
 
 export default function LoginScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const appDisplayName = useSettingsStore((s) => s.appDisplayName);
   const signIn = useAuthStore((s) => s.signIn);
   const signInWithGoogle = useAuthStore((s) => s.signInWithGoogle);
   const errorKey = useAuthStore((s) => s.errorKey);
@@ -58,9 +60,12 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="mx-auto w-full max-w-md">
+          <Text className="text-xs uppercase tracking-wider text-brand-600 dark:text-brand-300">
+            {appDisplayName}
+          </Text>
           <Text
             accessibilityRole="header"
-            className="text-3xl font-bold text-neutral-900 dark:text-neutral-50"
+            className="mt-1 text-3xl font-bold text-neutral-900 dark:text-neutral-50"
           >
             {t('auth.welcome')}
           </Text>

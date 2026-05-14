@@ -113,8 +113,16 @@
   "settings": {
     "account": "ھېسابات",
     "signOutConfirm": "بۇ ئۈسكۈنىدىن چىقامسىز؟",
-    "morePlaceholder": "تېخىمۇ كۆپ تەڭشەكلەر كېلىدۇ",
-    "morePlaceholderHint": "تېما، تىل، ۋە كۆڭۈلدىكى پۇل بىرلىكى تاللىلىرى 6-قەدەمدە كېلىدۇ."
+    "theme": "تېما",
+    "themeSystem": "سىستېما",
+    "themeLight": "يورۇق",
+    "themeDark": "قاراڭغۇ",
+    "themeHint": "ئەپنىڭ كۆرۈنۈشىنى تاللاڭ. سىستېما ئۈسكۈنىڭىزگە ماس كېلىدۇ.",
+    "language": "تىل",
+    "defaultCurrency": "كۆڭۈلدىكى پۇل بىرلىكى",
+    "defaultCurrencyHint": "كىرىم، چىقىم ياكى قەرز خاتىرىلىگەندە ئالدىن تاللىنىدۇ.",
+    "appDisplayName": "ئەپ كۆرسىتىش ئىسمى",
+    "appDisplayNameHint": "كىرىش بېتىدە ۋە بەت بېشىدا كۆرۈنىدۇ."
   },
   "validation": {
     "emailInvalid": "توغرا ئېلخەت ئادرېسى كىرگۈزۈڭ.",

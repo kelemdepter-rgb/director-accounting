@@ -14,8 +14,21 @@
     "outstandingDebt": "Net açık bakiye",
     "outstandingHint": "Artı — size borçlular. Eksi — siz borçlusunuz.",
     "recentTransactions": "Son hareketler",
+    "seeAll": "Tümünü gör",
     "noTransactionsYet": "Henüz kayıt yok",
     "noTransactionsHint": "İlk gelirinizi, giderinizi veya borcunuzu eklemek için + düğmesine dokunun."
+  },
+  "transactions": {
+    "title": "Tüm hareketler",
+    "searchPlaceholder": "Kişi, not, tutar veya para birimine göre arayın",
+    "filterAll": "Hepsi",
+    "export": "Dışa aktar",
+    "exportEmpty": "Dışa aktarılacak bir şey yok — filtreleri temizleyip yeniden deneyin.",
+    "noMatches": "Filtrelere uygun hareket bulunamadı",
+    "noMatchesHint": "Farklı bir anahtar kelime deneyin veya tür filtresini temizleyin.",
+    "delete": "Hareketi sil",
+    "deleteConfirm": "Bu hareketi kalıcı olarak silmek istiyor musunuz? Geri alınamaz.",
+    "notFound": "Hareket bulunamadı."
   },
   "quickAdd": {
     "pickerTitle": "Ne kaydetmek istersiniz?",
@@ -141,7 +154,9 @@
     "userAlreadyExists": "Bu e-posta ile bir hesap zaten mevcut.",
     "userNotFound": "Bu e-postaya kayıtlı hesap bulunamadı.",
     "rateLimited": "Çok fazla deneme yapıldı. Lütfen birkaç dakika sonra tekrar deneyin.",
-    "network": "Sunucuya ulaşılamıyor. İnternet bağlantınızı kontrol edin."
+    "network": "Sunucuya ulaşılamıyor. İnternet bağlantınızı kontrol edin.",
+    "crashTitle": "Bu ekranda bir sorun oluştu.",
+    "crashHint": "Verileriniz güvende. Tekrar deneyin; sorun sürerse uygulamayı yeniden başlatın."
   },
   "common": {
     "loading": "Yükleniyor…",

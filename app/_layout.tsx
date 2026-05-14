@@ -7,8 +7,10 @@ import { StatusBar } from 'expo-status-bar';
 import i18n from 'i18next';
 import { useColorScheme } from 'nativewind';
 import { useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, View } from 'react-native';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -40,11 +42,25 @@ function SettingsBridge() {
 
   useEffect(() => {
     if (i18n.language !== language) {
+      // eslint-disable-next-line import/no-named-as-default-member -- i18next exposes .changeLanguage as an instance method
       void i18n.changeLanguage(language);
     }
   }, [language]);
 
   return null;
+}
+
+function RootBoundary({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
+  return (
+    <ErrorBoundary
+      fallbackTitle={t('errors.crashTitle')}
+      fallbackDescription={t('errors.crashHint')}
+      retryLabel={t('common.retry')}
+    >
+      {children}
+    </ErrorBoundary>
+  );
 }
 
 export default function RootLayout() {
@@ -95,14 +111,18 @@ export default function RootLayout() {
       <SettingsBridge />
       <RealtimeBridge />
       <StatusBar style="auto" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="contact/new" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="contact/[id]" />
-        <Stack.Screen name="debt/[id]" />
-      </Stack>
+      <RootBoundary>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="contact/new" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="contact/[id]" />
+          <Stack.Screen name="debt/[id]" />
+          <Stack.Screen name="transaction/[id]" />
+          <Stack.Screen name="transactions" />
+        </Stack>
+      </RootBoundary>
     </QueryClientProvider>
   );
 }

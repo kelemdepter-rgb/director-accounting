@@ -14,8 +14,21 @@
     "outstandingDebt": "Outstanding balance",
     "outstandingHint": "Positive — owed to you. Negative — you owe.",
     "recentTransactions": "Recent activity",
+    "seeAll": "See all",
     "noTransactionsYet": "Nothing recorded yet",
     "noTransactionsHint": "Tap the + button to log your first income, expense, or debt."
+  },
+  "transactions": {
+    "title": "All transactions",
+    "searchPlaceholder": "Search by contact, note, amount, currency",
+    "filterAll": "All",
+    "export": "Export",
+    "exportEmpty": "Nothing to export yet — try clearing your filters.",
+    "noMatches": "No transactions match those filters",
+    "noMatchesHint": "Try a different keyword, or clear the type filter.",
+    "delete": "Delete transaction",
+    "deleteConfirm": "Delete this transaction permanently? This cannot be undone.",
+    "notFound": "Transaction not found."
   },
   "quickAdd": {
     "pickerTitle": "What would you like to record?",
@@ -141,7 +154,9 @@
     "userAlreadyExists": "An account with this email already exists.",
     "userNotFound": "No account found with that email.",
     "rateLimited": "Too many attempts. Please wait a few minutes and try again.",
-    "network": "Cannot reach the server. Check your internet connection."
+    "network": "Cannot reach the server. Check your internet connection.",
+    "crashTitle": "Something broke on this screen.",
+    "crashHint": "Your data is safe. Try again, and if it keeps happening, restart the app."
   },
   "common": {
     "loading": "Loading…",

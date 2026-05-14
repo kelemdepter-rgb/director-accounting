@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -57,6 +58,7 @@ function SummaryRow({
 
 export default function HomeScreen() {
   const { t } = useTranslation();
+  const router = useRouter();
   const defaultCurrency = useSettingsStore((s) => s.defaultCurrency);
   const summaryQ = useSummary();
   const txnQ = useTransactions({ limit: 25 });
@@ -96,6 +98,9 @@ export default function HomeScreen() {
           <TransactionListItem
             transaction={item}
             contactName={item.contact_id ? contactById.get(item.contact_id)?.full_name : null}
+            onPress={(tx) =>
+              router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
+            }
           />
         )}
         contentContainerClassName="pb-32"
@@ -150,9 +155,19 @@ export default function HomeScreen() {
               )}
             </Card>
 
-            <Text className="mt-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
-              {t('home.recentTransactions')}
-            </Text>
+            <View className="mt-2 flex-row items-center justify-between">
+              <Text className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                {t('home.recentTransactions')}
+              </Text>
+              <Pressable
+                accessibilityRole="link"
+                onPress={() => router.push('/transactions')}
+              >
+                <Text className="text-sm font-medium text-brand-600 dark:text-brand-300">
+                  {t('home.seeAll')}
+                </Text>
+              </Pressable>
+            </View>
           </View>
         }
         ListEmptyComponent={

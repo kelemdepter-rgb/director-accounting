@@ -18,7 +18,6 @@ import {
   useDeleteDebt,
 } from '@/hooks/useDebts';
 import { confirm, notify } from '@/lib/confirm';
-import { useAuthStore } from '@/stores/authStore';
 import type { DebtPaymentRow } from '@/types/database';
 import { formatMoney, parseUserAmount } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
@@ -28,7 +27,6 @@ export default function DebtDetailScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const userId = useAuthStore((s) => s.user?.id);
 
   const debtQ = useDebt(id);
   const paymentsQ = useDebtPayments(id);
@@ -90,7 +88,6 @@ export default function DebtDetailScreen() {
 
   const submitPayment = async () => {
     setPaymentError(null);
-    if (!userId) return;
     const parsed = parseUserAmount(paymentAmount);
     if (parsed === null) {
       setPaymentError(t('validation.amountInvalid'));
@@ -114,13 +111,32 @@ export default function DebtDetailScreen() {
     try {
       await createPayment.mutateAsync({
         debt_id: debt.id,
-        user_id: userId,
         amount: validation.amount!,
         note: paymentNote.trim() ? paymentNote.trim() : null,
       });
       setPaymentSheet(null);
     } catch (err) {
-      notify(t('app.name'), (err as Error).message ?? t('errors.unknown'));
+      const code = (err as { code?: string })?.code;
+      let message: string;
+      switch (code) {
+        case '23514':
+          message = t('debts.exceedsRemaining', {
+            remaining: formatMoney(debt.remaining_amount, debt.currency),
+          });
+          break;
+        case '22023':
+          message = t('validation.amountInvalid');
+          break;
+        case '22000':
+          message = t('debts.alreadySettled');
+          break;
+        case '42501':
+          message = t('errors.unknown');
+          break;
+        default:
+          message = (err as Error).message ?? t('errors.unknown');
+      }
+      setPaymentError(message);
     }
   };
 

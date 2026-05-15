@@ -105,26 +105,51 @@ export function useCreateDebt() {
 
 export interface CreatePaymentArgs {
   debt_id: string;
-  user_id: string;
   amount: number;
   note: string | null;
+  paid_at?: string;
+}
+
+export interface RecordedPayment {
+  debt_id: string;
+  paid_amount: number;
+  remaining_amount: number;
+  debt_status: DebtStatus;
+  transaction_id: string;
 }
 
 export function useCreatePayment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: CreatePaymentArgs) => {
+    mutationFn: async (input: CreatePaymentArgs): Promise<RecordedPayment> => {
       const { data, error } = await supabase
-        .from('debt_payments')
-        .insert(input)
-        .select()
+        .rpc('record_debt_payment', {
+          p_debt_id: input.debt_id,
+          p_amount: input.amount,
+          p_note: input.note,
+          p_paid_at: input.paid_at,
+        })
         .single();
       if (error) throw error;
-      return data as DebtPaymentRow;
+      const row = data as {
+        paid_amount: number | string;
+        remaining_amount: number | string;
+        debt_status: DebtStatus;
+        transaction_id: string;
+      };
+      return {
+        debt_id: input.debt_id,
+        paid_amount: Number(row.paid_amount),
+        remaining_amount: Number(row.remaining_amount),
+        debt_status: row.debt_status,
+        transaction_id: row.transaction_id,
+      };
     },
-    onSuccess: (row) => {
+    onSuccess: (result) => {
       void qc.invalidateQueries({ queryKey: DEBTS_KEY });
-      void qc.invalidateQueries({ queryKey: [...DEBTS_KEY, 'payments', row.debt_id] });
+      void qc.invalidateQueries({ queryKey: [...DEBTS_KEY, 'detail', result.debt_id] });
+      void qc.invalidateQueries({ queryKey: [...DEBTS_KEY, 'payments', result.debt_id] });
+      void qc.invalidateQueries({ queryKey: ['transactions'] });
       void qc.invalidateQueries({ queryKey: ['summary'] });
     },
   });

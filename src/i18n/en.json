@@ -66,6 +66,7 @@
     "fullAmountHint": "This records {{amount}} and marks the debt as settled.",
     "partialAmountHint": "Remaining balance: {{amount}}",
     "exceedsRemaining": "Amount can't exceed the remaining {{remaining}}.",
+    "alreadySettled": "This debt is already settled.",
     "openedOn": "Opened on {{date}}",
     "delete": "Delete debt",
     "deleteConfirm": "Delete this debt and all its payments permanently?",

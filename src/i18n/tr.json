@@ -66,6 +66,7 @@
     "fullAmountHint": "{{amount}} tutarı kaydedilecek ve borç kapatılmış olarak işaretlenecek.",
     "partialAmountHint": "Kalan bakiye: {{amount}}",
     "exceedsRemaining": "Tutar kalan {{remaining}} miktarını aşamaz.",
+    "alreadySettled": "Bu borç zaten kapatılmış.",
     "openedOn": "{{date}} tarihinde açıldı",
     "delete": "Borcu sil",
     "deleteConfirm": "Bu borcu ve tüm ödemelerini kalıcı olarak silmek istiyor musunuz?",

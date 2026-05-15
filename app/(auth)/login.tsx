@@ -1,12 +1,15 @@
+import { Ionicons } from '@expo/vector-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
+import { AuthScaffold } from '@/components/AuthScaffold';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { colors } from '@/constants/theme';
 import { signInSchema, type SignInValues } from '@/schemas/auth';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -34,7 +37,7 @@ export default function LoginScreen() {
       await signIn(values.email, values.password);
       router.replace('/(tabs)');
     } catch {
-      // Error already set in the store; surfaced below.
+      /* error already in store */
     } finally {
       setSubmitting(false);
     }
@@ -45,146 +48,139 @@ export default function LoginScreen() {
     try {
       await signInWithGoogle();
     } catch {
-      // Error already set in the store.
+      /* error already in store */
     } finally {
       setGoogleSubmitting(false);
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-neutral-950">
-      <ScrollView
-        contentContainerClassName="grow justify-center px-6 py-10"
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="mx-auto w-full max-w-md">
-          <Text className="text-xs uppercase tracking-wider text-brand-600 dark:text-brand-300">
-            {t('app.name')}
-          </Text>
-          <Text
-            accessibilityRole="header"
-            className="mt-1 text-3xl font-bold text-neutral-900 dark:text-neutral-50"
-          >
-            {t('auth.welcome')}
-          </Text>
-          <Text className="mt-2 text-base text-neutral-600 dark:text-neutral-400">
-            {t('auth.loginSubtitle')}
-          </Text>
+    <AuthScaffold title={t('auth.welcome')} subtitle={t('auth.loginSubtitle')}>
+      <Controller
+        control={control}
+        name="email"
+        render={({ field, fieldState }) => (
+          <Input
+            label={t('auth.email')}
+            placeholder={t('auth.emailPlaceholder')}
+            autoCapitalize="none"
+            autoComplete="email"
+            keyboardType="email-address"
+            textContentType="emailAddress"
+            value={field.value}
+            onChangeText={(text) => {
+              clearError();
+              field.onChange(text);
+            }}
+            onBlur={field.onBlur}
+            leftAdornment={
+              <Ionicons name="mail-outline" size={20} color={colors.ink[400]} />
+            }
+            error={
+              fieldState.error ? t(fieldState.error.message ?? 'errors.unknown') : undefined
+            }
+          />
+        )}
+      />
 
-          <View className="mt-8 gap-4">
-            <Controller
-              control={control}
-              name="email"
-              render={({ field, fieldState }) => (
-                <Input
-                  label={t('auth.email')}
-                  placeholder={t('auth.emailPlaceholder')}
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  keyboardType="email-address"
-                  textContentType="emailAddress"
-                  value={field.value}
-                  onChangeText={(text) => {
-                    clearError();
-                    field.onChange(text);
-                  }}
-                  onBlur={field.onBlur}
-                  error={fieldState.error ? t(fieldState.error.message ?? 'errors.unknown') : undefined}
-                />
-              )}
-            />
-
-            <Controller
-              control={control}
-              name="password"
-              render={({ field, fieldState }) => (
-                <Input
-                  label={t('auth.password')}
-                  placeholder={t('auth.passwordPlaceholder')}
-                  autoCapitalize="none"
-                  autoComplete="current-password"
-                  textContentType="password"
-                  secureTextEntry={!showPassword}
-                  value={field.value}
-                  onChangeText={(text) => {
-                    clearError();
-                    field.onChange(text);
-                  }}
-                  onBlur={field.onBlur}
-                  error={fieldState.error ? t(fieldState.error.message ?? 'errors.unknown') : undefined}
-                  rightAdornment={
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-                      onPress={() => setShowPassword((v) => !v)}
-                      className="px-2 py-2"
-                    >
-                      <Text className="text-xs font-medium text-brand-600 dark:text-brand-300">
-                        {showPassword ? 'Hide' : 'Show'}
-                      </Text>
-                    </Pressable>
-                  }
-                />
-              )}
-            />
-
-            <Link href="/(auth)/forgot-password" asChild>
-              <Pressable className="self-end">
-                <Text className="text-sm font-medium text-brand-600 dark:text-brand-300">
-                  {t('auth.forgotPassword')}
-                </Text>
-              </Pressable>
-            </Link>
-
-            {errorKey ? (
-              <View
-                accessibilityLiveRegion="polite"
-                className="rounded-lg bg-red-50 px-3 py-2 dark:bg-red-900/30"
+      <Controller
+        control={control}
+        name="password"
+        render={({ field, fieldState }) => (
+          <Input
+            label={t('auth.password')}
+            placeholder={t('auth.passwordPlaceholder')}
+            autoCapitalize="none"
+            autoComplete="current-password"
+            textContentType="password"
+            secureTextEntry={!showPassword}
+            value={field.value}
+            onChangeText={(text) => {
+              clearError();
+              field.onChange(text);
+            }}
+            onBlur={field.onBlur}
+            leftAdornment={
+              <Ionicons name="lock-closed-outline" size={20} color={colors.ink[400]} />
+            }
+            rightAdornment={
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+                onPress={() => setShowPassword((v) => !v)}
+                className="px-2 py-2"
               >
-                <Text className="text-sm text-expense">{t(errorKey)}</Text>
-              </View>
-            ) : null}
-
-            <Button
-              label={t('auth.signIn')}
-              onPress={onSubmit}
-              loading={submitting || formState.isSubmitting}
-              fullWidth
-              size="lg"
-            />
-
-            <View className="my-2 flex-row items-center gap-3">
-              <View className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
-              <Text className="text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                {t('auth.or')}
-              </Text>
-              <View className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
-            </View>
-
-            <Button
-              label={t('auth.continueWithGoogle')}
-              variant="secondary"
-              onPress={onGoogle}
-              loading={googleSubmitting}
-              fullWidth
-              size="lg"
-            />
-          </View>
-
-          <View className="mt-8 flex-row items-center justify-center gap-1">
-            <Text className="text-sm text-neutral-600 dark:text-neutral-400">
-              {t('auth.noAccount')}
-            </Text>
-            <Link href="/(auth)/register" asChild>
-              <Pressable>
-                <Text className="text-sm font-semibold text-brand-600 dark:text-brand-300">
-                  {t('auth.signUp')}
-                </Text>
+                <Ionicons
+                  name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                  size={20}
+                  color={colors.ink[500]}
+                />
               </Pressable>
-            </Link>
-          </View>
+            }
+            error={
+              fieldState.error ? t(fieldState.error.message ?? 'errors.unknown') : undefined
+            }
+          />
+        )}
+      />
+
+      <Link href="/(auth)/forgot-password" asChild>
+        <Pressable className="-mt-2 self-end">
+          <Text className="text-sm font-medium text-brand-500 dark:text-brand-200">
+            {t('auth.forgotPassword')}
+          </Text>
+        </Pressable>
+      </Link>
+
+      {errorKey ? (
+        <View
+          accessibilityLiveRegion="polite"
+          className="rounded-xl bg-expense-50 px-3 py-2.5 dark:bg-expense-900/30"
+        >
+          <Text className="text-sm font-medium text-expense-600 dark:text-expense-100">
+            {t(errorKey)}
+          </Text>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      ) : null}
+
+      <Button
+        label={t('auth.signIn')}
+        onPress={onSubmit}
+        loading={submitting || formState.isSubmitting}
+        fullWidth
+        size="lg"
+      />
+
+      <View className="my-2 flex-row items-center gap-3">
+        <View className="h-px flex-1 bg-ink-200 dark:bg-ink-700" />
+        <Text className="text-xs uppercase tracking-widest text-ink-400 dark:text-ink-500">
+          {t('auth.or')}
+        </Text>
+        <View className="h-px flex-1 bg-ink-200 dark:bg-ink-700" />
+      </View>
+
+      <Button
+        label={t('auth.continueWithGoogle')}
+        variant="outline"
+        onPress={onGoogle}
+        loading={googleSubmitting}
+        leftIcon={<Ionicons name="logo-google" size={18} color="#EA4335" />}
+        fullWidth
+        size="lg"
+      />
+
+      <View className="mt-8 flex-row items-center justify-center gap-1">
+        <Text className="text-sm text-ink-500 dark:text-ink-400">
+          {t('auth.noAccount')}
+        </Text>
+        <Link href="/(auth)/register" asChild>
+          <Pressable>
+            <Text className="text-sm font-semibold text-brand-500 dark:text-brand-200">
+              {t('auth.signUp')}
+            </Text>
+          </Pressable>
+        </Link>
+      </View>
+    </AuthScaffold>
   );
 }

@@ -1,43 +1,66 @@
 import type { PropsWithChildren } from 'react';
 import { Pressable, type PressableProps, View } from 'react-native';
 
+import { shadows } from '@/constants/theme';
+
+type Accent = 'brand' | 'income' | 'expense' | 'receivable' | 'payable' | 'none';
+type Elevation = 'flat' | 'card' | 'elevated';
+
 interface CardProps extends PropsWithChildren {
-  /** Optional accent border on the left edge. */
-  accent?: 'brand' | 'income' | 'expense' | 'receivable' | 'payable' | 'none';
+  accent?: Accent;
+  elevation?: Elevation;
   className?: string;
 }
 
-const accentMap: Record<NonNullable<CardProps['accent']>, string> = {
+const accentMap: Record<Accent, string> = {
   brand: 'border-l-4 border-l-brand-500',
-  income: 'border-l-4 border-l-income',
-  expense: 'border-l-4 border-l-expense',
-  receivable: 'border-l-4 border-l-receivable',
-  payable: 'border-l-4 border-l-payable',
+  income: 'border-l-4 border-l-income-500',
+  expense: 'border-l-4 border-l-expense-500',
+  receivable: 'border-l-4 border-l-income-500',
+  payable: 'border-l-4 border-l-payable-500',
   none: '',
 };
 
-export function Card({ children, accent = 'none', className = '' }: CardProps) {
+const elevationToStyle = {
+  flat: undefined,
+  card: shadows.card,
+  elevated: shadows.elevated,
+} as const;
+
+const BASE = 'rounded-2xl bg-white dark:bg-ink-800 border border-ink-100 dark:border-ink-700';
+
+export function Card({
+  children,
+  accent = 'none',
+  elevation = 'card',
+  className = '',
+}: CardProps) {
   return (
     <View
-      className={`rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900 ${accentMap[accent]} ${className}`}
+      className={`${BASE} ${accentMap[accent]} ${className}`}
+      style={elevationToStyle[elevation]}
     >
       {children}
     </View>
   );
 }
 
-interface PressableCardProps extends PressableProps, Pick<CardProps, 'accent' | 'className'> {}
+interface PressableCardProps
+  extends PressableProps,
+    Pick<CardProps, 'accent' | 'className' | 'elevation'> {}
 
 export function PressableCard({
   children,
   accent = 'none',
+  elevation = 'card',
   className = '',
   ...rest
 }: PressableCardProps) {
   return (
     <Pressable
       accessibilityRole={rest.accessibilityRole ?? 'button'}
-      className={`rounded-2xl border border-neutral-200 bg-white p-4 active:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:active:bg-neutral-800 ${accentMap[accent]} ${className}`}
+      style={elevationToStyle[elevation]}
+      className={`${BASE} ${accentMap[accent]} active:opacity-90 ${className}`}
       {...rest}
     >
       {children}

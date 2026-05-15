@@ -1,13 +1,15 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, FlatList, SafeAreaView, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, SafeAreaView, Text, View } from 'react-native';
 
+import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
-import { BottomSheet } from '@/components/ui/BottomSheet';
+import { colors } from '@/constants/theme';
 import { useContact } from '@/hooks/useContacts';
 import {
   useCreatePayment,
@@ -41,15 +43,15 @@ export default function DebtDetailScreen() {
 
   if (debtQ.isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white dark:bg-neutral-950">
-        <ActivityIndicator size="large" color="#4f46e5" />
+      <SafeAreaView className="flex-1 items-center justify-center bg-ink-50 dark:bg-ink-950">
+        <ActivityIndicator size="large" color={colors.brand[500]} />
       </SafeAreaView>
     );
   }
 
   if (debtQ.isError || !debtQ.data) {
     return (
-      <SafeAreaView className="flex-1 bg-white dark:bg-neutral-950">
+      <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
         <EmptyState
           icon="❓"
           title={t('debts.notFound')}
@@ -61,8 +63,16 @@ export default function DebtDetailScreen() {
 
   const debt = debtQ.data;
   const isReceivable = debt.type === 'receivable';
+  const isSettled = debt.status === 'settled';
   const progress = paymentProgress(debt.principal_amount, [{ amount: debt.paid_amount }]);
   const progressPercent = Math.round(progress * 100);
+
+  const heroBg = isSettled
+    ? 'bg-ink-700'
+    : isReceivable
+      ? 'bg-income-500'
+      : 'bg-payable-500';
+  const sideIcon = isReceivable ? 'arrow-up-circle' : 'arrow-down-circle';
 
   const openPartial = () => {
     setPaymentAmount('');
@@ -132,17 +142,66 @@ export default function DebtDetailScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-neutral-950">
-      <View className="flex-row items-center justify-between border-b border-neutral-200 px-5 py-3 dark:border-neutral-800">
-        <Button label={t('common.cancel')} variant="ghost" size="sm" onPress={() => router.back()} />
-        <Text
-          accessibilityRole="header"
-          className="flex-1 px-2 text-center text-lg font-semibold text-neutral-900 dark:text-neutral-50"
-          numberOfLines={1}
-        >
-          {isReceivable ? t('debts.receivable') : t('debts.payable')}
-        </Text>
-        <View className="w-16" />
+    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
+      {/* Hero header */}
+      <View className={`px-5 pb-7 pt-3 ${heroBg}`}>
+        <View className="flex-row items-center justify-between">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('common.cancel')}
+            onPress={() => router.back()}
+            className="h-10 w-10 items-center justify-center rounded-full bg-white/15"
+          >
+            <Ionicons name="chevron-back" size={20} color="#fff" />
+          </Pressable>
+          <View className="flex-row items-center gap-1.5 rounded-full bg-white/15 px-3 py-1">
+            <Ionicons name={sideIcon} size={14} color="#fff" />
+            <Text className="text-xs font-semibold uppercase tracking-widest text-white">
+              {isReceivable ? t('debts.receivable') : t('debts.payable')}
+            </Text>
+          </View>
+          <View className="w-10" />
+        </View>
+
+        <View className="mt-4 items-center">
+          <Text className="text-xs uppercase tracking-widest text-white/70">
+            {contactQ.data?.full_name ?? '—'}
+          </Text>
+          <Text
+            className="mt-1 text-4xl font-extrabold text-white"
+            style={{ fontVariant: ['tabular-nums'] }}
+          >
+            {formatMoney(debt.remaining_amount, debt.currency)}
+          </Text>
+          <Text className="mt-1 text-xs text-white/80">
+            {t('debts.paidOf', {
+              paid: formatMoney(debt.paid_amount, debt.currency),
+              principal: formatMoney(debt.principal_amount, debt.currency),
+            })}
+          </Text>
+
+          <View className="mt-4 h-2 w-full max-w-xs overflow-hidden rounded-full bg-white/20">
+            <View
+              accessibilityLabel={`${progressPercent}%`}
+              className="h-full bg-white"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </View>
+
+          <Text className="mt-2 text-xs text-white/70">
+            {t('debts.openedOn', { date: formatDate(debt.created_at, 'long') })}
+          </Text>
+
+          {isSettled ? (
+            <View className="mt-2 flex-row items-center gap-1.5 rounded-full bg-white/15 px-3 py-1">
+              <Ionicons name="checkmark-circle" size={14} color="#fff" />
+              <Text className="text-xs font-semibold text-white">
+                {t('debts.settled')}
+                {debt.settled_at ? ` · ${formatDate(debt.settled_at, 'short')}` : ''}
+              </Text>
+            </View>
+          ) : null}
+        </View>
       </View>
 
       <FlatList
@@ -152,51 +211,15 @@ export default function DebtDetailScreen() {
         contentContainerClassName="pb-10"
         ListHeaderComponent={
           <View className="gap-4 px-5 py-5">
-            <Card accent={isReceivable ? 'receivable' : 'payable'}>
-              <Text className="text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                {contactQ.data?.full_name ?? '—'}
-              </Text>
-              <Text
-                className={`mt-1 text-3xl font-bold ${isReceivable ? 'text-receivable' : 'text-payable'}`}
-              >
-                {formatMoney(debt.remaining_amount, debt.currency)}
-              </Text>
-              <Text className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                {t('debts.paidOf', {
-                  paid: formatMoney(debt.paid_amount, debt.currency),
-                  principal: formatMoney(debt.principal_amount, debt.currency),
-                })}
-              </Text>
-              <View className="mt-3 h-1.5 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
-                <View
-                  className={`h-full ${isReceivable ? 'bg-receivable' : 'bg-payable'}`}
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </View>
-              <Text className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
-                {t('debts.openedOn', { date: formatDate(debt.created_at, 'long') })}
-              </Text>
-              {debt.status === 'settled' ? (
-                <Text className="mt-1 text-xs font-semibold text-income">
-                  ✓ {t('debts.settled')}
-                  {debt.settled_at ? ` · ${formatDate(debt.settled_at, 'long')}` : ''}
-                </Text>
-              ) : null}
-              {debt.description ? (
-                <Text className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
-                  {debt.description}
-                </Text>
-              ) : null}
-            </Card>
-
-            {debt.status === 'active' ? (
+            {!isSettled ? (
               <View className="flex-row gap-3">
                 <View className="flex-1">
                   <Button
                     label={t('debts.partialPayment')}
-                    variant="secondary"
+                    variant="outline"
                     onPress={openPartial}
                     fullWidth
+                    size="lg"
                   />
                 </View>
                 <View className="flex-1">
@@ -204,12 +227,24 @@ export default function DebtDetailScreen() {
                     label={t('debts.settleInFull')}
                     onPress={openFull}
                     fullWidth
+                    size="lg"
                   />
                 </View>
               </View>
             ) : null}
 
-            <Text className="mt-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            {debt.description ? (
+              <Card className="p-4">
+                <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+                  {t('quickAdd.description')}
+                </Text>
+                <Text className="mt-2 text-base text-ink-700 dark:text-ink-200">
+                  {debt.description}
+                </Text>
+              </Card>
+            ) : null}
+
+            <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
               {t('debts.payments')}
             </Text>
           </View>
@@ -217,12 +252,16 @@ export default function DebtDetailScreen() {
         ListEmptyComponent={
           paymentsQ.isLoading ? (
             <View className="items-center py-6">
-              <ActivityIndicator color="#4f46e5" />
+              <ActivityIndicator color={colors.brand[500]} />
             </View>
           ) : (
-            <Text className="px-5 py-3 text-sm text-neutral-500 dark:text-neutral-400">
-              {t('debts.noPaymentsYet')}
-            </Text>
+            <View className="px-5">
+              <Card className="p-4">
+                <Text className="text-sm text-ink-500 dark:text-ink-400">
+                  {t('debts.noPaymentsYet')}
+                </Text>
+              </Card>
+            </View>
           )
         }
         ListFooterComponent={
@@ -233,6 +272,7 @@ export default function DebtDetailScreen() {
               onPress={onDelete}
               loading={deleteDebt.isPending}
               fullWidth
+              leftIcon={<Ionicons name="trash-outline" size={18} color="#fff" />}
             />
           </View>
         }
@@ -271,8 +311,10 @@ export default function DebtDetailScreen() {
             numberOfLines={2}
           />
           {paymentError ? (
-            <View className="rounded-lg bg-red-50 px-3 py-2 dark:bg-red-900/30">
-              <Text className="text-sm text-expense">{paymentError}</Text>
+            <View className="rounded-xl bg-expense-50 px-3 py-2.5 dark:bg-expense-900/30">
+              <Text className="text-sm font-medium text-expense-600 dark:text-expense-100">
+                {paymentError}
+              </Text>
             </View>
           ) : null}
           <Button
@@ -290,21 +332,23 @@ export default function DebtDetailScreen() {
 
 function PaymentRow({ payment, currency }: { payment: DebtPaymentRow; currency: string }) {
   return (
-    <View className="flex-row items-center justify-between border-b border-neutral-100 px-5 py-3 dark:border-neutral-800">
+    <View className="mx-5 mb-2 flex-row items-center justify-between rounded-2xl border border-ink-100 bg-white p-4 dark:border-ink-700 dark:bg-ink-800">
       <View className="flex-1 pr-3">
-        <Text className="text-sm text-neutral-900 dark:text-neutral-100">
+        <Text className="text-sm font-medium text-ink-900 dark:text-ink-50">
           {formatDate(payment.paid_at, 'long')}
         </Text>
         {payment.note ? (
-          <Text className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+          <Text className="mt-0.5 text-xs text-ink-500 dark:text-ink-400">
             {payment.note}
           </Text>
         ) : null}
       </View>
-      <Text className="text-sm font-semibold text-income">
+      <Text
+        className="text-sm font-bold text-income-600"
+        style={{ fontVariant: ['tabular-nums'] }}
+      >
         +{formatMoney(payment.amount, currency)}
       </Text>
     </View>
   );
 }
-

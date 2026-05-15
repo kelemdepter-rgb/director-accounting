@@ -1,8 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { PressableCard } from '@/components/ui/Card';
+import { colors } from '@/constants/theme';
 import type { DebtWithBalanceRow } from '@/types/database';
 import { formatMoney } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
@@ -19,67 +21,83 @@ function DebtCardImpl({ debt, contactName, onPress }: DebtCardProps) {
   const isReceivable = debt.type === 'receivable';
   const accent = isReceivable ? 'receivable' : 'payable';
 
-  // Build a synthetic payment list from the totals on the view for the progress calc.
   const paid = Number(debt.paid_amount);
   const progress = paymentProgress(debt.principal_amount, [{ amount: paid }]);
   const progressPercent = Math.round(progress * 100);
+  const isSettled = debt.status === 'settled';
+
+  const amountColor = isReceivable ? 'text-income-600' : 'text-payable-600';
+  const progressBarColor = isReceivable ? 'bg-income-500' : 'bg-payable-500';
+  const sideIcon = isReceivable ? 'arrow-up-circle' : 'arrow-down-circle';
+  const sideTint = isReceivable ? colors.income : colors.payable;
 
   return (
     <PressableCard
       accent={accent}
       onPress={() => onPress?.(debt)}
       accessibilityLabel={`${isReceivable ? t('debts.receivable') : t('debts.payable')} ${formatMoney(debt.remaining_amount, debt.currency)} ${contactName ?? ''}`}
-      className="gap-2"
+      className="gap-3 p-4"
     >
       <View className="flex-row items-center justify-between">
-        <Text className="text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-          {isReceivable ? t('debts.receivable') : t('debts.payable')}
-        </Text>
-        {debt.status === 'settled' ? (
-          <Text className="text-xs font-semibold text-income">{t('debts.settled')}</Text>
+        <View className="flex-row items-center gap-2">
+          <Ionicons name={sideIcon} size={16} color={sideTint} />
+          <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+            {isReceivable ? t('debts.receivable') : t('debts.payable')}
+          </Text>
+        </View>
+        {isSettled ? (
+          <View className="flex-row items-center gap-1 rounded-full bg-income-50 px-2 py-0.5 dark:bg-income-700/30">
+            <Ionicons name="checkmark-circle" size={12} color={colors.income} />
+            <Text className="text-[11px] font-semibold text-income-600 dark:text-income-100">
+              {t('debts.settled')}
+            </Text>
+          </View>
         ) : (
-          <Text className="text-xs text-neutral-500 dark:text-neutral-400">
+          <Text className="text-xs text-ink-500 dark:text-ink-400">
             {formatDate(debt.created_at, 'short')}
           </Text>
         )}
       </View>
 
       <View className="flex-row items-baseline justify-between">
-        <Text className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
+        <Text
+          className="text-base font-semibold text-ink-900 dark:text-ink-50"
+          numberOfLines={1}
+        >
           {contactName ?? '—'}
         </Text>
         <Text
-          className={`text-xl font-bold ${isReceivable ? 'text-receivable' : 'text-payable'}`}
+          className={`text-xl font-bold ${amountColor}`}
+          style={{ fontVariant: ['tabular-nums'] }}
         >
           {formatMoney(debt.remaining_amount, debt.currency)}
         </Text>
       </View>
 
-      {debt.principal_amount !== debt.remaining_amount ? (
-        <Text className="text-xs text-neutral-500 dark:text-neutral-400">
-          {t('debts.paidOf', {
-            paid: formatMoney(debt.paid_amount, debt.currency),
-            principal: formatMoney(debt.principal_amount, debt.currency),
-          })}
-        </Text>
-      ) : (
-        <Text className="text-xs text-neutral-500 dark:text-neutral-400">
-          {t('debts.principal')}: {formatMoney(debt.principal_amount, debt.currency)}
-        </Text>
-      )}
-
-      {debt.status === 'active' ? (
-        <View className="mt-1 h-1.5 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
-          <View
-            accessibilityLabel={`${progressPercent}%`}
-            className={`h-full ${isReceivable ? 'bg-receivable' : 'bg-payable'}`}
-            style={{ width: `${progressPercent}%` }}
-          />
+      {/* Progress bar (only meaningful while active) */}
+      {!isSettled ? (
+        <View>
+          <View className="h-1.5 overflow-hidden rounded-full bg-ink-100 dark:bg-ink-700">
+            <View
+              accessibilityLabel={`${progressPercent}%`}
+              className={`h-full ${progressBarColor}`}
+              style={{ width: `${progressPercent}%` }}
+            />
+          </View>
+          <Text className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">
+            {t('debts.paidOf', {
+              paid: formatMoney(debt.paid_amount, debt.currency),
+              principal: formatMoney(debt.principal_amount, debt.currency),
+            })}
+          </Text>
         </View>
       ) : null}
 
       {debt.description ? (
-        <Text className="text-xs text-neutral-500 dark:text-neutral-400">
+        <Text
+          className="text-xs text-ink-500 dark:text-ink-400"
+          numberOfLines={2}
+        >
           {debt.description}
         </Text>
       ) : null}

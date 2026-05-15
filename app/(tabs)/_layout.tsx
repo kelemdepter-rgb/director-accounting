@@ -3,9 +3,9 @@ import { Redirect, Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useWindowDimensions } from 'react-native';
 
+import { colors } from '@/constants/theme';
 import { useAuthStore } from '@/stores/authStore';
 
-/** Tablet/desktop breakpoint where the tab bar moves to the left as a sidebar. */
 const SIDEBAR_BREAKPOINT = 768;
 
 export default function TabsLayout() {
@@ -21,17 +21,44 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: true,
+        headerShown: !isWide,
         headerTitle: t('app.name'),
-        tabBarActiveTintColor: '#4f46e5',
-        tabBarInactiveTintColor: '#6b7280',
-        // Bottom on phones; left rail on tablets and web.
+        headerStyle: {
+          backgroundColor: '#FFFFFF',
+        },
+        headerTitleStyle: {
+          fontWeight: '700',
+          color: colors.ink[900],
+        },
+        tabBarActiveTintColor: isWide ? '#FFFFFF' : colors.brand[500],
+        tabBarInactiveTintColor: isWide ? '#CBD5E1' : colors.ink[400],
         tabBarPosition: isWide ? 'left' : 'bottom',
         tabBarLabelPosition: isWide ? 'beside-icon' : 'below-icon',
         tabBarStyle: isWide
-          ? { width: 220, borderRightWidth: 1, borderRightColor: '#e5e7eb' }
+          ? {
+              width: 240,
+              backgroundColor: colors.brand[500],
+              borderRightWidth: 0,
+              paddingTop: 24,
+            }
+          : {
+              height: 64,
+              paddingTop: 6,
+              paddingBottom: 8,
+              borderTopColor: colors.ink[100],
+            },
+        tabBarItemStyle: isWide
+          ? {
+              justifyContent: 'flex-start',
+              borderRadius: 12,
+              marginHorizontal: 12,
+              marginVertical: 4,
+              paddingHorizontal: 12,
+            }
           : undefined,
-        tabBarItemStyle: isWide ? { justifyContent: 'flex-start' } : undefined,
+        tabBarLabelStyle: isWide
+          ? { fontSize: 14, fontWeight: '600', marginLeft: 12 }
+          : { fontSize: 11, fontWeight: '600' },
       }}
     >
       <Tabs.Screen
@@ -64,3 +91,4 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
+

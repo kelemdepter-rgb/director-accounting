@@ -16,7 +16,11 @@
     "recentTransactions": "Son hareketler",
     "seeAll": "Tümünü gör",
     "noTransactionsYet": "Henüz kayıt yok",
-    "noTransactionsHint": "İlk gelirinizi, giderinizi veya borcunuzu eklemek için + düğmesine dokunun."
+    "noTransactionsHint": "İlk gelirinizi, giderinizi veya borcunuzu eklemek için + düğmesine dokunun.",
+    "greetingMorning": "Günaydın",
+    "greetingAfternoon": "İyi günler",
+    "greetingEvening": "İyi akşamlar",
+    "greetingNight": "İyi geceler"
   },
   "transactions": {
     "title": "Tüm hareketler",
@@ -92,7 +96,9 @@
     "loginSubtitle": "Defterinizi güncel tutmak için giriş yapın.",
     "registerSubtitle": "Bir dakikanızı alır. Verileriniz uçtan uca koruma altındadır.",
     "confirmEmailNotice": "E-postanızı doğrulamamız için size bir bağlantı gönderdik. Doğruladıktan sonra burada giriş yapabilirsiniz.",
-    "googleNotConfigured": "Google ile giriş henüz yapılandırılmamış."
+    "googleNotConfigured": "Google ile giriş henüz yapılandırılmamış.",
+    "brandHeadline": "Defteriniz artık avucunuzda.",
+    "brandSub": "Gelirinizi, giderinizi ve alacaklarınızı telefonunuzdan, tabletinizden ve web üzerinden tek bir yerden takip edin. Banka düzeyinde şifreleme; ne bir Excel ne bir kâğıt."
   },
   "contacts": {
     "searchPlaceholder": "Kişi ara",
@@ -125,6 +131,7 @@
   },
   "settings": {
     "account": "Hesap",
+    "appearance": "Görünüm",
     "signOutConfirm": "Bu cihazdan çıkış yapmak istiyor musunuz?",
     "theme": "Tema",
     "themeSystem": "Sistem",

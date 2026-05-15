@@ -5,7 +5,9 @@ export interface InputProps extends Omit<TextInputProps, 'style'> {
   label?: string;
   hint?: string;
   error?: string;
-  /** Render adornment on the right side (e.g. show/hide password toggle). */
+  /** Optional adornment shown on the LEFT (e.g. mail/lock/user icon). */
+  leftAdornment?: React.ReactNode;
+  /** Optional adornment shown on the RIGHT (e.g. password show/hide). */
   rightAdornment?: React.ReactNode;
 }
 
@@ -14,12 +16,14 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
     label,
     hint,
     error,
+    leftAdornment,
     rightAdornment,
     onFocus,
     onBlur,
     accessibilityLabel,
     accessibilityHint,
     editable = true,
+    multiline,
     ...rest
   },
   ref,
@@ -28,27 +32,29 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   const hasError = !!error;
 
   const borderClass = hasError
-    ? 'border-expense'
+    ? 'border-expense-500'
     : focused
-      ? 'border-brand-500'
-      : 'border-neutral-300 dark:border-neutral-700';
+      ? 'border-brand-500 ring-2 ring-brand-100 dark:ring-brand-900'
+      : 'border-ink-200 dark:border-ink-700';
 
   return (
     <View className="w-full">
       {label ? (
-        <Text className="mb-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+        <Text className="mb-1.5 text-sm font-medium text-ink-700 dark:text-ink-300">
           {label}
         </Text>
       ) : null}
       <View
-        className={`flex-row items-center rounded-lg border ${borderClass} bg-white dark:bg-neutral-900 ${editable ? '' : 'opacity-60'}`}
+        className={`flex-row items-center rounded-xl border bg-white dark:bg-ink-900 ${borderClass} ${editable ? '' : 'opacity-60'}`}
       >
+        {leftAdornment ? <View className="pl-3">{leftAdornment}</View> : null}
         <TextInput
           ref={ref}
           accessibilityLabel={accessibilityLabel ?? label}
           accessibilityHint={accessibilityHint ?? hint}
           editable={editable}
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor="#94A3B8"
+          multiline={multiline}
           onFocus={(event) => {
             setFocused(true);
             onFocus?.(event);
@@ -57,17 +63,17 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
             setFocused(false);
             onBlur?.(event);
           }}
-          className="h-12 flex-1 px-3 text-base text-neutral-900 dark:text-neutral-100"
+          className={`flex-1 ${multiline ? 'min-h-[80px] py-3' : 'h-12'} px-3 text-base text-ink-900 dark:text-ink-50`}
           {...rest}
         />
         {rightAdornment ? <View className="pr-2">{rightAdornment}</View> : null}
       </View>
       {hasError ? (
-        <Text className="mt-1 text-xs text-expense" accessibilityLiveRegion="polite">
+        <Text className="mt-1.5 text-xs text-expense-600" accessibilityLiveRegion="polite">
           {error}
         </Text>
       ) : hint ? (
-        <Text className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{hint}</Text>
+        <Text className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">{hint}</Text>
       ) : null}
     </View>
   );

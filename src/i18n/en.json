@@ -16,7 +16,11 @@
     "recentTransactions": "Recent activity",
     "seeAll": "See all",
     "noTransactionsYet": "Nothing recorded yet",
-    "noTransactionsHint": "Tap the + button to log your first income, expense, or debt."
+    "noTransactionsHint": "Tap the + button to log your first income, expense, or debt.",
+    "greetingMorning": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening",
+    "greetingNight": "Hello"
   },
   "transactions": {
     "title": "All transactions",
@@ -92,7 +96,9 @@
     "loginSubtitle": "Sign in to keep your books up to date.",
     "registerSubtitle": "It takes a minute, and your data is end-to-end protected.",
     "confirmEmailNotice": "Please confirm your email — we just sent you a link. Then come back here to sign in.",
-    "googleNotConfigured": "Google sign-in is not configured yet."
+    "googleNotConfigured": "Google sign-in is not configured yet.",
+    "brandHeadline": "Your books, finally in your pocket.",
+    "brandSub": "Track income, expenses, and what people owe you — across phone, tablet, and web. Bank-grade encryption, zero spreadsheets."
   },
   "contacts": {
     "searchPlaceholder": "Search contacts",
@@ -125,6 +131,7 @@
   },
   "settings": {
     "account": "Account",
+    "appearance": "Appearance",
     "signOutConfirm": "Sign out of this device?",
     "theme": "Theme",
     "themeSystem": "System",

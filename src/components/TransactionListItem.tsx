@@ -1,9 +1,10 @@
 import { memo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-import { formatDate } from '@/utils/date';
+import { Avatar } from '@/components/ui/Avatar';
 import type { TransactionRow } from '@/types/database';
 import { formatMoney } from '@/utils/currency';
+import { formatDate } from '@/utils/date';
 
 interface TransactionListItemProps {
   transaction: TransactionRow;
@@ -18,8 +19,8 @@ function TransactionListItemImpl({
 }: TransactionListItemProps) {
   const isIncome = transaction.type === 'income';
   const sign = isIncome ? '+' : '−';
-  const amountClass = isIncome ? 'text-income' : 'text-expense';
-  const accentDotClass = isIncome ? 'bg-income' : 'bg-expense';
+  const amountClass = isIncome ? 'text-income-600' : 'text-expense-600';
+  const display = contactName ?? transaction.description ?? '—';
 
   return (
     <Pressable
@@ -27,21 +28,25 @@ function TransactionListItemImpl({
       accessibilityLabel={`${transaction.type}, ${formatMoney(transaction.amount, transaction.currency)}${contactName ? `, ${contactName}` : ''}`}
       onPress={() => onPress?.(transaction)}
       disabled={!onPress}
-      className="flex-row items-center justify-between border-b border-neutral-100 px-5 py-3 active:bg-neutral-50 dark:border-neutral-800 dark:active:bg-neutral-800"
+      className="flex-row items-center gap-3 px-4 py-3 active:bg-ink-50 dark:active:bg-ink-700"
     >
-      <View className="flex-row items-center gap-3">
-        <View className={`h-2 w-2 rounded-full ${accentDotClass}`} />
-        <View>
-          <Text className="text-base font-medium text-neutral-900 dark:text-neutral-100">
-            {contactName ?? (transaction.description ?? '—')}
-          </Text>
-          <Text className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
-            {formatDate(transaction.occurred_at, 'short')}
-            {transaction.description && contactName ? ` · ${transaction.description}` : ''}
-          </Text>
-        </View>
+      <Avatar name={display} size={40} />
+      <View className="flex-1">
+        <Text
+          className="text-base font-semibold text-ink-900 dark:text-ink-50"
+          numberOfLines={1}
+        >
+          {display}
+        </Text>
+        <Text className="mt-0.5 text-xs text-ink-500 dark:text-ink-400" numberOfLines={1}>
+          {formatDate(transaction.occurred_at, 'short')}
+          {transaction.description && contactName ? ` · ${transaction.description}` : ''}
+        </Text>
       </View>
-      <Text className={`text-base font-semibold ${amountClass}`}>
+      <Text
+        className={`text-base font-bold ${amountClass}`}
+        style={{ fontVariant: ['tabular-nums'] }}
+      >
         {sign}
         {formatMoney(transaction.amount, transaction.currency)}
       </Text>

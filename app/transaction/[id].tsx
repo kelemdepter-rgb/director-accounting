@@ -1,22 +1,20 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  ActivityIndicator,
-  SafeAreaView,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
 
+import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
+import { colors } from '@/constants/theme';
 import { useContacts } from '@/hooks/useContacts';
 import { useDeleteTransaction } from '@/hooks/useTransactions';
-import { supabase } from '@/lib/supabase';
 import { confirm, notify } from '@/lib/confirm';
+import { supabase } from '@/lib/supabase';
 import type { TransactionRow } from '@/types/database';
 import { formatMoney, parseUserAmount } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
@@ -88,15 +86,15 @@ export default function TransactionDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white dark:bg-neutral-950">
-        <ActivityIndicator size="large" color="#4f46e5" />
+      <SafeAreaView className="flex-1 items-center justify-center bg-ink-50 dark:bg-ink-950">
+        <ActivityIndicator size="large" color={colors.brand[500]} />
       </SafeAreaView>
     );
   }
 
   if (error || !txn) {
     return (
-      <SafeAreaView className="flex-1 bg-white dark:bg-neutral-950">
+      <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
         <EmptyState
           icon="❓"
           title={t('transactions.notFound')}
@@ -110,6 +108,9 @@ export default function TransactionDetailScreen() {
     ? (contactsQ.data ?? []).find((c) => c.id === txn.contact_id) ?? null
     : null;
   const isIncome = txn.type === 'income';
+  const heroBg = isIncome ? 'bg-income-500' : 'bg-expense-500';
+  const sign = isIncome ? '+' : '−';
+  const heroIcon = isIncome ? 'arrow-up-circle' : 'arrow-down-circle';
 
   const onSave = async () => {
     const parsed = parseUserAmount(amount);
@@ -154,52 +155,80 @@ export default function TransactionDetailScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-neutral-950">
-      <View className="flex-row items-center justify-between border-b border-neutral-200 px-5 py-3 dark:border-neutral-800">
-        <Button
-          label={t('common.cancel')}
-          variant="ghost"
-          size="sm"
-          onPress={() => (editing ? setEditing(false) : router.back())}
-        />
-        <Text
-          accessibilityRole="header"
-          className="flex-1 px-2 text-center text-lg font-semibold text-neutral-900 dark:text-neutral-50"
-        >
-          {isIncome ? t('quickAdd.income') : t('quickAdd.expense')}
-        </Text>
-        {editing ? (
-          <View className="w-16" />
-        ) : (
-          <Button
-            label={t('contacts.edit')}
-            variant="ghost"
-            size="sm"
-            onPress={() => setEditing(true)}
-          />
-        )}
+    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
+      <View className={`px-5 pb-7 pt-3 ${heroBg}`}>
+        <View className="flex-row items-center justify-between">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('common.cancel')}
+            onPress={() => (editing ? setEditing(false) : router.back())}
+            className="h-10 w-10 items-center justify-center rounded-full bg-white/15"
+          >
+            <Ionicons name="chevron-back" size={20} color="#fff" />
+          </Pressable>
+          <View className="flex-row items-center gap-1.5 rounded-full bg-white/15 px-3 py-1">
+            <Ionicons name={heroIcon} size={14} color="#fff" />
+            <Text className="text-xs font-semibold uppercase tracking-widest text-white">
+              {isIncome ? t('quickAdd.income') : t('quickAdd.expense')}
+            </Text>
+          </View>
+          {!editing ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('contacts.edit')}
+              onPress={() => setEditing(true)}
+              className="h-10 w-10 items-center justify-center rounded-full bg-white/15"
+            >
+              <Ionicons name="create-outline" size={18} color="#fff" />
+            </Pressable>
+          ) : (
+            <View className="w-10" />
+          )}
+        </View>
+
+        <View className="mt-4 items-center">
+          <Text
+            className="text-4xl font-extrabold text-white"
+            style={{ fontVariant: ['tabular-nums'] }}
+          >
+            {sign}
+            {formatMoney(txn.amount, txn.currency)}
+          </Text>
+          <Text className="mt-1 text-xs text-white/80">
+            {formatDate(txn.occurred_at, 'long')}
+          </Text>
+        </View>
       </View>
 
-      <ScrollView contentContainerClassName="px-5 py-6 gap-5" keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerClassName="px-5 py-5 gap-4 pb-10"
+        keyboardShouldPersistTaps="handled"
+      >
         {!editing ? (
           <>
-            <View>
-              <Text
-                className={`text-3xl font-bold ${isIncome ? 'text-income' : 'text-expense'}`}
-              >
-                {isIncome ? '+' : '−'}
-                {formatMoney(txn.amount, txn.currency)}
-              </Text>
-              <Text className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-                {formatDate(txn.occurred_at, 'long')}
-              </Text>
-            </View>
-
             {contact ? (
-              <Field label={t('contacts.fullName')} value={contact.full_name} />
+              <Card className="flex-row items-center gap-3 p-4">
+                <Avatar name={contact.full_name} size={40} />
+                <View className="flex-1">
+                  <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+                    {t('contacts.fullName')}
+                  </Text>
+                  <Text className="mt-0.5 text-base text-ink-900 dark:text-ink-50">
+                    {contact.full_name}
+                  </Text>
+                </View>
+              </Card>
             ) : null}
+
             {txn.description ? (
-              <Field label={t('quickAdd.description')} value={txn.description} />
+              <Card className="p-4">
+                <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+                  {t('quickAdd.description')}
+                </Text>
+                <Text className="mt-2 text-base text-ink-700 dark:text-ink-200">
+                  {txn.description}
+                </Text>
+              </Card>
             ) : null}
 
             <Button
@@ -208,16 +237,17 @@ export default function TransactionDetailScreen() {
               onPress={onDelete}
               loading={deleteTxn.isPending}
               fullWidth
+              leftIcon={<Ionicons name="trash-outline" size={18} color="#fff" />}
             />
           </>
         ) : (
-          <>
+          <Card className="gap-4 p-4">
             <Input
               label={t('quickAdd.amount')}
               value={amount}
               onChangeText={setAmount}
               keyboardType="decimal-pad"
-              hint={`${txn.currency}`}
+              hint={txn.currency}
             />
             <Input
               label={t('quickAdd.description')}
@@ -233,20 +263,9 @@ export default function TransactionDetailScreen() {
               fullWidth
               size="lg"
             />
-          </>
+          </Card>
         )}
       </ScrollView>
     </SafeAreaView>
-  );
-}
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <View>
-      <Text className="text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-        {label}
-      </Text>
-      <Text className="mt-1 text-base text-neutral-900 dark:text-neutral-100">{value}</Text>
-    </View>
   );
 }

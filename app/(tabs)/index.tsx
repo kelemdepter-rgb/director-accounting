@@ -1,57 +1,104 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  SafeAreaView,
-  Text,
-  View,
-} from 'react-native';
+import { FlatList, Pressable, SafeAreaView, Text, View } from 'react-native';
 
-import { QuickAddPicker } from '@/components/QuickAddPicker';
+import { QuickAddFab } from '@/components/QuickAddFab';
 import { QuickAddSheet, type QuickAddMode } from '@/components/QuickAddSheet';
 import { TransactionListItem } from '@/components/TransactionListItem';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { colors } from '@/constants/theme';
 import { useContacts } from '@/hooks/useContacts';
 import { useSummary } from '@/hooks/useSummary';
 import { useTransactions } from '@/hooks/useTransactions';
+import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { ContactRow } from '@/types/database';
 import { formatMoney } from '@/utils/currency';
+import { formatDate } from '@/utils/date';
+import { currentGreetingKey } from '@/utils/greeting';
 
-function SummaryRow({
-  label,
-  totals,
-  emptyText,
-  toneClass,
-}: {
+interface SummaryCardProps {
   label: string;
   totals: Record<string, number>;
-  emptyText: string;
   toneClass: string;
-}) {
-  const entries = Object.entries(totals).filter(([, v]) => v > 0);
+  iconBg: string;
+  iconName: keyof typeof Ionicons.glyphMap;
+  emptyText?: string;
+  signed?: boolean;
+}
+
+function SummaryCard({
+  label,
+  totals,
+  toneClass,
+  iconBg,
+  iconName,
+  emptyText,
+  signed = false,
+}: SummaryCardProps) {
+  const entries = Object.entries(totals).filter(([, v]) => v !== 0);
   return (
-    <Card className="flex-1" accent="none">
-      <Text className="text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-        {label}
-      </Text>
+    <Card elevation="card" className="w-64 p-5">
+      <View className="flex-row items-center justify-between">
+        <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+          {label}
+        </Text>
+        <View
+          className={`h-9 w-9 items-center justify-center rounded-full ${iconBg}`}
+          accessibilityElementsHidden
+        >
+          <Ionicons name={iconName} size={18} color="#fff" />
+        </View>
+      </View>
       {entries.length === 0 ? (
-        <Text className="mt-1 text-base text-neutral-400 dark:text-neutral-500">
-          {emptyText}
+        <Text className="mt-3 text-2xl font-semibold text-ink-300 dark:text-ink-600">
+          {emptyText ?? '—'}
         </Text>
       ) : (
-        <View className="mt-1 gap-0.5">
-          {entries.map(([currency, total]) => (
-            <Text key={currency} className={`text-xl font-bold ${toneClass}`}>
-              {formatMoney(total, currency)}
-            </Text>
-          ))}
+        <View className="mt-3 gap-1">
+          {entries.map(([currency, total]) => {
+            if (signed) {
+              const positive = total > 0;
+              const cls = positive ? 'text-income-600' : 'text-payable-600';
+              return (
+                <Text
+                  key={currency}
+                  className={`text-2xl font-bold ${cls}`}
+                  style={{ fontVariant: ['tabular-nums'] }}
+                >
+                  {positive ? '+' : '−'}
+                  {formatMoney(Math.abs(total), currency)}
+                </Text>
+              );
+            }
+            return (
+              <Text
+                key={currency}
+                className={`text-2xl font-bold ${toneClass}`}
+                style={{ fontVariant: ['tabular-nums'] }}
+              >
+                {formatMoney(total, currency)}
+              </Text>
+            );
+          })}
         </View>
       )}
+    </Card>
+  );
+}
+
+function SummarySkeleton() {
+  return (
+    <Card elevation="card" className="w-64 p-5">
+      <View className="flex-row items-center justify-between">
+        <Skeleton width={80} height={12} />
+        <Skeleton width={36} height={36} radius={18} />
+      </View>
+      <Skeleton width={140} height={28} style={{ marginTop: 16 }} />
     </Card>
   );
 }
@@ -59,9 +106,10 @@ function SummaryRow({
 export default function HomeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const user = useAuthStore((s) => s.user);
   const defaultCurrency = useSettingsStore((s) => s.defaultCurrency);
   const summaryQ = useSummary();
-  const txnQ = useTransactions({ limit: 25 });
+  const txnQ = useTransactions({ limit: 10 });
   const contactsQ = useContacts({ enabled: true });
 
   const contactById = useMemo(() => {
@@ -70,17 +118,9 @@ export default function HomeScreen() {
     return map;
   }, [contactsQ.data]);
 
-  const [pickerOpen, setPickerOpen] = useState(false);
   const [sheetMode, setSheetMode] = useState<QuickAddMode | null>(null);
 
-  const openPicker = () => setPickerOpen(true);
-  const onPick = (mode: QuickAddMode) => {
-    setPickerOpen(false);
-    setSheetMode(mode);
-  };
-  const closeSheet = () => setSheetMode(null);
-
-  const outstandingTotals = useMemo(() => {
+  const outstandingNet = useMemo(() => {
     const out: Record<string, number> = {};
     for (const [currency, totals] of Object.entries(summaryQ.data?.outstanding ?? {})) {
       const value = totals.receivable - totals.payable;
@@ -89,19 +129,32 @@ export default function HomeScreen() {
     return out;
   }, [summaryQ.data]);
 
+  const greeting = t(currentGreetingKey());
+  const displayName =
+    user?.user_metadata?.full_name ??
+    (user?.email ? user.email.split('@')[0] : '') ??
+    '';
+  const today = formatDate(new Date(), 'long');
+
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-neutral-950">
+    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
       <FlatList
         data={txnQ.data ?? []}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TransactionListItem
-            transaction={item}
-            contactName={item.contact_id ? contactById.get(item.contact_id)?.full_name : null}
-            onPress={(tx) =>
-              router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
-            }
-          />
+          <View className="px-5">
+            <View className="mb-2 overflow-hidden rounded-2xl border border-ink-100 bg-white dark:border-ink-700 dark:bg-ink-800">
+              <TransactionListItem
+                transaction={item}
+                contactName={
+                  item.contact_id ? contactById.get(item.contact_id)?.full_name : null
+                }
+                onPress={(tx) =>
+                  router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
+                }
+              />
+            </View>
+          </View>
         )}
         contentContainerClassName="pb-32"
         refreshing={txnQ.isFetching && !txnQ.isLoading}
@@ -110,100 +163,107 @@ export default function HomeScreen() {
           void summaryQ.refetch();
         }}
         ListHeaderComponent={
-          <View className="gap-4 px-5 py-5">
-            <View className="flex-row gap-3">
-              <SummaryRow
-                label={t('home.todayIncome')}
-                totals={summaryQ.data?.todayIncome ?? {}}
-                emptyText="—"
-                toneClass="text-income"
-              />
-              <SummaryRow
-                label={t('home.todayExpense')}
-                totals={summaryQ.data?.todayExpense ?? {}}
-                emptyText="—"
-                toneClass="text-expense"
-              />
+          <View className="gap-5 px-5 py-6">
+            {/* Greeting */}
+            <View>
+              <Text className="text-sm text-ink-500 dark:text-ink-400">{today}</Text>
+              <Text className="mt-1 text-2xl font-bold text-ink-900 dark:text-ink-50">
+                {greeting}
+                {displayName ? `, ${displayName}` : ''} 👋
+              </Text>
             </View>
 
-            <Card accent="brand">
-              <Text className="text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                {t('home.outstandingDebt')}
-              </Text>
-              {Object.keys(outstandingTotals).length === 0 ? (
-                <Text className="mt-1 text-base text-neutral-400 dark:text-neutral-500">
-                  —
-                </Text>
-              ) : (
-                <View className="mt-1 gap-0.5">
-                  {Object.entries(outstandingTotals).map(([currency, net]) => {
-                    const positive = net > 0;
-                    return (
-                      <Text
-                        key={currency}
-                        className={`text-xl font-bold ${positive ? 'text-receivable' : 'text-payable'}`}
-                      >
-                        {positive ? '+' : '−'}
-                        {formatMoney(Math.abs(net), currency)}
-                      </Text>
-                    );
-                  })}
-                  <Text className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                    {t('home.outstandingHint')}
-                  </Text>
-                </View>
-              )}
-            </Card>
+            {/* Summary cards — horizontally scrollable on phones, wrap on wide screens. */}
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item) => item}
+              data={['income', 'expense', 'debt']}
+              ItemSeparatorComponent={() => <View className="w-3" />}
+              renderItem={({ item }) => {
+                if (summaryQ.isLoading) return <SummarySkeleton />;
+                if (item === 'income') {
+                  return (
+                    <SummaryCard
+                      label={t('home.todayIncome')}
+                      totals={summaryQ.data?.todayIncome ?? {}}
+                      toneClass="text-income-600"
+                      iconBg="bg-income-500"
+                      iconName="arrow-up-circle"
+                    />
+                  );
+                }
+                if (item === 'expense') {
+                  return (
+                    <SummaryCard
+                      label={t('home.todayExpense')}
+                      totals={summaryQ.data?.todayExpense ?? {}}
+                      toneClass="text-expense-600"
+                      iconBg="bg-expense-500"
+                      iconName="arrow-down-circle"
+                    />
+                  );
+                }
+                return (
+                  <SummaryCard
+                    label={t('home.outstandingDebt')}
+                    totals={outstandingNet}
+                    toneClass="text-payable-600"
+                    iconBg="bg-payable-500"
+                    iconName="time"
+                    signed
+                  />
+                );
+              }}
+            />
 
+            {/* Recent activity header */}
             <View className="mt-2 flex-row items-center justify-between">
-              <Text className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+              <Text className="text-base font-bold text-ink-900 dark:text-ink-50">
                 {t('home.recentTransactions')}
               </Text>
               <Pressable
                 accessibilityRole="link"
                 onPress={() => router.push('/transactions')}
+                className="flex-row items-center gap-0.5"
               >
-                <Text className="text-sm font-medium text-brand-600 dark:text-brand-300">
+                <Text className="text-sm font-semibold text-brand-500 dark:text-brand-200">
                   {t('home.seeAll')}
                 </Text>
+                <Ionicons name="chevron-forward" size={16} color={colors.brand[500]} />
               </Pressable>
             </View>
           </View>
         }
         ListEmptyComponent={
-          summaryQ.isLoading || txnQ.isLoading ? (
-            <View className="items-center justify-center py-10">
-              <ActivityIndicator color="#4f46e5" />
+          txnQ.isLoading ? (
+            <View className="gap-2 px-5">
+              {[0, 1, 2].map((i) => (
+                <View
+                  key={i}
+                  className="rounded-2xl border border-ink-100 bg-white p-4 dark:border-ink-700 dark:bg-ink-800"
+                >
+                  <Skeleton width="70%" height={14} />
+                  <Skeleton width="40%" height={12} style={{ marginTop: 8 }} />
+                </View>
+              ))}
             </View>
           ) : (
             <EmptyState
               icon="🧾"
               title={t('home.noTransactionsYet')}
               description={t('home.noTransactionsHint')}
-              action={{ label: t('quickAdd.openPicker'), onPress: openPicker }}
             />
           )
         }
       />
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={t('quickAdd.openPicker')}
-        onPress={openPicker}
-        className="absolute bottom-6 right-6 h-14 w-14 items-center justify-center rounded-full bg-brand-600 shadow-lg active:bg-brand-700"
-      >
-        <Text className="text-2xl text-white">＋</Text>
-      </Pressable>
+      <QuickAddFab onPick={(mode) => setSheetMode(mode)} />
 
-      <QuickAddPicker
-        visible={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        onPick={onPick}
-      />
       <QuickAddSheet
         visible={!!sheetMode}
         mode={sheetMode}
-        onClose={closeSheet}
+        onClose={() => setSheetMode(null)}
         defaultCurrency={defaultCurrency}
       />
     </SafeAreaView>

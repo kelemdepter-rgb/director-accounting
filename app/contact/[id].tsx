@@ -1,15 +1,27 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Linking,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 
 import { ContactForm } from '@/components/ContactForm';
 import { DebtCard } from '@/components/DebtCard';
-import { QuickAddPicker } from '@/components/QuickAddPicker';
+import { QuickAddFab } from '@/components/QuickAddFab';
 import { QuickAddSheet, type QuickAddMode } from '@/components/QuickAddSheet';
 import { TransactionListItem } from '@/components/TransactionListItem';
+import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { avatarColor, colors } from '@/constants/theme';
 import { useContact, useDeleteContact, useUpdateContact } from '@/hooks/useContacts';
 import { useDebts } from '@/hooks/useDebts';
 import { useTransactions } from '@/hooks/useTransactions';
@@ -32,15 +44,10 @@ export default function ContactDetailScreen() {
   const txnQ = useTransactions({ contactId: id, limit: 50 });
 
   const [editing, setEditing] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
   const [sheetMode, setSheetMode] = useState<QuickAddMode | null>(null);
 
   const activeDebts = useMemo(
     () => (debtsQ.data ?? []).filter((d) => d.status === 'active'),
-    [debtsQ.data],
-  );
-  const settledDebts = useMemo(
-    () => (debtsQ.data ?? []).filter((d) => d.status === 'settled'),
     [debtsQ.data],
   );
   const balances = useMemo(
@@ -50,15 +57,15 @@ export default function ContactDetailScreen() {
 
   if (contactQ.isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white dark:bg-neutral-950">
-        <ActivityIndicator size="large" color="#4f46e5" />
+      <SafeAreaView className="flex-1 items-center justify-center bg-ink-50 dark:bg-ink-950">
+        <ActivityIndicator size="large" color={colors.brand[500]} />
       </SafeAreaView>
     );
   }
 
   if (contactQ.isError || !contactQ.data) {
     return (
-      <SafeAreaView className="flex-1 bg-white dark:bg-neutral-950">
+      <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
         <EmptyState
           icon="❓"
           title={t('contacts.notFound')}
@@ -69,6 +76,7 @@ export default function ContactDetailScreen() {
   }
 
   const contact = contactQ.data;
+  const heroColor = avatarColor(contact.full_name);
 
   const onDelete = async () => {
     const ok = await confirm({
@@ -87,126 +95,170 @@ export default function ContactDetailScreen() {
     }
   };
 
+  const callPhone = () => {
+    if (contact.phone_number) {
+      void Linking.openURL(`tel:${contact.phone_number}`).catch(() => undefined);
+    }
+  };
+
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-neutral-950">
-      <View className="flex-row items-center justify-between border-b border-neutral-200 px-5 py-3 dark:border-neutral-800">
-        <Button
-          label={t('common.cancel')}
-          variant="ghost"
-          size="sm"
-          onPress={() => (editing ? setEditing(false) : router.back())}
-        />
-        <Text
-          accessibilityRole="header"
-          className="flex-1 px-2 text-center text-lg font-semibold text-neutral-900 dark:text-neutral-50"
-          numberOfLines={1}
-        >
-          {contact.full_name}
-        </Text>
-        {editing ? (
-          <View className="w-16" />
-        ) : (
-          <Button
-            label={t('contacts.edit')}
-            variant="ghost"
-            size="sm"
-            onPress={() => setEditing(true)}
-          />
-        )}
+    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
+      {/* Hero header */}
+      <View className="px-5 py-3" style={{ backgroundColor: heroColor }}>
+        <View className="flex-row items-center justify-between">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('common.cancel')}
+            onPress={() => (editing ? setEditing(false) : router.back())}
+            className="h-10 w-10 items-center justify-center rounded-full bg-white/15"
+          >
+            <Ionicons name="chevron-back" size={20} color="#fff" />
+          </Pressable>
+          {!editing ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('contacts.edit')}
+              onPress={() => setEditing(true)}
+              className="rounded-full bg-white/15 px-4 py-2"
+            >
+              <Text className="text-sm font-semibold text-white">
+                {t('contacts.edit')}
+              </Text>
+            </Pressable>
+          ) : (
+            <View className="w-16" />
+          )}
+        </View>
+
+        <View className="items-center pb-6 pt-2">
+          <View className="rounded-full bg-white/20 p-1">
+            <Avatar name={contact.full_name} size={72} color="#FFFFFF22" />
+          </View>
+          <Text className="mt-3 text-2xl font-bold text-white">{contact.full_name}</Text>
+          {contact.occupation ? (
+            <Text className="mt-1 text-sm text-white/80">{contact.occupation}</Text>
+          ) : null}
+          {contact.phone_number ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('contacts.phoneNumber')}
+              onPress={callPhone}
+              className="mt-3 flex-row items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5"
+            >
+              <Ionicons name="call" size={14} color="#fff" />
+              <Text
+                className="text-sm font-medium text-white"
+                style={{ fontVariant: ['tabular-nums'] }}
+              >
+                {contact.phone_number}
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
       </View>
 
-      <ScrollView contentContainerClassName="px-5 py-6 gap-6" keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerClassName="px-5 py-5 gap-5 pb-32"
+        keyboardShouldPersistTaps="handled"
+      >
         {editing ? (
-          <ContactForm
-            initialValues={{
-              full_name: contact.full_name,
-              phone_number: contact.phone_number ?? '',
-              occupation: contact.occupation ?? '',
-              notes: contact.notes ?? '',
-            }}
-            submitLabel={t('common.save')}
-            submitting={updateContact.isPending}
-            onCancel={() => setEditing(false)}
-            onSubmit={async (rawValues) => {
-              const parsed = contactSchema.safeParse(rawValues);
-              if (!parsed.success) return;
-              try {
-                await updateContact.mutateAsync({
-                  id: contact.id,
-                  patch: {
-                    full_name: parsed.data.full_name,
-                    phone_number: parsed.data.phone_number,
-                    occupation: parsed.data.occupation,
-                    notes: parsed.data.notes,
-                  },
-                });
-                setEditing(false);
-              } catch (err) {
-                notify(t('app.name'), (err as Error).message ?? t('errors.unknown'));
-              }
-            }}
-          />
+          <Card className="p-4">
+            <ContactForm
+              initialValues={{
+                full_name: contact.full_name,
+                phone_number: contact.phone_number ?? '',
+                occupation: contact.occupation ?? '',
+                notes: contact.notes ?? '',
+              }}
+              submitLabel={t('common.save')}
+              submitting={updateContact.isPending}
+              onCancel={() => setEditing(false)}
+              onSubmit={async (rawValues) => {
+                const parsed = contactSchema.safeParse(rawValues);
+                if (!parsed.success) return;
+                try {
+                  await updateContact.mutateAsync({
+                    id: contact.id,
+                    patch: {
+                      full_name: parsed.data.full_name,
+                      phone_number: parsed.data.phone_number,
+                      occupation: parsed.data.occupation,
+                      notes: parsed.data.notes,
+                    },
+                  });
+                  setEditing(false);
+                } catch (err) {
+                  notify(t('app.name'), (err as Error).message ?? t('errors.unknown'));
+                }
+              }}
+            />
+          </Card>
         ) : (
           <>
-            <View className="gap-3">
-              {contact.phone_number ? (
-                <Field label={t('contacts.phoneNumber')} value={contact.phone_number} />
-              ) : null}
-              {contact.occupation ? (
-                <Field label={t('contacts.occupation')} value={contact.occupation} />
-              ) : null}
-              {contact.notes ? (
-                <Field label={t('contacts.notes')} value={contact.notes} />
-              ) : null}
-              {!contact.phone_number && !contact.occupation && !contact.notes ? (
-                <Text className="text-base text-neutral-500 dark:text-neutral-400">
-                  {t('contacts.noExtraInfo')}
-                </Text>
-              ) : null}
-            </View>
-
-            <View className="rounded-2xl bg-neutral-50 p-4 dark:bg-neutral-900">
-              <Text className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            {/* Balance summary per currency */}
+            <View>
+              <Text className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
                 {t('contacts.balanceHeading')}
               </Text>
               {Object.keys(balances).length === 0 ? (
-                <Text className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
-                  {t('contacts.noActiveDebts')}
-                </Text>
+                <Card className="p-4">
+                  <Text className="text-sm text-ink-500 dark:text-ink-400">
+                    {t('contacts.noActiveDebts')}
+                  </Text>
+                </Card>
               ) : (
-                <View className="mt-2 gap-1">
+                <View className="gap-2">
                   {Object.entries(balances).map(([currency, totals]) => (
-                    <View key={currency} className="flex-row items-center justify-between">
-                      <Text className="text-xs text-neutral-500 dark:text-neutral-400">
+                    <Card key={currency} className="flex-row items-center justify-between p-4">
+                      <Text className="text-xs font-bold text-ink-500 dark:text-ink-400">
                         {currency}
                       </Text>
                       <View className="flex-row gap-3">
                         {totals.receivable > 0 ? (
-                          <Text className="text-sm font-semibold text-receivable">
-                            ↗ {formatMoney(totals.receivable, currency)}
-                          </Text>
+                          <View className="flex-row items-center gap-1">
+                            <Ionicons name="arrow-up-circle" size={14} color={colors.income} />
+                            <Text
+                              className="text-sm font-bold text-income-600"
+                              style={{ fontVariant: ['tabular-nums'] }}
+                            >
+                              {formatMoney(totals.receivable, currency)}
+                            </Text>
+                          </View>
                         ) : null}
                         {totals.payable > 0 ? (
-                          <Text className="text-sm font-semibold text-payable">
-                            ↙ {formatMoney(totals.payable, currency)}
-                          </Text>
+                          <View className="flex-row items-center gap-1">
+                            <Ionicons name="arrow-down-circle" size={14} color={colors.payable} />
+                            <Text
+                              className="text-sm font-bold text-payable-600"
+                              style={{ fontVariant: ['tabular-nums'] }}
+                            >
+                              {formatMoney(totals.payable, currency)}
+                            </Text>
+                          </View>
                         ) : null}
                       </View>
-                    </View>
+                    </Card>
                   ))}
                 </View>
               )}
             </View>
 
-            <Button
-              label={t('quickAdd.openPicker')}
-              onPress={() => setPickerOpen(true)}
-              fullWidth
-            />
+            {/* Notes if present */}
+            {contact.notes ? (
+              <Card className="p-4">
+                <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+                  {t('contacts.notes')}
+                </Text>
+                <Text className="mt-2 text-base text-ink-700 dark:text-ink-200">
+                  {contact.notes}
+                </Text>
+              </Card>
+            ) : null}
 
+            {/* Active debts */}
             {activeDebts.length > 0 ? (
-              <View className="gap-3">
-                <Text className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+              <View className="gap-2">
+                <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
                   {t('debts.activeHeading')}
                 </Text>
                 {activeDebts.map((d) => (
@@ -222,44 +274,36 @@ export default function ContactDetailScreen() {
               </View>
             ) : null}
 
-            {settledDebts.length > 0 ? (
-              <View className="gap-3">
-                <Text className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                  {t('debts.settledHeading')}
-                </Text>
-                {settledDebts.map((d) => (
-                  <DebtCard
-                    key={d.id}
-                    debt={d}
-                    contactName={contact.full_name}
-                    onPress={(debt) =>
-                      router.push({ pathname: '/debt/[id]', params: { id: debt.id } })
-                    }
-                  />
-                ))}
-              </View>
-            ) : null}
-
-            <View className="gap-3">
-              <Text className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            {/* Transaction history */}
+            <View>
+              <Text className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
                 {t('contacts.transactionHistory')}
               </Text>
               {txnQ.isLoading ? (
-                <ActivityIndicator color="#4f46e5" />
+                <ActivityIndicator color={colors.brand[500]} />
               ) : (txnQ.data ?? []).length === 0 ? (
-                <Text className="text-sm text-neutral-500 dark:text-neutral-400">
-                  {t('contacts.noTransactions')}
-                </Text>
+                <Card className="p-4">
+                  <Text className="text-sm text-ink-500 dark:text-ink-400">
+                    {t('contacts.noTransactions')}
+                  </Text>
+                </Card>
               ) : (
-                <View className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
-                  {(txnQ.data ?? []).map((tx) => (
-                    <TransactionListItem
-                      key={tx.id}
-                      transaction={tx}
-                      contactName={contact.full_name}
-                    />
+                <Card className="overflow-hidden p-0">
+                  {(txnQ.data ?? []).map((tx, idx) => (
+                    <View key={tx.id}>
+                      {idx > 0 ? (
+                        <View className="h-px bg-ink-100 dark:bg-ink-700" />
+                      ) : null}
+                      <TransactionListItem
+                        transaction={tx}
+                        contactName={contact.full_name}
+                        onPress={(t2) =>
+                          router.push({ pathname: '/transaction/[id]', params: { id: t2.id } })
+                        }
+                      />
+                    </View>
                   ))}
-                </View>
+                </Card>
               )}
             </View>
 
@@ -269,19 +313,13 @@ export default function ContactDetailScreen() {
               onPress={onDelete}
               loading={deleteContact.isPending}
               fullWidth
+              leftIcon={<Ionicons name="trash-outline" size={18} color="#fff" />}
             />
           </>
         )}
       </ScrollView>
 
-      <QuickAddPicker
-        visible={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        onPick={(mode) => {
-          setPickerOpen(false);
-          setSheetMode(mode);
-        }}
-      />
+      <QuickAddFab onPick={(mode) => setSheetMode(mode)} />
       <QuickAddSheet
         visible={!!sheetMode}
         mode={sheetMode}
@@ -292,15 +330,3 @@ export default function ContactDetailScreen() {
     </SafeAreaView>
   );
 }
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <View>
-      <Text className="text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-        {label}
-      </Text>
-      <Text className="mt-1 text-base text-neutral-900 dark:text-neutral-100">{value}</Text>
-    </View>
-  );
-}
-

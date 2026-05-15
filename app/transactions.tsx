@@ -1,8 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   SafeAreaView,
@@ -12,8 +12,9 @@ import {
 } from 'react-native';
 
 import { TransactionListItem } from '@/components/TransactionListItem';
-import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { colors } from '@/constants/theme';
 import { useContacts } from '@/hooks/useContacts';
 import { useTransactions } from '@/hooks/useTransactions';
 import { notify } from '@/lib/confirm';
@@ -22,6 +23,12 @@ import { downloadCsv, toCsv } from '@/utils/csv';
 import { formatDate } from '@/utils/date';
 
 type Filter = 'all' | TransactionType;
+
+const FILTERS: { value: Filter; key: string }[] = [
+  { value: 'all', key: 'transactions.filterAll' },
+  { value: 'income', key: 'quickAdd.income' },
+  { value: 'expense', key: 'quickAdd.expense' },
+];
 
 export default function TransactionsScreen() {
   const { t } = useTranslation();
@@ -76,58 +83,68 @@ export default function TransactionsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-neutral-950">
-      <View className="flex-row items-center justify-between border-b border-neutral-200 px-5 py-3 dark:border-neutral-800">
-        <Button
-          label={t('common.cancel')}
-          variant="ghost"
-          size="sm"
+    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
+      {/* Header bar */}
+      <View className="flex-row items-center justify-between bg-white px-4 py-3 dark:bg-ink-900">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('common.cancel')}
           onPress={() => router.back()}
-        />
+          className="h-9 w-9 items-center justify-center rounded-full active:bg-ink-100 dark:active:bg-ink-700"
+        >
+          <Ionicons name="chevron-back" size={20} color={colors.ink[700]} />
+        </Pressable>
         <Text
           accessibilityRole="header"
-          className="flex-1 px-2 text-center text-lg font-semibold text-neutral-900 dark:text-neutral-50"
+          className="flex-1 px-2 text-center text-base font-bold text-ink-900 dark:text-ink-50"
         >
           {t('transactions.title')}
         </Text>
-        <Button
-          label={t('transactions.export')}
-          variant="ghost"
-          size="sm"
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('transactions.export')}
           onPress={onExport}
-        />
+          className="h-9 w-9 items-center justify-center rounded-full active:bg-ink-100 dark:active:bg-ink-700"
+        >
+          <Ionicons name="download-outline" size={20} color={colors.brand[500]} />
+        </Pressable>
       </View>
 
-      <View className="gap-3 px-5 pt-3">
-        <TextInput
-          accessibilityLabel={t('transactions.searchPlaceholder')}
-          placeholder={t('transactions.searchPlaceholder')}
-          placeholderTextColor="#9ca3af"
-          value={search}
-          onChangeText={setSearch}
-          autoCapitalize="none"
-          className="h-11 rounded-lg border border-neutral-300 bg-white px-3 text-base text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
-        />
+      {/* Search + filters */}
+      <View className="gap-3 px-5 py-3">
+        <View className="flex-row items-center gap-2 rounded-2xl border border-ink-200 bg-white px-3 dark:border-ink-700 dark:bg-ink-800">
+          <Ionicons name="search" size={18} color={colors.ink[400]} />
+          <TextInput
+            accessibilityLabel={t('transactions.searchPlaceholder')}
+            placeholder={t('transactions.searchPlaceholder')}
+            placeholderTextColor={colors.ink[400]}
+            value={search}
+            onChangeText={setSearch}
+            autoCapitalize="none"
+            className="h-11 flex-1 text-base text-ink-900 dark:text-ink-50"
+          />
+          {search ? (
+            <Pressable accessibilityRole="button" onPress={() => setSearch('')}>
+              <Ionicons name="close-circle" size={18} color={colors.ink[400]} />
+            </Pressable>
+          ) : null}
+        </View>
 
-        <View className="flex-row gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800">
-          {(['all', 'income', 'expense'] as const).map((option) => {
-            const active = option === filter;
+        <View className="flex-row gap-1 rounded-xl bg-ink-100 p-1 dark:bg-ink-800">
+          {FILTERS.map((option) => {
+            const active = option.value === filter;
             return (
               <Pressable
-                key={option}
+                key={option.value}
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
-                onPress={() => setFilter(option)}
-                className={`flex-1 items-center rounded-md px-3 py-2 ${active ? 'bg-white shadow-sm dark:bg-neutral-700' : ''}`}
+                onPress={() => setFilter(option.value)}
+                className={`flex-1 items-center rounded-lg px-3 py-2 ${active ? 'bg-white shadow-sm dark:bg-ink-700' : ''}`}
               >
                 <Text
-                  className={`text-sm ${active ? 'font-semibold text-neutral-900 dark:text-neutral-50' : 'text-neutral-600 dark:text-neutral-300'}`}
+                  className={`text-sm ${active ? 'font-semibold text-ink-900 dark:text-ink-50' : 'text-ink-500 dark:text-ink-400'}`}
                 >
-                  {option === 'all'
-                    ? t('transactions.filterAll')
-                    : option === 'income'
-                      ? t('debts.receivable')
-                      : t('quickAdd.expense')}
+                  {t(option.key)}
                 </Text>
               </Pressable>
             );
@@ -136,8 +153,16 @@ export default function TransactionsScreen() {
       </View>
 
       {txnQ.isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#4f46e5" />
+        <View className="gap-2 px-5">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <View
+              key={i}
+              className="rounded-2xl border border-ink-100 bg-white p-4 dark:border-ink-700 dark:bg-ink-800"
+            >
+              <Skeleton width="70%" height={14} />
+              <Skeleton width="40%" height={11} style={{ marginTop: 8 }} />
+            </View>
+          ))}
         </View>
       ) : txnQ.isError ? (
         <EmptyState
@@ -164,13 +189,19 @@ export default function TransactionsScreen() {
           data={filtered}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <TransactionListItem
-              transaction={item}
-              contactName={item.contact_id ? contactById.get(item.contact_id)?.full_name : null}
-              onPress={(t2) =>
-                router.push({ pathname: '/transaction/[id]', params: { id: t2.id } })
-              }
-            />
+            <View className="px-5">
+              <View className="mb-2 overflow-hidden rounded-2xl border border-ink-100 bg-white dark:border-ink-700 dark:bg-ink-800">
+                <TransactionListItem
+                  transaction={item}
+                  contactName={
+                    item.contact_id ? contactById.get(item.contact_id)?.full_name : null
+                  }
+                  onPress={(tx) =>
+                    router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
+                  }
+                />
+              </View>
+            </View>
           )}
           contentContainerClassName="pb-10"
           refreshing={txnQ.isFetching && !txnQ.isLoading}

@@ -1,8 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   SafeAreaView,
@@ -11,8 +11,11 @@ import {
   View,
 } from 'react-native';
 
+import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { colors } from '@/constants/theme';
 import { useContacts } from '@/hooks/useContacts';
 import type { ContactRow } from '@/types/database';
 
@@ -23,25 +26,39 @@ function ContactRowItem({
   contact: ContactRow;
   onPress: (c: ContactRow) => void;
 }) {
+  const subtitle = [contact.occupation, contact.phone_number].filter(Boolean).join(' · ');
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${contact.full_name}${contact.phone_number ? `, ${contact.phone_number}` : ''}`}
       onPress={() => onPress(contact)}
-      className="flex-row items-center justify-between border-b border-neutral-100 px-5 py-3 active:bg-neutral-50 dark:border-neutral-800 dark:active:bg-neutral-800"
+      className="mx-5 mb-2 flex-row items-center gap-3 rounded-2xl border border-ink-100 bg-white p-3 active:bg-ink-50 dark:border-ink-700 dark:bg-ink-800 dark:active:bg-ink-700"
     >
-      <View className="flex-1 pr-3">
-        <Text className="text-base font-medium text-neutral-900 dark:text-neutral-100">
+      <Avatar name={contact.full_name} size={44} />
+      <View className="flex-1">
+        <Text className="text-base font-semibold text-ink-900 dark:text-ink-50">
           {contact.full_name}
         </Text>
-        {contact.phone_number || contact.occupation ? (
-          <Text className="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
-            {[contact.phone_number, contact.occupation].filter(Boolean).join(' · ')}
+        {subtitle ? (
+          <Text className="mt-0.5 text-xs text-ink-500 dark:text-ink-400" numberOfLines={1}>
+            {subtitle}
           </Text>
         ) : null}
       </View>
-      <Text className="text-neutral-400">›</Text>
+      <Ionicons name="chevron-forward" size={18} color={colors.ink[400]} />
     </Pressable>
+  );
+}
+
+function ContactSkeleton() {
+  return (
+    <View className="mx-5 mb-2 flex-row items-center gap-3 rounded-2xl border border-ink-100 bg-white p-3 dark:border-ink-700 dark:bg-ink-800">
+      <Skeleton width={44} height={44} radius={22} />
+      <View className="flex-1 gap-1.5">
+        <Skeleton width="60%" height={14} />
+        <Skeleton width="40%" height={11} />
+      </View>
+    </View>
   );
 }
 
@@ -52,25 +69,36 @@ export default function ContactsTab() {
   const { data, isLoading, isError, refetch, isFetching } = useContacts({ search });
 
   const onAdd = () => router.push('/contact/new');
-  const onOpenContact = (c: ContactRow) => router.push({ pathname: '/contact/[id]', params: { id: c.id } });
+  const onOpenContact = (c: ContactRow) =>
+    router.push({ pathname: '/contact/[id]', params: { id: c.id } });
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-neutral-950">
+    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
       <View className="px-5 pb-3 pt-2">
-        <TextInput
-          accessibilityLabel={t('contacts.searchPlaceholder')}
-          placeholder={t('contacts.searchPlaceholder')}
-          placeholderTextColor="#9ca3af"
-          value={search}
-          onChangeText={setSearch}
-          autoCapitalize="none"
-          className="h-11 rounded-lg border border-neutral-300 bg-white px-3 text-base text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
-        />
+        <View className="flex-row items-center gap-2 rounded-2xl border border-ink-200 bg-white px-3 dark:border-ink-700 dark:bg-ink-800">
+          <Ionicons name="search" size={18} color={colors.ink[400]} />
+          <TextInput
+            accessibilityLabel={t('contacts.searchPlaceholder')}
+            placeholder={t('contacts.searchPlaceholder')}
+            placeholderTextColor={colors.ink[400]}
+            value={search}
+            onChangeText={setSearch}
+            autoCapitalize="none"
+            className="h-11 flex-1 text-base text-ink-900 dark:text-ink-50"
+          />
+          {search ? (
+            <Pressable accessibilityRole="button" onPress={() => setSearch('')}>
+              <Ionicons name="close-circle" size={18} color={colors.ink[400]} />
+            </Pressable>
+          ) : null}
+        </View>
       </View>
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#4f46e5" />
+        <View className="mt-3">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <ContactSkeleton key={i} />
+          ))}
         </View>
       ) : isError ? (
         <EmptyState
@@ -92,6 +120,7 @@ export default function ContactsTab() {
           renderItem={({ item }) => <ContactRowItem contact={item} onPress={onOpenContact} />}
           refreshing={isFetching && !isLoading}
           onRefresh={() => void refetch()}
+          contentContainerClassName="pb-32 pt-1"
           initialNumToRender={20}
         />
       )}
@@ -102,6 +131,7 @@ export default function ContactsTab() {
           onPress={onAdd}
           accessibilityLabel={t('contacts.addNew')}
           size="lg"
+          leftIcon={<Ionicons name="person-add-outline" size={18} color="#fff" />}
         />
       </View>
     </SafeAreaView>

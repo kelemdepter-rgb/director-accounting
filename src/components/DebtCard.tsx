@@ -41,7 +41,7 @@ function DebtCardImpl({ debt, contactName, onPress }: DebtCardProps) {
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center gap-2">
           <Ionicons name={sideIcon} size={16} color={sideTint} />
-          <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+          <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-300">
             {isReceivable ? t('debts.receivable') : t('debts.payable')}
           </Text>
         </View>
@@ -53,7 +53,7 @@ function DebtCardImpl({ debt, contactName, onPress }: DebtCardProps) {
             </Text>
           </View>
         ) : (
-          <Text className="text-xs text-ink-500 dark:text-ink-400">
+          <Text className="text-xs text-ink-500 dark:text-ink-300">
             {formatDate(debt.created_at, 'short')}
           </Text>
         )}
@@ -84,7 +84,7 @@ function DebtCardImpl({ debt, contactName, onPress }: DebtCardProps) {
               style={{ width: `${progressPercent}%` }}
             />
           </View>
-          <Text className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">
+          <Text className="mt-1.5 text-xs text-ink-500 dark:text-ink-300">
             {t('debts.paidOf', {
               paid: formatMoney(debt.paid_amount, debt.currency),
               principal: formatMoney(debt.principal_amount, debt.currency),
@@ -95,7 +95,7 @@ function DebtCardImpl({ debt, contactName, onPress }: DebtCardProps) {
 
       {debt.description ? (
         <Text
-          className="text-xs text-ink-500 dark:text-ink-400"
+          className="text-xs text-ink-500 dark:text-ink-300"
           numberOfLines={2}
         >
           {debt.description}

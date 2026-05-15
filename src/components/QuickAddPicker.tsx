@@ -82,7 +82,7 @@ export function QuickAddPicker({ visible, onClose, onPick }: QuickAddPickerProps
               <Text className="text-base font-semibold text-ink-900 dark:text-ink-50">
                 {t(choice.titleKey)}
               </Text>
-              <Text className="text-xs text-ink-500 dark:text-ink-400">
+              <Text className="text-xs text-ink-500 dark:text-ink-300">
                 {t(choice.subtitleKey)}
               </Text>
             </View>

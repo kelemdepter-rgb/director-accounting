@@ -235,7 +235,7 @@ export default function DebtDetailScreen() {
 
             {debt.description ? (
               <Card className="p-4">
-                <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+                <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-300">
                   {t('quickAdd.description')}
                 </Text>
                 <Text className="mt-2 text-base text-ink-700 dark:text-ink-200">
@@ -244,7 +244,7 @@ export default function DebtDetailScreen() {
               </Card>
             ) : null}
 
-            <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+            <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-300">
               {t('debts.payments')}
             </Text>
           </View>
@@ -257,7 +257,7 @@ export default function DebtDetailScreen() {
           ) : (
             <View className="px-5">
               <Card className="p-4">
-                <Text className="text-sm text-ink-500 dark:text-ink-400">
+                <Text className="text-sm text-ink-500 dark:text-ink-300">
                   {t('debts.noPaymentsYet')}
                 </Text>
               </Card>
@@ -338,7 +338,7 @@ function PaymentRow({ payment, currency }: { payment: DebtPaymentRow; currency: 
           {formatDate(payment.paid_at, 'long')}
         </Text>
         {payment.note ? (
-          <Text className="mt-0.5 text-xs text-ink-500 dark:text-ink-400">
+          <Text className="mt-0.5 text-xs text-ink-500 dark:text-ink-300">
             {payment.note}
           </Text>
         ) : null}

@@ -77,7 +77,7 @@ export function AuthScaffold({ title, subtitle, children }: AuthScaffoldProps) {
           >
             {title}
           </Text>
-          <Text className="mt-2 text-base leading-relaxed text-ink-500 dark:text-ink-400">
+          <Text className="mt-2 text-base leading-relaxed text-ink-500 dark:text-ink-300">
             {subtitle}
           </Text>
 

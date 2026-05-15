@@ -197,12 +197,12 @@ export default function ContactDetailScreen() {
           <>
             {/* Balance summary per currency */}
             <View>
-              <Text className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+              <Text className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-300">
                 {t('contacts.balanceHeading')}
               </Text>
               {Object.keys(balances).length === 0 ? (
                 <Card className="p-4">
-                  <Text className="text-sm text-ink-500 dark:text-ink-400">
+                  <Text className="text-sm text-ink-500 dark:text-ink-300">
                     {t('contacts.noActiveDebts')}
                   </Text>
                 </Card>
@@ -210,7 +210,7 @@ export default function ContactDetailScreen() {
                 <View className="gap-2">
                   {Object.entries(balances).map(([currency, totals]) => (
                     <Card key={currency} className="flex-row items-center justify-between p-4">
-                      <Text className="text-xs font-bold text-ink-500 dark:text-ink-400">
+                      <Text className="text-xs font-bold text-ink-500 dark:text-ink-300">
                         {currency}
                       </Text>
                       <View className="flex-row gap-3">
@@ -246,7 +246,7 @@ export default function ContactDetailScreen() {
             {/* Notes if present */}
             {contact.notes ? (
               <Card className="p-4">
-                <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+                <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-300">
                   {t('contacts.notes')}
                 </Text>
                 <Text className="mt-2 text-base text-ink-700 dark:text-ink-200">
@@ -258,7 +258,7 @@ export default function ContactDetailScreen() {
             {/* Active debts */}
             {activeDebts.length > 0 ? (
               <View className="gap-2">
-                <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+                <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-300">
                   {t('debts.activeHeading')}
                 </Text>
                 {activeDebts.map((d) => (
@@ -276,14 +276,14 @@ export default function ContactDetailScreen() {
 
             {/* Transaction history */}
             <View>
-              <Text className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+              <Text className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-300">
                 {t('contacts.transactionHistory')}
               </Text>
               {txnQ.isLoading ? (
                 <ActivityIndicator color={colors.brand[500]} />
               ) : (txnQ.data ?? []).length === 0 ? (
                 <Card className="p-4">
-                  <Text className="text-sm text-ink-500 dark:text-ink-400">
+                  <Text className="text-sm text-ink-500 dark:text-ink-300">
                     {t('contacts.noTransactions')}
                   </Text>
                 </Card>

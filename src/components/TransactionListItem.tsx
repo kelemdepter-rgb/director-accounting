@@ -38,7 +38,7 @@ function TransactionListItemImpl({
         >
           {display}
         </Text>
-        <Text className="mt-0.5 text-xs text-ink-500 dark:text-ink-400" numberOfLines={1}>
+        <Text className="mt-0.5 text-xs text-ink-500 dark:text-ink-300" numberOfLines={1}>
           {formatDate(transaction.occurred_at, 'short')}
           {transaction.description && contactName ? ` · ${transaction.description}` : ''}
         </Text>

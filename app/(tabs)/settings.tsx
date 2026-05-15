@@ -31,7 +31,7 @@ const LANGUAGE_OPTIONS: { value: Language; label: string; flag: string }[] = [
 
 function SectionHeader({ label }: { label: string }) {
   return (
-    <Text className="mb-2 mt-2 px-1 text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+    <Text className="mb-2 mt-2 px-1 text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-300">
       {label}
     </Text>
   );
@@ -63,7 +63,7 @@ function ThemeSegment({
               color={active ? colors.brand[500] : colors.ink[500]}
             />
             <Text
-              className={`text-sm ${active ? 'font-semibold text-ink-900 dark:text-ink-50' : 'text-ink-500 dark:text-ink-400'}`}
+              className={`text-sm ${active ? 'font-semibold text-ink-900 dark:text-ink-50' : 'text-ink-500 dark:text-ink-300'}`}
             >
               {t(option.key)}
             </Text>
@@ -143,7 +143,7 @@ export default function SettingsTab() {
         <Card className="flex-row items-center gap-3 p-4" elevation="card">
           <Avatar name={user?.email ?? ''} size={48} />
           <View className="flex-1">
-            <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+            <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-300">
               {t('settings.account')}
             </Text>
             <Text
@@ -162,7 +162,7 @@ export default function SettingsTab() {
             {t('settings.theme')}
           </Text>
           <ThemeSegment value={theme} onChange={(next) => void setTheme(next)} />
-          <Text className="mt-2 text-xs text-ink-500 dark:text-ink-400">
+          <Text className="mt-2 text-xs text-ink-500 dark:text-ink-300">
             {t('settings.themeHint')}
           </Text>
         </Card>
@@ -189,7 +189,7 @@ export default function SettingsTab() {
             value={defaultCurrency}
             onChange={(next) => void setDefaultCurrency(next)}
           />
-          <Text className="mt-2 text-xs text-ink-500 dark:text-ink-400">
+          <Text className="mt-2 text-xs text-ink-500 dark:text-ink-300">
             {t('settings.defaultCurrencyHint')}
           </Text>
         </Card>

@@ -33,7 +33,7 @@ export function EmptyState({ title, description, action, icon, compact = false }
         {title}
       </Text>
       {description ? (
-        <Text className="mt-2 max-w-md text-center text-sm leading-relaxed text-ink-500 dark:text-ink-400">
+        <Text className="mt-2 max-w-md text-center text-sm leading-relaxed text-ink-500 dark:text-ink-300">
           {description}
         </Text>
       ) : null}

@@ -44,7 +44,7 @@ function SummaryCard({
   return (
     <Card elevation="card" className="w-64 p-5">
       <View className="flex-row items-center justify-between">
-        <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+        <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-300">
           {label}
         </Text>
         <View
@@ -55,7 +55,7 @@ function SummaryCard({
         </View>
       </View>
       {entries.length === 0 ? (
-        <Text className="mt-3 text-2xl font-semibold text-ink-300 dark:text-ink-600">
+        <Text className="mt-3 text-2xl font-semibold text-ink-400 dark:text-ink-400">
           {emptyText ?? '—'}
         </Text>
       ) : (
@@ -166,7 +166,7 @@ export default function HomeScreen() {
           <View className="gap-5 px-5 py-6">
             {/* Greeting */}
             <View>
-              <Text className="text-sm text-ink-500 dark:text-ink-400">{today}</Text>
+              <Text className="text-sm text-ink-500 dark:text-ink-300">{today}</Text>
               <Text className="mt-1 text-2xl font-bold text-ink-900 dark:text-ink-50">
                 {greeting}
                 {displayName ? `, ${displayName}` : ''} 👋

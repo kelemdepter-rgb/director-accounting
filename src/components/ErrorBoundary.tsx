@@ -62,12 +62,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           {this.props.fallbackTitle}
         </Text>
         {this.props.fallbackDescription ? (
-          <Text className="mt-2 max-w-md text-center text-sm text-ink-600 dark:text-ink-400">
+          <Text className="mt-2 max-w-md text-center text-sm text-ink-600 dark:text-ink-300">
             {this.props.fallbackDescription}
           </Text>
         ) : null}
         {__DEV__ && this.state.error ? (
-          <Text className="mt-4 max-w-md text-center font-mono text-xs text-ink-500 dark:text-ink-400">
+          <Text className="mt-4 max-w-md text-center font-mono text-xs text-ink-500 dark:text-ink-300">
             {this.state.error.message}
           </Text>
         ) : null}

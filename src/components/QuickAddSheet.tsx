@@ -178,7 +178,7 @@ export function QuickAddSheet({
             onChangeText={setAmount}
             keyboardType="decimal-pad"
             autoFocus
-            className={`text-center text-5xl font-extrabold ${amount ? theme.amountColor : 'text-ink-300 dark:text-ink-600'} dark:text-ink-50`}
+            className={`text-center text-5xl font-extrabold ${amount ? theme.amountColor : 'text-ink-300 dark:text-ink-500'} dark:text-ink-50`}
             style={{ fontVariant: ['tabular-nums'], minWidth: 140 }}
           />
           <View className="mt-2 flex-row gap-2">

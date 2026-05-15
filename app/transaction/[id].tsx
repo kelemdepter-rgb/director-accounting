@@ -210,7 +210,7 @@ export default function TransactionDetailScreen() {
               <Card className="flex-row items-center gap-3 p-4">
                 <Avatar name={contact.full_name} size={40} />
                 <View className="flex-1">
-                  <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+                  <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-300">
                     {t('contacts.fullName')}
                   </Text>
                   <Text className="mt-0.5 text-base text-ink-900 dark:text-ink-50">
@@ -222,7 +222,7 @@ export default function TransactionDetailScreen() {
 
             {txn.description ? (
               <Card className="p-4">
-                <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-400">
+                <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-300">
                   {t('quickAdd.description')}
                 </Text>
                 <Text className="mt-2 text-base text-ink-700 dark:text-ink-200">

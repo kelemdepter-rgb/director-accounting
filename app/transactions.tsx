@@ -142,7 +142,7 @@ export default function TransactionsScreen() {
                 className={`flex-1 items-center rounded-lg px-3 py-2 ${active ? 'bg-white shadow-sm dark:bg-ink-700' : ''}`}
               >
                 <Text
-                  className={`text-sm ${active ? 'font-semibold text-ink-900 dark:text-ink-50' : 'text-ink-500 dark:text-ink-400'}`}
+                  className={`text-sm ${active ? 'font-semibold text-ink-900 dark:text-ink-50' : 'text-ink-500 dark:text-ink-300'}`}
                 >
                   {t(option.key)}
                 </Text>

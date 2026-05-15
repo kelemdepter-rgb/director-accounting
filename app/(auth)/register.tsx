@@ -195,7 +195,7 @@ export default function RegisterScreen() {
       />
 
       <View className="mt-8 flex-row items-center justify-center gap-1">
-        <Text className="text-sm text-ink-500 dark:text-ink-400">
+        <Text className="text-sm text-ink-500 dark:text-ink-300">
           {t('auth.hasAccount')}
         </Text>
         <Link href="/(auth)/login" asChild>

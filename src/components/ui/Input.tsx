@@ -74,7 +74,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
           {error}
         </Text>
       ) : hint ? (
-        <Text className="mt-1.5 text-xs text-ink-500 dark:text-ink-400">{hint}</Text>
+        <Text className="mt-1.5 text-xs text-ink-500 dark:text-ink-300">{hint}</Text>
       ) : null}
     </View>
   );

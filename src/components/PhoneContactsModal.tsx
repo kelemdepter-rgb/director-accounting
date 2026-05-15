@@ -44,7 +44,7 @@ function Row({
           {item.name}
         </Text>
         {item.phoneNumber ? (
-          <Text className="mt-0.5 text-sm text-ink-500 dark:text-ink-400">
+          <Text className="mt-0.5 text-sm text-ink-500 dark:text-ink-300">
             {item.phoneNumber}
           </Text>
         ) : null}

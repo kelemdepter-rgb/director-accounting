@@ -179,7 +179,7 @@ export function ContactAutocomplete({
             </View>
           ) : suggestions.length === 0 ? (
             <View className="px-3 py-4">
-              <Text className="text-sm text-ink-500 dark:text-ink-400">
+              <Text className="text-sm text-ink-500 dark:text-ink-300">
                 {t('contacts.noMatches')}
               </Text>
             </View>
@@ -200,7 +200,7 @@ export function ContactAutocomplete({
                     {item.label}
                   </Text>
                   {item.sublabel ? (
-                    <Text className="text-xs text-ink-500 dark:text-ink-400">
+                    <Text className="text-xs text-ink-500 dark:text-ink-300">
                       {item.sublabel}
                     </Text>
                   ) : null}

@@ -40,7 +40,7 @@ function ContactRowItem({
           {contact.full_name}
         </Text>
         {subtitle ? (
-          <Text className="mt-0.5 text-xs text-ink-500 dark:text-ink-400" numberOfLines={1}>
+          <Text className="mt-0.5 text-xs text-ink-500 dark:text-ink-300" numberOfLines={1}>
             {subtitle}
           </Text>
         ) : null}

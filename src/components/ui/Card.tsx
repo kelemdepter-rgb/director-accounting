@@ -27,7 +27,9 @@ const elevationToStyle = {
   elevated: shadows.elevated,
 } as const;
 
-const BASE = 'rounded-2xl bg-white dark:bg-ink-800 border border-ink-100 dark:border-ink-700';
+// Light: subtle slate border. Dark: a faint inner-glow border using white at
+// low opacity, which renders cleaner on the navy bg than a flat slate stroke.
+const BASE = 'rounded-2xl bg-white dark:bg-ink-800 border border-ink-100 dark:border-white/10';
 
 export function Card({
   children,

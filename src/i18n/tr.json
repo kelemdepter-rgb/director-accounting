@@ -50,6 +50,7 @@
     "borrowHint": "Siz birine borçlusunuz (borç).",
     "amount": "Tutar",
     "currency": "Para birimi",
+    "date": "Tarih",
     "description": "Açıklama",
     "descriptionPlaceholder": "Bu alan isteğe bağlıdır",
     "contactRequired": "Kişi (zorunlu)",

@@ -7,6 +7,7 @@ import { ActivityIndicator, FlatList, Pressable, SafeAreaView, Text, View } from
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { DateField } from '@/components/ui/DateField';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
 import { colors } from '@/constants/theme';
@@ -37,6 +38,7 @@ export default function DebtDetailScreen() {
   const [paymentSheet, setPaymentSheet] = useState<'partial' | 'full' | null>(null);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentNote, setPaymentNote] = useState('');
+  const [paidAt, setPaidAt] = useState<Date>(new Date());
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
   if (debtQ.isLoading) {
@@ -75,6 +77,7 @@ export default function DebtDetailScreen() {
   const openPartial = () => {
     setPaymentAmount('');
     setPaymentNote('');
+    setPaidAt(new Date());
     setPaymentError(null);
     setPaymentSheet('partial');
   };
@@ -82,6 +85,7 @@ export default function DebtDetailScreen() {
   const openFull = () => {
     setPaymentAmount(String(debt.remaining_amount));
     setPaymentNote('');
+    setPaidAt(new Date());
     setPaymentError(null);
     setPaymentSheet('full');
   };
@@ -113,6 +117,7 @@ export default function DebtDetailScreen() {
         debt_id: debt.id,
         amount: validation.amount!,
         note: paymentNote.trim() ? paymentNote.trim() : null,
+        paid_at: paidAt.toISOString(),
       });
       setPaymentSheet(null);
     } catch (err) {
@@ -318,6 +323,11 @@ export default function DebtDetailScreen() {
                     amount: formatMoney(debt.remaining_amount, debt.currency),
                   })
             }
+          />
+          <DateField
+            label={t('quickAdd.date')}
+            value={paidAt}
+            onChange={setPaidAt}
           />
           <Input
             label={t('debts.noteOptional')}

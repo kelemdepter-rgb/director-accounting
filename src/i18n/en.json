@@ -50,6 +50,7 @@
     "borrowHint": "You owe someone (payable).",
     "amount": "Amount",
     "currency": "Currency",
+    "date": "Date",
     "description": "Note",
     "descriptionPlaceholder": "Optional",
     "contactRequired": "Contact (required)",

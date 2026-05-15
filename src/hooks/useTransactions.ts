@@ -56,6 +56,7 @@ export interface CreateTransactionArgs {
   currency: string;
   description: string | null;
   contact_id: string | null;
+  occurred_at?: string;
 }
 
 export function useCreateTransaction() {

@@ -5,6 +5,7 @@ import { Pressable, Text, TextInput, View } from 'react-native';
 import { ContactAutocomplete } from '@/components/ContactAutocomplete';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
+import { DateField } from '@/components/ui/DateField';
 import { Input } from '@/components/ui/Input';
 import { useCreateDebt } from '@/hooks/useDebts';
 import { useCreateTransaction } from '@/hooks/useTransactions';
@@ -84,6 +85,7 @@ export function QuickAddSheet({
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState(defaultCurrency);
   const [description, setDescription] = useState('');
+  const [occurredAt, setOccurredAt] = useState<Date>(new Date());
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -94,6 +96,7 @@ export function QuickAddSheet({
       setAmount('');
       setCurrency(defaultCurrency);
       setDescription('');
+      setOccurredAt(new Date());
       setError(null);
     }
   }, [visible, initialContact, defaultCurrency]);
@@ -131,6 +134,7 @@ export function QuickAddSheet({
     }
     setSubmitting(true);
     try {
+      const occurredAtIso = occurredAt.toISOString();
       if (isDebtMode) {
         await createDebt.mutateAsync({
           contact_id: contact!.id,
@@ -138,6 +142,7 @@ export function QuickAddSheet({
           principal_amount: parsedAmount,
           currency,
           description: description.trim() ? description.trim() : null,
+          occurred_at: occurredAtIso,
         });
       } else {
         await createTransaction.mutateAsync({
@@ -147,6 +152,7 @@ export function QuickAddSheet({
           amount: parsedAmount,
           currency,
           description: description.trim() ? description.trim() : null,
+          occurred_at: occurredAtIso,
         });
       }
       onClose();
@@ -207,6 +213,13 @@ export function QuickAddSheet({
           label={requiresContact ? t('quickAdd.contactRequired') : t('quickAdd.contactOptional')}
           value={contact}
           onChange={setContact}
+        />
+
+        {/* Date — defaults to today; blocked from picking a future date. */}
+        <DateField
+          label={t('quickAdd.date')}
+          value={occurredAt}
+          onChange={setOccurredAt}
         />
 
         {/* Description */}

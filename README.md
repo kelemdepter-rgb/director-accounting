@@ -58,8 +58,43 @@ that pulls names from the device address book.
 | `npm run lint` | ESLint check |
 | `npm run format` | Prettier format all files |
 | `npm run typecheck` | TypeScript no-emit check |
-| `npm run test` | Run Vitest test suite |
+| `npm run test` | Run unit + component tests (see [Testing](#testing)) |
 | `npm run test:watch` | Vitest in watch mode |
+| `npm run test:integration` | Live-Supabase RLS + RPC tests (needs env vars) |
+
+---
+
+## Testing
+
+| Command | What it runs | Where it runs |
+| --- | --- | --- |
+| `npm run test` | Unit + component tests (currency, debt math, CSV, locale-aware amount parsing, RPC contract, `QuickAddSheet`). | Locally and in CI. |
+| `npm run test:watch` | Vitest in watch mode for the same suite. | Locally. |
+| `npm run test:integration` | RLS + RPC integration tests against a real Supabase project. Skips automatically when `SUPABASE_TEST_URL` / `SUPABASE_TEST_ANON_KEY` are not set. | Locally only — **not** in CI. |
+
+### Running the integration suite
+
+The integration tests live in `__tests__/integration/` and need a throwaway
+Supabase project (a local `supabase start` instance is ideal). Before running
+them:
+
+1. Provision a fresh project and apply every migration in `supabase/migrations/`
+   in numeric order.
+2. In **Authentication → Providers → Email**, disable "Confirm email" so
+   `supabase.auth.signUp` returns a usable session immediately.
+3. Export the project's URL and `anon` key, then run the suite:
+   ```bash
+   export SUPABASE_TEST_URL=https://<project>.supabase.co
+   export SUPABASE_TEST_ANON_KEY=<anon-key>
+   npm run test:integration
+   ```
+
+The suite creates throwaway users on every run; rerunning is safe but does
+accumulate accounts in the test project — recreate the project periodically.
+
+CI (see `.github/workflows/ci.yml`) intentionally only runs `npm run test`.
+The integration suite needs credentials and is best driven from a protected
+environment or manually before a release.
 
 ---
 

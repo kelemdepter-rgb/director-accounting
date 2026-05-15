@@ -57,7 +57,7 @@ export default function ContactDetailScreen() {
 
   if (contactQ.isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-ink-50 dark:bg-ink-950">
+      <SafeAreaView className="flex-1 items-center justify-center bg-ink-50 dark:bg-ink-900">
         <ActivityIndicator size="large" color={colors.brand[500]} />
       </SafeAreaView>
     );
@@ -65,7 +65,7 @@ export default function ContactDetailScreen() {
 
   if (contactQ.isError || !contactQ.data) {
     return (
-      <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
+      <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-900">
         <EmptyState
           icon="❓"
           title={t('contacts.notFound')}
@@ -102,7 +102,7 @@ export default function ContactDetailScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
+    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-900">
       {/* Hero header */}
       <View className="px-5 py-3" style={{ backgroundColor: heroColor }}>
         <View className="flex-row items-center justify-between">

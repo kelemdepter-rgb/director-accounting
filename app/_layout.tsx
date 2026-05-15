@@ -100,7 +100,7 @@ export default function RootLayout() {
 
   if (!ready) {
     return (
-      <View className="flex-1 items-center justify-center bg-white dark:bg-neutral-950">
+      <View className="flex-1 items-center justify-center bg-white dark:bg-ink-900">
         <ActivityIndicator size="large" color="#4f46e5" />
       </View>
     );

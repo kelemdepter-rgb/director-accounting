@@ -65,7 +65,7 @@ export function AuthScaffold({ title, subtitle, children }: AuthScaffoldProps) {
   );
 
   const form = (
-    <View className={`${isSplit ? 'h-full w-1/2 bg-white dark:bg-ink-950' : 'flex-1'}`}>
+    <View className={`${isSplit ? 'h-full w-1/2 bg-white dark:bg-ink-900' : 'flex-1'}`}>
       <ScrollView
         contentContainerClassName="grow justify-center px-6 py-10"
         keyboardShouldPersistTaps="handled"
@@ -88,7 +88,7 @@ export function AuthScaffold({ title, subtitle, children }: AuthScaffoldProps) {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-ink-950">
+    <SafeAreaView className="flex-1 bg-white dark:bg-ink-900">
       {isSplit ? (
         <View className="flex-1 flex-row">
           {brand}

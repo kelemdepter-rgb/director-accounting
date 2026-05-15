@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
+import { useColorScheme } from 'nativewind';
 import { useTranslation } from 'react-i18next';
 import { useWindowDimensions } from 'react-native';
 
@@ -11,12 +12,31 @@ const SIDEBAR_BREAKPOINT = 768;
 export default function TabsLayout() {
   const { t } = useTranslation();
   const status = useAuthStore((s) => s.status);
+  const { colorScheme } = useColorScheme();
   const { width } = useWindowDimensions();
   const isWide = width >= SIDEBAR_BREAKPOINT;
+  const isDark = colorScheme === 'dark';
 
   if (status === 'unauthenticated') {
     return <Redirect href="/(auth)/login" />;
   }
+
+  // Native nav surfaces (header, bottom tab bar) don't pick up Tailwind classes,
+  // so we feed them explicit hex values keyed off the current colour scheme.
+  const headerBg = isDark ? colors.ink[900] : '#FFFFFF';
+  const headerText = isDark ? colors.ink[50] : colors.ink[900];
+  const tabBarBg = isWide
+    ? colors.brand[500]
+    : isDark
+      ? colors.ink[800]
+      : '#FFFFFF';
+  const tabBarBorder = isDark ? colors.ink[700] : colors.ink[100];
+  const tabBarActive = isWide ? '#FFFFFF' : colors.brand[500];
+  const tabBarInactive = isWide
+    ? colors.ink[300]
+    : isDark
+      ? colors.ink[400]
+      : colors.ink[400];
 
   return (
     <Tabs
@@ -24,20 +44,21 @@ export default function TabsLayout() {
         headerShown: !isWide,
         headerTitle: t('app.name'),
         headerStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: headerBg,
         },
         headerTitleStyle: {
           fontWeight: '700',
-          color: colors.ink[900],
+          color: headerText,
         },
-        tabBarActiveTintColor: isWide ? '#FFFFFF' : colors.brand[500],
-        tabBarInactiveTintColor: isWide ? '#CBD5E1' : colors.ink[400],
+        headerShadowVisible: false,
+        tabBarActiveTintColor: tabBarActive,
+        tabBarInactiveTintColor: tabBarInactive,
         tabBarPosition: isWide ? 'left' : 'bottom',
         tabBarLabelPosition: isWide ? 'beside-icon' : 'below-icon',
         tabBarStyle: isWide
           ? {
               width: 240,
-              backgroundColor: colors.brand[500],
+              backgroundColor: tabBarBg,
               borderRightWidth: 0,
               paddingTop: 24,
             }
@@ -45,7 +66,8 @@ export default function TabsLayout() {
               height: 64,
               paddingTop: 6,
               paddingBottom: 8,
-              borderTopColor: colors.ink[100],
+              backgroundColor: tabBarBg,
+              borderTopColor: tabBarBorder,
             },
         tabBarItemStyle: isWide
           ? {
@@ -91,4 +113,3 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
-

@@ -37,14 +37,14 @@ function Row({
       accessibilityRole="button"
       accessibilityLabel={`${item.name}${item.phoneNumber ? `, ${item.phoneNumber}` : ''}`}
       onPress={() => onPress(item)}
-      className="flex-row items-center justify-between border-b border-neutral-100 px-5 py-3 active:bg-neutral-50 dark:border-neutral-800 dark:active:bg-neutral-800"
+      className="flex-row items-center justify-between border-b border-ink-100 px-5 py-3 active:bg-ink-50 dark:border-ink-700 dark:active:bg-ink-700"
     >
       <View className="flex-1 pr-3">
-        <Text className="text-base font-medium text-neutral-900 dark:text-neutral-100">
+        <Text className="text-base font-medium text-ink-900 dark:text-ink-100">
           {item.name}
         </Text>
         {item.phoneNumber ? (
-          <Text className="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
+          <Text className="mt-0.5 text-sm text-ink-500 dark:text-ink-400">
             {item.phoneNumber}
           </Text>
         ) : null}
@@ -78,11 +78,11 @@ export function PhoneContactsModal({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <SafeAreaView className="flex-1 bg-white dark:bg-neutral-950">
-        <View className="flex-row items-center justify-between border-b border-neutral-200 px-5 py-3 dark:border-neutral-800">
+      <SafeAreaView className="flex-1 bg-white dark:bg-ink-900">
+        <View className="flex-row items-center justify-between border-b border-ink-200 px-5 py-3 dark:border-ink-700">
           <Text
             accessibilityRole="header"
-            className="text-lg font-semibold text-neutral-900 dark:text-neutral-50"
+            className="text-lg font-semibold text-ink-900 dark:text-ink-50"
           >
             {t('contacts.fromPhone')}
           </Text>
@@ -93,11 +93,11 @@ export function PhoneContactsModal({
           <TextInput
             accessibilityLabel={t('contacts.searchPlaceholder')}
             placeholder={t('contacts.searchPlaceholder')}
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor="#94A3B8"
             value={query}
             onChangeText={setQuery}
             autoCapitalize="none"
-            className="h-11 rounded-lg border border-neutral-300 bg-white px-3 text-base text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+            className="h-11 rounded-xl border border-ink-200 bg-white px-3 text-base text-ink-900 dark:border-ink-700 dark:bg-ink-700 dark:text-ink-100"
           />
         </View>
 

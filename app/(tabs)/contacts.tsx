@@ -73,9 +73,9 @@ export default function ContactsTab() {
     router.push({ pathname: '/contact/[id]', params: { id: c.id } });
 
   return (
-    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
+    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-900">
       <View className="px-5 pb-3 pt-2">
-        <View className="flex-row items-center gap-2 rounded-2xl border border-ink-200 bg-white px-3 dark:border-ink-700 dark:bg-ink-800">
+        <View className="flex-row items-center gap-2 rounded-2xl border border-ink-200 bg-white px-3 dark:border-ink-700 dark:bg-ink-700">
           <Ionicons name="search" size={18} color={colors.ink[400]} />
           <TextInput
             accessibilityLabel={t('contacts.searchPlaceholder')}

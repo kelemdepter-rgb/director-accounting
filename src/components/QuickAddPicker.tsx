@@ -75,18 +75,18 @@ export function QuickAddPicker({ visible, onClose, onPick }: QuickAddPickerProps
             accessibilityLabel={t(choice.titleKey)}
             accessibilityHint={t(choice.subtitleKey)}
             onPress={() => onPick(choice.mode)}
-            className={`flex-row items-center gap-3 rounded-xl border border-neutral-200 bg-white p-4 active:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:active:bg-neutral-800 ${toneClass[choice.tone]}`}
+            className={`flex-row items-center gap-3 rounded-xl border border-ink-200 bg-white p-4 active:bg-ink-50 dark:border-ink-700 dark:bg-ink-800 dark:active:bg-ink-700 ${toneClass[choice.tone]}`}
           >
             <Text className="text-2xl">{choice.icon}</Text>
             <View className="flex-1">
-              <Text className="text-base font-semibold text-neutral-900 dark:text-neutral-50">
+              <Text className="text-base font-semibold text-ink-900 dark:text-ink-50">
                 {t(choice.titleKey)}
               </Text>
-              <Text className="text-xs text-neutral-500 dark:text-neutral-400">
+              <Text className="text-xs text-ink-500 dark:text-ink-400">
                 {t(choice.subtitleKey)}
               </Text>
             </View>
-            <Text className="text-neutral-400">›</Text>
+            <Text className="text-ink-400">›</Text>
           </Pressable>
         ))}
       </View>

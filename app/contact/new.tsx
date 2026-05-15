@@ -16,11 +16,11 @@ export default function NewContactScreen() {
   const createContact = useCreateContact();
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-neutral-950">
-      <View className="flex-row items-center justify-between border-b border-neutral-200 px-5 py-3 dark:border-neutral-800">
+    <SafeAreaView className="flex-1 bg-white dark:bg-ink-900">
+      <View className="flex-row items-center justify-between border-b border-ink-200 px-5 py-3 dark:border-ink-700">
         <Text
           accessibilityRole="header"
-          className="text-lg font-semibold text-neutral-900 dark:text-neutral-50"
+          className="text-lg font-semibold text-ink-900 dark:text-ink-50"
         >
           {t('contacts.addNew')}
         </Text>

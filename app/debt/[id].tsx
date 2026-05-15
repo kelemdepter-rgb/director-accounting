@@ -43,7 +43,7 @@ export default function DebtDetailScreen() {
 
   if (debtQ.isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-ink-50 dark:bg-ink-950">
+      <SafeAreaView className="flex-1 items-center justify-center bg-ink-50 dark:bg-ink-900">
         <ActivityIndicator size="large" color={colors.brand[500]} />
       </SafeAreaView>
     );
@@ -51,7 +51,7 @@ export default function DebtDetailScreen() {
 
   if (debtQ.isError || !debtQ.data) {
     return (
-      <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
+      <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-900">
         <EmptyState
           icon="❓"
           title={t('debts.notFound')}
@@ -142,7 +142,7 @@ export default function DebtDetailScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
+    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-900">
       {/* Hero header */}
       <View className={`px-5 pb-7 pt-3 ${heroBg}`}>
         <View className="flex-row items-center justify-between">

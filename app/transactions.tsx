@@ -83,7 +83,7 @@ export default function TransactionsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
+    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-900">
       {/* Header bar */}
       <View className="flex-row items-center justify-between bg-white px-4 py-3 dark:bg-ink-900">
         <Pressable
@@ -112,7 +112,7 @@ export default function TransactionsScreen() {
 
       {/* Search + filters */}
       <View className="gap-3 px-5 py-3">
-        <View className="flex-row items-center gap-2 rounded-2xl border border-ink-200 bg-white px-3 dark:border-ink-700 dark:bg-ink-800">
+        <View className="flex-row items-center gap-2 rounded-2xl border border-ink-200 bg-white px-3 dark:border-ink-700 dark:bg-ink-700">
           <Ionicons name="search" size={18} color={colors.ink[400]} />
           <TextInput
             accessibilityLabel={t('transactions.searchPlaceholder')}

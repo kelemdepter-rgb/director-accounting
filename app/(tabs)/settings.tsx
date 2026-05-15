@@ -137,7 +137,7 @@ export default function SettingsTab() {
   const appVersion = Constants.expoConfig?.version ?? '1.0.0';
 
   return (
-    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
+    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-900">
       <ScrollView contentContainerClassName="px-5 py-6 gap-3">
         {/* Account hero */}
         <Card className="flex-row items-center gap-3 p-4" elevation="card">

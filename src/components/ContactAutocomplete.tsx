@@ -123,25 +123,25 @@ export function ContactAutocomplete({
   return (
     <View className="w-full">
       {label ? (
-        <Text className="mb-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+        <Text className="mb-1.5 text-sm font-medium text-ink-700 dark:text-ink-300">
           {label}
         </Text>
       ) : null}
 
       <View className="flex-row items-center gap-2">
         <View
-          className={`flex-1 rounded-lg border ${focused ? 'border-brand-500' : 'border-neutral-300 dark:border-neutral-700'} bg-white dark:bg-neutral-900`}
+          className={`flex-1 rounded-xl border ${focused ? 'border-brand-500' : 'border-ink-200 dark:border-ink-700'} bg-white dark:bg-ink-700`}
         >
           <TextInput
             accessibilityLabel={label ?? t('contacts.searchPlaceholder')}
             placeholder={placeholder ?? (value ? value.full_name : t('contacts.searchPlaceholder'))}
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor="#94A3B8"
             value={query}
             onChangeText={setQuery}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             autoCapitalize="words"
-            className="h-12 px-3 text-base text-neutral-900 dark:text-neutral-100"
+            className="h-12 px-3 text-base text-ink-900 dark:text-ink-100"
           />
         </View>
         {phone.supported ? (
@@ -149,7 +149,7 @@ export function ContactAutocomplete({
             accessibilityRole="button"
             accessibilityLabel={t('contacts.fromPhone')}
             onPress={openPhoneList}
-            className="h-12 w-12 items-center justify-center rounded-lg bg-neutral-100 active:bg-neutral-200 dark:bg-neutral-800 dark:active:bg-neutral-700"
+            className="h-12 w-12 items-center justify-center rounded-lg bg-ink-100 active:bg-ink-200 dark:bg-ink-700 dark:active:bg-ink-700"
           >
             <Text className="text-xl">📇</Text>
           </Pressable>
@@ -172,14 +172,14 @@ export function ContactAutocomplete({
       ) : null}
 
       {enableSearch ? (
-        <View className="mt-2 max-h-80 rounded-lg border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+        <View className="mt-2 max-h-80 rounded-lg border border-ink-200 bg-white dark:border-ink-700 dark:bg-ink-800">
           {savedContacts.isLoading ? (
             <View className="items-center justify-center px-3 py-4">
               <ActivityIndicator color="#4f46e5" />
             </View>
           ) : suggestions.length === 0 ? (
             <View className="px-3 py-4">
-              <Text className="text-sm text-neutral-500 dark:text-neutral-400">
+              <Text className="text-sm text-ink-500 dark:text-ink-400">
                 {t('contacts.noMatches')}
               </Text>
             </View>
@@ -193,14 +193,14 @@ export function ContactAutocomplete({
                   if (item.kind === 'saved' && item.saved) onPickSaved(item.saved);
                   else if (item.kind === 'phone' && item.phone) void onPickPhone(item.phone);
                 }}
-                className="flex-row items-center justify-between border-b border-neutral-100 px-3 py-3 last:border-b-0 active:bg-neutral-50 dark:border-neutral-800 dark:active:bg-neutral-800"
+                className="flex-row items-center justify-between border-b border-ink-100 px-3 py-3 last:border-b-0 active:bg-ink-50 dark:border-ink-700 dark:active:bg-ink-700"
               >
                 <View className="flex-1 pr-2">
-                  <Text className="text-base text-neutral-900 dark:text-neutral-100">
+                  <Text className="text-base text-ink-900 dark:text-ink-100">
                     {item.label}
                   </Text>
                   {item.sublabel ? (
-                    <Text className="text-xs text-neutral-500 dark:text-neutral-400">
+                    <Text className="text-xs text-ink-500 dark:text-ink-400">
                       {item.sublabel}
                     </Text>
                   ) : null}

@@ -45,7 +45,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
         </Text>
       ) : null}
       <View
-        className={`flex-row items-center rounded-xl border bg-white dark:bg-ink-900 ${borderClass} ${editable ? '' : 'opacity-60'}`}
+        className={`flex-row items-center rounded-xl border bg-white dark:bg-ink-700 ${borderClass} ${editable ? '' : 'opacity-60'}`}
       >
         {leftAdornment ? <View className="pl-3">{leftAdornment}</View> : null}
         <TextInput
@@ -54,6 +54,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
           accessibilityHint={accessibilityHint ?? hint}
           editable={editable}
           placeholderTextColor="#94A3B8"
+          selectionColor="#10B981"
           multiline={multiline}
           onFocus={(event) => {
             setFocused(true);

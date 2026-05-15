@@ -50,24 +50,24 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return (
       <View
         accessibilityRole="alert"
-        className="flex-1 items-center justify-center bg-white px-6 py-10 dark:bg-neutral-950"
+        className="flex-1 items-center justify-center bg-white px-6 py-10 dark:bg-ink-900"
       >
         <Text className="mb-2 text-4xl" accessibilityElementsHidden>
           ⚠️
         </Text>
         <Text
           accessibilityRole="header"
-          className="text-center text-lg font-semibold text-neutral-900 dark:text-neutral-50"
+          className="text-center text-lg font-semibold text-ink-900 dark:text-ink-50"
         >
           {this.props.fallbackTitle}
         </Text>
         {this.props.fallbackDescription ? (
-          <Text className="mt-2 max-w-md text-center text-sm text-neutral-600 dark:text-neutral-400">
+          <Text className="mt-2 max-w-md text-center text-sm text-ink-600 dark:text-ink-400">
             {this.props.fallbackDescription}
           </Text>
         ) : null}
         {__DEV__ && this.state.error ? (
-          <Text className="mt-4 max-w-md text-center font-mono text-xs text-neutral-500 dark:text-neutral-400">
+          <Text className="mt-4 max-w-md text-center font-mono text-xs text-ink-500 dark:text-ink-400">
             {this.state.error.message}
           </Text>
         ) : null}

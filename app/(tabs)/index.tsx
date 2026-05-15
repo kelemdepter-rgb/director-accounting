@@ -137,7 +137,7 @@ export default function HomeScreen() {
   const today = formatDate(new Date(), 'long');
 
   return (
-    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
+    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-900">
       <FlatList
         data={txnQ.data ?? []}
         keyExtractor={(item) => item.id}

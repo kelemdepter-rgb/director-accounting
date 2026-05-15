@@ -19,7 +19,7 @@ export function CurrencyPicker({ value, onChange, label }: CurrencyPickerProps) 
   return (
     <View>
       {label ? (
-        <Text className="mb-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+        <Text className="mb-1.5 text-sm font-medium text-ink-700 dark:text-ink-300">
           {label}
         </Text>
       ) : null}
@@ -29,12 +29,12 @@ export function CurrencyPicker({ value, onChange, label }: CurrencyPickerProps) 
         accessibilityLabel={label}
         accessibilityHint={t('common.tapToChange')}
         onPress={() => setOpen(true)}
-        className="flex-row items-center justify-between rounded-lg border border-neutral-300 bg-white px-3 py-3 active:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:active:bg-neutral-800"
+        className="flex-row items-center justify-between rounded-lg border border-ink-300 bg-white px-3 py-3 active:bg-ink-50 dark:border-ink-700 dark:bg-ink-800 dark:active:bg-ink-700"
       >
-        <Text className="text-base font-medium text-neutral-900 dark:text-neutral-100">
+        <Text className="text-base font-medium text-ink-900 dark:text-ink-100">
           {value}
         </Text>
-        <Text className="text-neutral-400">▾</Text>
+        <Text className="text-ink-400">▾</Text>
       </Pressable>
 
       <Modal
@@ -49,13 +49,13 @@ export function CurrencyPicker({ value, onChange, label }: CurrencyPickerProps) 
         >
           <Pressable
             onPress={(e) => e.stopPropagation()}
-            className="w-full max-w-sm rounded-2xl bg-white dark:bg-neutral-900"
+            className="w-full max-w-sm rounded-2xl bg-white dark:bg-ink-800"
           >
             <SafeAreaView>
               <View className="flex-row items-center justify-between px-5 pb-2 pt-4">
                 <Text
                   accessibilityRole="header"
-                  className="text-base font-semibold text-neutral-900 dark:text-neutral-50"
+                  className="text-base font-semibold text-ink-900 dark:text-ink-50"
                 >
                   {label ?? t('common.choose')}
                 </Text>
@@ -79,10 +79,10 @@ export function CurrencyPicker({ value, onChange, label }: CurrencyPickerProps) 
                         onChange(code);
                         setOpen(false);
                       }}
-                      className={`flex-row items-center justify-between px-5 py-3 active:bg-neutral-50 dark:active:bg-neutral-800 ${selected ? 'bg-brand-50 dark:bg-brand-900/30' : ''}`}
+                      className={`flex-row items-center justify-between px-5 py-3 active:bg-ink-50 dark:active:bg-ink-700 ${selected ? 'bg-brand-50 dark:bg-brand-900/30' : ''}`}
                     >
                       <Text
-                        className={`text-base ${selected ? 'font-semibold text-brand-700 dark:text-brand-200' : 'text-neutral-900 dark:text-neutral-100'}`}
+                        className={`text-base ${selected ? 'font-semibold text-brand-700 dark:text-brand-200' : 'text-ink-900 dark:text-ink-100'}`}
                       >
                         {code}
                       </Text>

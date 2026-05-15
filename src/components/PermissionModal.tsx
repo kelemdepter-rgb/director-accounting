@@ -39,18 +39,18 @@ export function PermissionModal({
       >
         <Pressable
           onPress={(e) => e.stopPropagation()}
-          className="w-full max-w-md rounded-2xl bg-white p-6 dark:bg-neutral-900"
+          className="w-full max-w-md rounded-2xl bg-white p-6 dark:bg-ink-800"
         >
           <Text className="mb-3 text-4xl" accessibilityElementsHidden>
             📇
           </Text>
           <Text
             accessibilityRole="header"
-            className="text-xl font-bold text-neutral-900 dark:text-neutral-50"
+            className="text-xl font-bold text-ink-900 dark:text-ink-50"
           >
             {t('contacts.permissionTitle')}
           </Text>
-          <Text className="mt-3 text-base text-neutral-600 dark:text-neutral-300">
+          <Text className="mt-3 text-base text-ink-600 dark:text-ink-300">
             {t('contacts.permissionExplain')}
           </Text>
           {previouslyDenied ? (

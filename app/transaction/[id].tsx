@@ -86,7 +86,7 @@ export default function TransactionDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-ink-50 dark:bg-ink-950">
+      <SafeAreaView className="flex-1 items-center justify-center bg-ink-50 dark:bg-ink-900">
         <ActivityIndicator size="large" color={colors.brand[500]} />
       </SafeAreaView>
     );
@@ -94,7 +94,7 @@ export default function TransactionDetailScreen() {
 
   if (error || !txn) {
     return (
-      <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
+      <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-900">
         <EmptyState
           icon="❓"
           title={t('transactions.notFound')}
@@ -155,7 +155,7 @@ export default function TransactionDetailScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-950">
+    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-900">
       <View className={`px-5 pb-7 pt-3 ${heroBg}`}>
         <View className="flex-row items-center justify-between">
           <Pressable

@@ -20,7 +20,7 @@ import {
 } from '@/hooks/useDebts';
 import { confirm, notify } from '@/lib/confirm';
 import type { DebtPaymentRow } from '@/types/database';
-import { formatMoney, parseUserAmount } from '@/utils/currency';
+import { formatMoney, parseLocaleAmount } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
 import { paymentProgress, validatePayment } from '@/utils/debtCalculation';
 
@@ -92,7 +92,7 @@ export default function DebtDetailScreen() {
 
   const submitPayment = async () => {
     setPaymentError(null);
-    const parsed = parseUserAmount(paymentAmount);
+    const parsed = parseLocaleAmount(paymentAmount)?.value ?? null;
     if (parsed === null) {
       setPaymentError(t('validation.amountInvalid'));
       return;

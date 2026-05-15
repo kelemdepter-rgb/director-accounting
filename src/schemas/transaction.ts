@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { parseUserAmount } from '@/utils/currency';
+import { parseLocaleAmount } from '@/utils/currency';
 
 export const TRANSACTION_TYPES = ['income', 'expense'] as const;
 
@@ -8,7 +8,7 @@ const amountField = z.preprocess(
   (v) => (typeof v === 'string' ? v.trim() : v),
   z
     .union([z.string(), z.number()])
-    .transform((v) => (typeof v === 'number' ? v : parseUserAmount(v)))
+    .transform((v) => (typeof v === 'number' ? v : parseLocaleAmount(v)?.value ?? null))
     .refine((v): v is number => v !== null && v > 0, {
       message: 'validation.amountInvalid',
     }),

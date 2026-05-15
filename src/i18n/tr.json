@@ -156,7 +156,7 @@
     "required": "Bu alan zorunludur.",
     "tooLong": "Çok uzun.",
     "phoneInvalid": "Telefon 3 ile 30 karakter arasında olmalıdır.",
-    "amountInvalid": "Pozitif bir tutar girin (en çok 2 ondalık).",
+    "amountInvalid": "Pozitif bir tutar girin, örn. 1.234,56",
     "currencyInvalid": "Para birimi 3 harfli kod olmalıdır.",
     "contactRequired": "Bu borç için bir kişi seçin."
   },

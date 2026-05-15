@@ -1,3 +1,7 @@
+import { parseLocaleAmount } from '@/utils/parseLocaleAmount';
+
+export { parseLocaleAmount };
+
 /**
  * A small fixed catalogue of currencies the UI offers as picker options.
  * Anything outside this list is still valid — it just won't appear in the
@@ -75,16 +79,10 @@ export function formatMoney(
 }
 
 /**
- * Validate that a user-typed amount is a positive money number with at most
- * 2 decimal places. Returns the parsed number on success, or null on failure.
+ * @deprecated Use `parseLocaleAmount` directly. This thin wrapper only
+ * exists so any caller we forgot to migrate still resolves to a number.
+ * It silently throws away the `detected` tag.
  */
 export function parseUserAmount(input: string): number | null {
-  if (typeof input !== 'string') return null;
-  // Allow either comma or dot as decimal separator.
-  const normalised = input.trim().replace(',', '.');
-  if (normalised === '') return null;
-  if (!/^\d+(\.\d{1,2})?$/.test(normalised)) return null;
-  const n = Number(normalised);
-  if (!Number.isFinite(n) || n <= 0) return null;
-  return roundMoney(n);
+  return parseLocaleAmount(input)?.value ?? null;
 }

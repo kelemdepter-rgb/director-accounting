@@ -170,6 +170,59 @@ export function useCreatePayment() {
   });
 }
 
+export interface UpdatePaymentArgs {
+  id: string;
+  debt_id: string;
+  amount?: number;
+  paid_at?: string;
+  note?: string | null;
+}
+
+function invalidatePaymentRelated(qc: ReturnType<typeof useQueryClient>, debtId: string) {
+  void qc.invalidateQueries({ queryKey: DEBTS_KEY });
+  void qc.invalidateQueries({ queryKey: [...DEBTS_KEY, 'detail', debtId] });
+  void qc.invalidateQueries({ queryKey: [...DEBTS_KEY, 'payments', debtId] });
+  void qc.invalidateQueries({ queryKey: ['transactions'] });
+  void qc.invalidateQueries({ queryKey: ['summary'] });
+}
+
+export function useUpdatePayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: UpdatePaymentArgs): Promise<DebtPaymentRow> => {
+      const patch: Record<string, unknown> = {};
+      if (input.amount !== undefined) patch.amount = input.amount;
+      if (input.paid_at !== undefined) patch.paid_at = input.paid_at;
+      if (input.note !== undefined) patch.note = input.note;
+      const { data, error } = await supabase
+        .from('debt_payments')
+        .update(patch)
+        .eq('id', input.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as DebtPaymentRow;
+    },
+    onSuccess: (_row, vars) => invalidatePaymentRelated(qc, vars.debt_id),
+  });
+}
+
+export interface DeletePaymentArgs {
+  id: string;
+  debt_id: string;
+}
+
+export function useDeletePayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: DeletePaymentArgs): Promise<void> => {
+      const { error } = await supabase.from('debt_payments').delete().eq('id', input.id);
+      if (error) throw error;
+    },
+    onSuccess: (_void, vars) => invalidatePaymentRelated(qc, vars.debt_id),
+  });
+}
+
 export function useDeleteDebt() {
   const qc = useQueryClient();
   return useMutation({

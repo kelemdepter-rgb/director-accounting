@@ -61,6 +61,8 @@ export interface DebtPaymentRow {
   note: string | null;
   created_at: string;
   transaction_id: string | null;
+  updated_at: string;
+  edited_count: number;
 }
 
 export type ContactInsert = Pick<ContactRow, 'full_name'> &

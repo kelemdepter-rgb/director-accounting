@@ -17,6 +17,8 @@ import {
   useDebt,
   useDebtPayments,
   useDeleteDebt,
+  useDeletePayment,
+  useUpdatePayment,
 } from '@/hooks/useDebts';
 import { confirm, notify } from '@/lib/confirm';
 import type { DebtPaymentRow } from '@/types/database';
@@ -33,13 +35,22 @@ export default function DebtDetailScreen() {
   const paymentsQ = useDebtPayments(id);
   const contactQ = useContact(debtQ.data?.contact_id);
   const createPayment = useCreatePayment();
+  const updatePayment = useUpdatePayment();
+  const deletePayment = useDeletePayment();
   const deleteDebt = useDeleteDebt();
 
-  const [paymentSheet, setPaymentSheet] = useState<'partial' | 'full' | null>(null);
+  type PaymentSheetState =
+    | { kind: 'partial' }
+    | { kind: 'full' }
+    | { kind: 'edit'; payment: DebtPaymentRow }
+    | null;
+
+  const [paymentSheet, setPaymentSheet] = useState<PaymentSheetState>(null);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentNote, setPaymentNote] = useState('');
   const [paidAt, setPaidAt] = useState<Date>(new Date());
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [actionsFor, setActionsFor] = useState<DebtPaymentRow | null>(null);
 
   if (debtQ.isLoading) {
     return (
@@ -79,7 +90,7 @@ export default function DebtDetailScreen() {
     setPaymentNote('');
     setPaidAt(new Date());
     setPaymentError(null);
-    setPaymentSheet('partial');
+    setPaymentSheet({ kind: 'partial' });
   };
 
   const openFull = () => {
@@ -87,20 +98,53 @@ export default function DebtDetailScreen() {
     setPaymentNote('');
     setPaidAt(new Date());
     setPaymentError(null);
-    setPaymentSheet('full');
+    setPaymentSheet({ kind: 'full' });
+  };
+
+  const openEdit = (payment: DebtPaymentRow) => {
+    setPaymentAmount(payment.amount);
+    setPaymentNote(payment.note ?? '');
+    setPaidAt(new Date(payment.paid_at));
+    setPaymentError(null);
+    setPaymentSheet({ kind: 'edit', payment });
+  };
+
+  const onDeletePayment = async (payment: DebtPaymentRow) => {
+    setActionsFor(null);
+    const ok = await confirm({
+      title: t('debts.deletePayment'),
+      message: t('debts.deletePaymentConfirm'),
+      confirmLabel: t('debts.deletePayment'),
+      cancelLabel: t('common.cancel'),
+      destructive: true,
+    });
+    if (!ok) return;
+    try {
+      await deletePayment.mutateAsync({ id: payment.id, debt_id: payment.debt_id });
+    } catch (err) {
+      notify(t('app.name'), (err as Error).message ?? t('errors.unknown'));
+    }
   };
 
   const submitPayment = async () => {
     setPaymentError(null);
+    if (!paymentSheet) return;
     const parsed = parseLocaleAmount(paymentAmount)?.value ?? null;
     if (parsed === null) {
       setPaymentError(t('validation.amountInvalid'));
       return;
     }
+    const editingPaymentId =
+      paymentSheet.kind === 'edit' ? paymentSheet.payment.id : null;
+    // For edits, exclude the row being edited from the running total — the
+    // new amount can fill up to (principal - other payments).
+    const otherPayments = (paymentsQ.data ?? []).filter(
+      (p) => p.id !== editingPaymentId,
+    );
     const validation = validatePayment(
       parsed,
       debt.principal_amount,
-      paymentsQ.data?.map((p) => ({ amount: p.amount })) ?? [],
+      otherPayments.map((p) => ({ amount: p.amount })),
     );
     if (!validation.valid) {
       setPaymentError(
@@ -113,12 +157,24 @@ export default function DebtDetailScreen() {
       return;
     }
     try {
-      await createPayment.mutateAsync({
-        debt_id: debt.id,
-        amount: validation.amount!,
-        note: paymentNote.trim() ? paymentNote.trim() : null,
-        paid_at: paidAt.toISOString(),
-      });
+      const note = paymentNote.trim() ? paymentNote.trim() : null;
+      const paidAtIso = paidAt.toISOString();
+      if (paymentSheet.kind === 'edit') {
+        await updatePayment.mutateAsync({
+          id: paymentSheet.payment.id,
+          debt_id: debt.id,
+          amount: validation.amount!,
+          paid_at: paidAtIso,
+          note,
+        });
+      } else {
+        await createPayment.mutateAsync({
+          debt_id: debt.id,
+          amount: validation.amount!,
+          note,
+          paid_at: paidAtIso,
+        });
+      }
       setPaymentSheet(null);
     } catch (err) {
       const code = (err as { code?: string })?.code;
@@ -228,7 +284,14 @@ export default function DebtDetailScreen() {
       <FlatList
         data={paymentsQ.data ?? []}
         keyExtractor={(p) => p.id}
-        renderItem={({ item }) => <PaymentRow payment={item} currency={debt.currency} />}
+        renderItem={({ item }) => (
+          <PaymentRow
+            payment={item}
+            currency={debt.currency}
+            onPress={() => setActionsFor(item)}
+            editedLabel={t('debts.edited')}
+          />
+        )}
         contentContainerClassName="pb-10"
         ListHeaderComponent={
           <View className="gap-4 px-5 py-5">
@@ -303,7 +366,11 @@ export default function DebtDetailScreen() {
         visible={paymentSheet !== null}
         onClose={() => setPaymentSheet(null)}
         title={
-          paymentSheet === 'full' ? t('debts.settleInFull') : t('debts.partialPayment')
+          paymentSheet?.kind === 'edit'
+            ? t('debts.editPayment')
+            : paymentSheet?.kind === 'full'
+              ? t('debts.settleInFull')
+              : t('debts.partialPayment')
         }
         closeLabel={t('common.cancel')}
       >
@@ -313,9 +380,9 @@ export default function DebtDetailScreen() {
             value={paymentAmount}
             onChangeText={setPaymentAmount}
             keyboardType="decimal-pad"
-            editable={paymentSheet !== 'full'}
+            editable={paymentSheet?.kind !== 'full'}
             hint={
-              paymentSheet === 'full'
+              paymentSheet?.kind === 'full'
                 ? t('debts.fullAmountHint', {
                     amount: formatMoney(debt.remaining_amount, debt.currency),
                   })
@@ -346,9 +413,43 @@ export default function DebtDetailScreen() {
           <Button
             label={t('common.save')}
             onPress={submitPayment}
-            loading={createPayment.isPending}
+            loading={createPayment.isPending || updatePayment.isPending}
             fullWidth
             size="lg"
+          />
+        </View>
+      </BottomSheet>
+
+      <BottomSheet
+        visible={actionsFor !== null}
+        onClose={() => setActionsFor(null)}
+        title={
+          actionsFor
+            ? formatMoney(actionsFor.amount, debt.currency)
+            : undefined
+        }
+        closeLabel={t('common.cancel')}
+      >
+        <View className="gap-3">
+          <Button
+            label={t('debts.editPayment')}
+            onPress={() => {
+              const target = actionsFor;
+              setActionsFor(null);
+              if (target) openEdit(target);
+            }}
+            fullWidth
+            size="lg"
+            leftIcon={<Ionicons name="create-outline" size={18} color="#fff" />}
+          />
+          <Button
+            label={t('debts.deletePayment')}
+            variant="danger"
+            onPress={() => actionsFor && onDeletePayment(actionsFor)}
+            loading={deletePayment.isPending}
+            fullWidth
+            size="lg"
+            leftIcon={<Ionicons name="trash-outline" size={18} color="#fff" />}
           />
         </View>
       </BottomSheet>
@@ -356,13 +457,34 @@ export default function DebtDetailScreen() {
   );
 }
 
-function PaymentRow({ payment, currency }: { payment: DebtPaymentRow; currency: string }) {
+interface PaymentRowProps {
+  payment: DebtPaymentRow;
+  currency: string;
+  onPress: () => void;
+  editedLabel: string;
+}
+
+function PaymentRow({ payment, currency, onPress, editedLabel }: PaymentRowProps) {
+  const isEdited = payment.edited_count > 0;
   return (
-    <View className="mx-5 mb-2 flex-row items-center justify-between rounded-2xl border border-ink-100 bg-white p-4 dark:border-ink-700 dark:bg-ink-800">
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      className="mx-5 mb-2 flex-row items-center justify-between rounded-2xl border border-ink-100 bg-white p-4 active:bg-ink-50 dark:border-ink-700 dark:bg-ink-800 dark:active:bg-ink-700"
+    >
       <View className="flex-1 pr-3">
-        <Text className="text-sm font-medium text-ink-900 dark:text-ink-50">
-          {formatDate(payment.paid_at, 'long')}
-        </Text>
+        <View className="flex-row items-center gap-2">
+          <Text className="text-sm font-medium text-ink-900 dark:text-ink-50">
+            {formatDate(payment.paid_at, 'long')}
+          </Text>
+          {isEdited ? (
+            <View className="rounded-full bg-ink-100 px-2 py-0.5 dark:bg-ink-700">
+              <Text className="text-[10px] font-semibold uppercase tracking-wider text-ink-500 dark:text-ink-200">
+                {editedLabel}
+              </Text>
+            </View>
+          ) : null}
+        </View>
         {payment.note ? (
           <Text className="mt-0.5 text-xs text-ink-500 dark:text-ink-300">
             {payment.note}
@@ -375,6 +497,6 @@ function PaymentRow({ payment, currency }: { payment: DebtPaymentRow; currency: 
       >
         +{formatMoney(payment.amount, currency)}
       </Text>
-    </View>
+    </Pressable>
   );
 }

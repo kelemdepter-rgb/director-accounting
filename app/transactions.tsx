@@ -197,7 +197,9 @@ export default function TransactionsScreen() {
                     item.contact_id ? contactById.get(item.contact_id)?.full_name : null
                   }
                   onPress={(tx) =>
-                    router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
+                    tx.auto_generated && tx.debt_id
+                      ? router.push({ pathname: '/debt/[id]', params: { id: tx.debt_id } })
+                      : router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
                   }
                 />
               </View>

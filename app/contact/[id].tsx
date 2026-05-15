@@ -298,7 +298,9 @@ export default function ContactDetailScreen() {
                         transaction={tx}
                         contactName={contact.full_name}
                         onPress={(t2) =>
-                          router.push({ pathname: '/transaction/[id]', params: { id: t2.id } })
+                          t2.auto_generated && t2.debt_id
+                            ? router.push({ pathname: '/debt/[id]', params: { id: t2.debt_id } })
+                            : router.push({ pathname: '/transaction/[id]', params: { id: t2.id } })
                         }
                       />
                     </View>

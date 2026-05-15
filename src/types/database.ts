@@ -26,6 +26,9 @@ export interface TransactionRow {
   description: string | null;
   occurred_at: string;
   created_at: string;
+  debt_id: string | null;
+  debt_payment_id: string | null;
+  auto_generated: boolean;
 }
 
 export type DebtType = 'receivable' | 'payable';

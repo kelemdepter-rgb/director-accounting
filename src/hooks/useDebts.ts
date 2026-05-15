@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type {
   DebtPaymentRow,
-  DebtRow,
   DebtStatus,
   DebtType,
   DebtWithBalanceRow,
@@ -80,24 +79,40 @@ export function useDebtPayments(debtId: string | undefined) {
 }
 
 export interface CreateDebtArgs {
-  user_id: string;
   contact_id: string;
   type: DebtType;
   principal_amount: number;
   currency: string;
   description: string | null;
+  occurred_at?: string;
+}
+
+export interface CreatedDebtWithCashflow {
+  debt_id: string;
+  transaction_id: string;
 }
 
 export function useCreateDebt() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: CreateDebtArgs) => {
-      const { data, error } = await supabase.from('debts').insert(input).select().single();
+    mutationFn: async (input: CreateDebtArgs): Promise<CreatedDebtWithCashflow> => {
+      const { data, error } = await supabase
+        .rpc('create_debt_with_cashflow', {
+          p_contact_id: input.contact_id,
+          p_type: input.type,
+          p_principal_amount: input.principal_amount,
+          p_currency: input.currency,
+          p_description: input.description,
+          p_occurred_at: input.occurred_at,
+        })
+        .single();
       if (error) throw error;
-      return data as DebtRow;
+      const row = data as { debt_id: string; transaction_id: string };
+      return { debt_id: row.debt_id, transaction_id: row.transaction_id };
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: DEBTS_KEY });
+      void qc.invalidateQueries({ queryKey: ['transactions'] });
       void qc.invalidateQueries({ queryKey: ['summary'] });
     },
   });

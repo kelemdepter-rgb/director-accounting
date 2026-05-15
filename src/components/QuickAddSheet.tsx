@@ -133,7 +133,6 @@ export function QuickAddSheet({
     try {
       if (isDebtMode) {
         await createDebt.mutateAsync({
-          user_id: userId,
           contact_id: contact!.id,
           type: mode === 'lend' ? 'receivable' : 'payable',
           principal_amount: parsedAmount,

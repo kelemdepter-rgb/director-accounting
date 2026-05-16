@@ -10,19 +10,10 @@ import { supabase } from '@/lib/supabase';
 /**
  * OAuth redirect target.
  *
- * Two cases to handle, depending on the provider's flow type:
- *
- *   1. PKCE flow → URL looks like `/auth-callback?code=...`. We swap the
- *      `code` for a session via `exchangeCodeForSession`.
- *   2. Implicit flow → tokens land in the URL **hash fragment**
- *      (`#access_token=...&refresh_token=...`). Query-param parsers don't
- *      see the fragment, so we pull it off `window.location.hash`
- *      ourselves and feed it to `setSession`.
- *
- * The supabase client is configured with `detectSessionInUrl: true`, so in
- * the implicit case it normally picks the tokens up on its own; we still
- * parse them defensively in case someone lands here from a non-root
- * redirect target.
+ * Supabase sends the user back to `/auth-callback?code=...` after they
+ * complete the Google sign-in flow. We swap the `code` for a session via
+ * `exchangeCodeForSession`, then bounce to the home route so the app's
+ * normal auth-gated routing takes over.
  */
 export default function AuthCallbackScreen() {
   const { t } = useTranslation();
@@ -32,46 +23,19 @@ export default function AuthCallbackScreen() {
 
   useEffect(() => {
     let cancelled = false;
-
-    function parseHashTokens(): { access_token: string; refresh_token: string } | null {
-      if (typeof window === 'undefined') return null;
-      const hash = window.location.hash;
-      if (!hash || hash.length < 2) return null;
-      const params = new URLSearchParams(hash.slice(1));
-      const access_token = params.get('access_token');
-      const refresh_token = params.get('refresh_token');
-      if (!access_token || !refresh_token) return null;
-      return { access_token, refresh_token };
-    }
-
     async function run() {
-      const hashTokens = parseHashTokens();
-      if (hashTokens) {
-        const { error: sessionError } = await supabase.auth.setSession(hashTokens);
-        if (cancelled) return;
-        if (sessionError) {
-          setError(sessionError.message || t('errors.unknown'));
-          return;
-        }
-        router.replace('/');
+      if (!code) {
+        if (!cancelled) setError(t('errors.unknown'));
         return;
       }
-
-      if (code) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-        if (cancelled) return;
-        if (exchangeError) {
-          setError(exchangeError.message || t('errors.unknown'));
-          return;
-        }
-        router.replace('/');
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+      if (cancelled) return;
+      if (exchangeError) {
+        setError(exchangeError.message || t('errors.unknown'));
         return;
       }
-
-      // Neither hash fragment nor `?code=` — someone hit the URL directly.
-      if (!cancelled) setError(t('errors.unknown'));
+      router.replace('/');
     }
-
     void run();
     return () => {
       cancelled = true;

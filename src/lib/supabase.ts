@@ -33,6 +33,9 @@ export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON
     persistSession: true,
     // RN/web do not support URL-fragment-based session detection automatically.
     detectSessionInUrl: Platform.OS === 'web',
-    flowType: 'pkce',
+    // Implicit flow returns the access_token in the URL hash fragment, which
+    // avoids the PKCE-code-verifier-not-found-in-storage issue we hit when
+    // the verifier didn't survive the Google round-trip on the web build.
+    flowType: 'implicit',
   },
 });

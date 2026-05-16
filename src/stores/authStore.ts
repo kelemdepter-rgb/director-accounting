@@ -26,6 +26,13 @@ export interface AuthState {
 }
 
 const GOOGLE_REDIRECT_PATH = 'auth-callback';
+// Implicit flow drops the access_token in the URL hash fragment, so the
+// redirect target must be a URL whose page boots Supabase (which then
+// auto-detects the fragment thanks to `detectSessionInUrl: true`). The root
+// URL works; `/auth-callback` does too — both serve a Supabase-aware bundle.
+// Hard-coded to production because Supabase requires the URL to be on the
+// allow-list configured in the dashboard.
+const GOOGLE_WEB_REDIRECT_URL = 'https://director-accounting.vercel.app';
 
 /**
  * Map Supabase auth errors to our i18n keys, falling back to a generic message.
@@ -173,12 +180,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       throw new Error('Google OAuth client ID not configured');
     }
 
-    const redirectTo = buildRedirectUri(GOOGLE_REDIRECT_PATH);
-
     if (Platform.OS === 'web') {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo },
+        options: { redirectTo: GOOGLE_WEB_REDIRECT_URL },
       });
       if (error) {
         set({ errorKey: mapAuthError(error) });
@@ -187,6 +192,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
 
+    const redirectTo = buildRedirectUri(GOOGLE_REDIRECT_PATH);
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo, skipBrowserRedirect: true },

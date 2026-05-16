@@ -1,7 +1,9 @@
+import { useColorScheme } from 'nativewind';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 
+import { colors } from '@/constants/theme';
 import { useCreateContact, useContacts } from '@/hooks/useContacts';
 import { usePhoneContacts } from '@/hooks/usePhoneContacts';
 import type { PhoneContact } from '@/lib/contacts';
@@ -38,6 +40,8 @@ export function ContactAutocomplete({
   placeholder,
 }: ContactAutocompleteProps) {
   const { t } = useTranslation();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const userId = useAuthStore((s) => s.user?.id);
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
@@ -135,7 +139,7 @@ export function ContactAutocomplete({
           <TextInput
             accessibilityLabel={label ?? t('contacts.searchPlaceholder')}
             placeholder={placeholder ?? (value ? value.full_name : t('contacts.searchPlaceholder'))}
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={isDark ? colors.ink[500] : colors.ink[400]}
             value={query}
             onChangeText={setQuery}
             onFocus={() => setFocused(true)}

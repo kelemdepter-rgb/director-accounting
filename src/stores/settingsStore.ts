@@ -6,7 +6,10 @@ export type Language = 'en' | 'tr' | 'ug';
 
 const STORAGE_KEY = '@directorbook/settings/v2';
 
-const ENV_DEFAULT_CURRENCY = process.env.EXPO_PUBLIC_DEFAULT_CURRENCY?.trim() || 'USD';
+// Falls back to Turkish Lira because the primary audience for this app is
+// Turkey-based small-business directors. Override at deploy time via the
+// EXPO_PUBLIC_DEFAULT_CURRENCY env var when shipping to other markets.
+const ENV_DEFAULT_CURRENCY = process.env.EXPO_PUBLIC_DEFAULT_CURRENCY?.trim() || 'TRY';
 
 export interface PersistedSettings {
   theme: Theme;

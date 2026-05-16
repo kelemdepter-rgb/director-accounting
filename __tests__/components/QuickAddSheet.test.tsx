@@ -20,6 +20,12 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
+// nativewind transitively pulls in the real (Flow-typed) RN entry; stub it.
+vi.mock('nativewind', () => ({
+  useColorScheme: () => ({ colorScheme: 'light', setColorScheme: () => {} }),
+  styled: <T,>(component: T) => component,
+}));
+
 vi.mock('@/hooks/useDebts', () => ({
   useCreateDebt: () => ({ mutateAsync: createDebtMutation, isPending: false }),
 }));

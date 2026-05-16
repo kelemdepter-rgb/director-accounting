@@ -1,5 +1,8 @@
+import { useColorScheme } from 'nativewind';
 import { forwardRef, useState } from 'react';
 import { Text, TextInput, type TextInputProps, View } from 'react-native';
+
+import { colors } from '@/constants/theme';
 
 export interface InputProps extends Omit<TextInputProps, 'style'> {
   label?: string;
@@ -29,6 +32,8 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   ref,
 ) {
   const [focused, setFocused] = useState(false);
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const hasError = !!error;
 
   const borderClass = hasError
@@ -53,7 +58,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
           accessibilityLabel={accessibilityLabel ?? label}
           accessibilityHint={accessibilityHint ?? hint}
           editable={editable}
-          placeholderTextColor="#94A3B8"
+          placeholderTextColor={isDark ? colors.ink[500] : colors.ink[400]}
           selectionColor="#10B981"
           multiline={multiline}
           onFocus={(event) => {

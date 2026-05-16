@@ -1,3 +1,4 @@
+import { useColorScheme } from 'nativewind';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -11,6 +12,7 @@ import {
   View,
 } from 'react-native';
 
+import { colors } from '@/constants/theme';
 import type { PhoneContact } from '@/lib/contacts';
 import { filterPhoneContacts } from '@/lib/contacts';
 
@@ -64,6 +66,8 @@ export function PhoneContactsModal({
   loading = false,
 }: PhoneContactsModalProps) {
   const { t } = useTranslation();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [query, setQuery] = useState('');
 
   const filtered = useMemo<PhoneContact[]>(() => {
@@ -93,7 +97,7 @@ export function PhoneContactsModal({
           <TextInput
             accessibilityLabel={t('contacts.searchPlaceholder')}
             placeholder={t('contacts.searchPlaceholder')}
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={isDark ? colors.ink[500] : colors.ink[400]}
             value={query}
             onChangeText={setQuery}
             autoCapitalize="none"

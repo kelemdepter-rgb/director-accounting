@@ -55,7 +55,7 @@ function SummaryCard({
         </View>
       </View>
       {entries.length === 0 ? (
-        <Text className="mt-3 text-2xl font-semibold text-ink-400 dark:text-ink-400">
+        <Text className="mt-3 text-2xl font-semibold text-ink-400 dark:text-ink-500">
           {emptyText ?? '—'}
         </Text>
       ) : (

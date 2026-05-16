@@ -86,7 +86,7 @@ export function QuickAddPicker({ visible, onClose, onPick }: QuickAddPickerProps
                 {t(choice.subtitleKey)}
               </Text>
             </View>
-            <Text className="text-ink-400">›</Text>
+            <Text className="text-ink-400 dark:text-ink-300">›</Text>
           </Pressable>
         ))}
       </View>

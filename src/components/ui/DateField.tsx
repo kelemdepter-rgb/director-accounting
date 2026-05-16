@@ -3,6 +3,7 @@ import DateTimePicker, {
   DateTimePickerAndroid,
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
+import { useColorScheme } from 'nativewind';
 import { createElement, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, Platform, Pressable, Text, View } from 'react-native';
@@ -34,6 +35,8 @@ export function DateField({
   minimumDate,
 }: DateFieldProps) {
   const { t, i18n } = useTranslation();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [open, setOpen] = useState(false);
 
   const display = formatDate(value, 'long', i18n.language);
@@ -72,6 +75,7 @@ export function DateField({
           onChange={onChange}
           maximumDate={maximumDate}
           minimumDate={minimumDate}
+          isDark={isDark}
         />
       ) : (
         <Pressable
@@ -81,7 +85,11 @@ export function DateField({
           className="h-12 flex-row items-center justify-between rounded-xl border border-ink-200 bg-white px-3 dark:border-ink-700 dark:bg-ink-700"
         >
           <Text className="text-base text-ink-900 dark:text-ink-50">{display}</Text>
-          <Ionicons name="calendar-outline" size={20} color={colors.ink[500]} />
+          <Ionicons
+            name="calendar-outline"
+            size={20}
+            color={isDark ? colors.ink[300] : colors.ink[500]}
+          />
         </Pressable>
       )}
 
@@ -131,17 +139,20 @@ interface WebDateInputProps {
   onChange: (next: Date) => void;
   maximumDate?: Date;
   minimumDate?: Date;
+  isDark: boolean;
 }
 
 // Web-only: use the native HTML date input so the user gets the OS-level
 // calendar widget. Renders via React.createElement to keep the RN typecheck
-// happy on native targets that never load this branch.
+// happy on native targets that never load this branch. Colours follow the
+// current theme so the field doesn't flash white on a dark surface.
 function WebDateInput({
   ariaLabel,
   value,
   onChange,
   maximumDate,
   minimumDate,
+  isDark,
 }: WebDateInputProps) {
   const handleChange = (event: { target: { value: string } }) => {
     const next = event.target.value;
@@ -164,12 +175,15 @@ function WebDateInput({
       width: '100%',
       borderRadius: 12,
       borderWidth: 1,
-      borderColor: colors.ink[200],
-      backgroundColor: '#fff',
+      borderStyle: 'solid',
+      borderColor: isDark ? colors.ink[700] : colors.ink[200],
+      backgroundColor: isDark ? colors.ink[700] : '#fff',
       paddingLeft: 12,
       paddingRight: 12,
       fontSize: 16,
-      color: colors.ink[900],
+      color: isDark ? colors.ink[50] : colors.ink[900],
+      // Invert the native date-picker icon when dark so it stays visible.
+      colorScheme: isDark ? 'dark' : 'light',
       fontFamily: 'inherit',
     },
   });

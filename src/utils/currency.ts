@@ -6,13 +6,16 @@ export { parseLocaleAmount };
  * A small fixed catalogue of currencies the UI offers as picker options.
  * Anything outside this list is still valid — it just won't appear in the
  * dropdown — because the database accepts any ISO-4217-style 3-letter code.
+ *
+ * Ordered with TRY first because the primary market for this app is Turkey;
+ * after that, the most-used reserve currencies, then regional codes.
  */
 export const SUPPORTED_CURRENCIES = [
+  'TRY',
   'USD',
   'EUR',
   'GBP',
   'CNY',
-  'TRY',
   'RUB',
   'KZT',
   'UZS',

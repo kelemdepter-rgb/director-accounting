@@ -1,3 +1,4 @@
+import { useColorScheme } from 'nativewind';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, TextInput, View } from 'react-native';
@@ -7,6 +8,7 @@ import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { DateField } from '@/components/ui/DateField';
 import { Input } from '@/components/ui/Input';
+import { colors } from '@/constants/theme';
 import { useCreateDebt } from '@/hooks/useDebts';
 import { useCreateTransaction } from '@/hooks/useTransactions';
 import { notify } from '@/lib/confirm';
@@ -66,8 +68,9 @@ const MODE_THEME: Record<QuickAddMode, { pill: string; button: 'primary' | 'dang
   },
 };
 
-// Show a curated subset as quick pills, plus the user's default if not in the list.
-const QUICK_CURRENCY_PILLS = ['USD', 'EUR', 'TRY', 'CNY'] as const;
+// Show a curated subset as quick pills, plus the user's default if not in the
+// list. Ordered with TRY first since this app's primary market is Turkey.
+const QUICK_CURRENCY_PILLS = ['TRY', 'USD', 'EUR', 'CNY'] as const;
 
 const I18N_TO_LOCALE: Record<string, string> = {
   en: 'en-US',
@@ -83,10 +86,12 @@ export function QuickAddSheet({
   visible,
   mode,
   onClose,
-  defaultCurrency = 'USD',
+  defaultCurrency = 'TRY',
   initialContact = null,
 }: QuickAddSheetProps) {
   const { t, i18n } = useTranslation();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const userId = useAuthStore((s) => s.user?.id);
   const createTransaction = useCreateTransaction();
   const createDebt = useCreateDebt();
@@ -194,7 +199,7 @@ export function QuickAddSheet({
           <TextInput
             accessibilityLabel={t('quickAdd.amount')}
             placeholder="0"
-            placeholderTextColor="#CBD5E1"
+            placeholderTextColor={isDark ? colors.ink[600] : colors.ink[300]}
             value={amount}
             onChangeText={(text) => {
               setAmount(text);
@@ -220,7 +225,7 @@ export function QuickAddSheet({
             }}
             keyboardType="decimal-pad"
             autoFocus
-            className={`text-center text-5xl font-extrabold ${amount ? theme.amountColor : 'text-ink-300 dark:text-ink-500'} dark:text-ink-50`}
+            className={`text-center text-5xl font-extrabold ${amount ? theme.amountColor : 'text-ink-300 dark:text-ink-600'} dark:text-ink-50`}
             style={{ fontVariant: ['tabular-nums'], minWidth: 140 }}
           />
           <View className="mt-2 flex-row gap-2">

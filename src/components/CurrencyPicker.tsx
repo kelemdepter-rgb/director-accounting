@@ -34,7 +34,7 @@ export function CurrencyPicker({ value, onChange, label }: CurrencyPickerProps) 
         <Text className="text-base font-medium text-ink-900 dark:text-ink-100">
           {value}
         </Text>
-        <Text className="text-ink-400">▾</Text>
+        <Text className="text-ink-400 dark:text-ink-300">▾</Text>
       </Pressable>
 
       <Modal

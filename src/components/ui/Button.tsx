@@ -1,3 +1,4 @@
+import { useColorScheme } from 'nativewind';
 import { forwardRef, useRef } from 'react';
 import {
   ActivityIndicator,
@@ -7,6 +8,8 @@ import {
   Text,
   View,
 } from 'react-native';
+
+import { colors } from '@/constants/theme';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline';
 type Size = 'sm' | 'md' | 'lg';
@@ -70,6 +73,17 @@ export const Button = forwardRef<View, ButtonProps>(function Button(
 ) {
   const isDisabled = disabled || loading;
   const scale = useRef(new Animated.Value(1)).current;
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  // Primary/danger render on a solid colour so white indicators read fine.
+  // Secondary/ghost/outline sit on theme-aware surfaces — use the high-contrast
+  // ink shade so the spinner stays visible in dark mode.
+  const indicatorColor =
+    variant === 'primary' || variant === 'danger'
+      ? '#fff'
+      : isDark
+        ? colors.ink[100]
+        : colors.brand[500];
 
   return (
     <Animated.View style={{ transform: [{ scale }] }} className={fullWidth ? 'w-full' : ''}>
@@ -102,9 +116,7 @@ export const Button = forwardRef<View, ButtonProps>(function Button(
         {...rest}
       >
         {loading ? (
-          <ActivityIndicator
-            color={variant === 'primary' || variant === 'danger' ? '#fff' : '#1E3A5F'}
-          />
+          <ActivityIndicator color={indicatorColor} />
         ) : (
           <>
             {leftIcon ? <View className="mr-2">{leftIcon}</View> : null}

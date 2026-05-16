@@ -1,3 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Pre-React paint on web: prevent the white flash on dark-mode systems by
+ * giving html/body the same neutral background colours the app uses once
+ * NativeWind takes over. Native targets ignore this stylesheet entirely.
+ */
+html,
+body,
+#root {
+  background-color: #f8fafc; /* matches ink-50 */
+}
+
+@media (prefers-color-scheme: dark) {
+  html,
+  body,
+  #root {
+    background-color: #0f172a; /* matches ink-900 */
+  }
+}

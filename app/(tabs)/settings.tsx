@@ -95,7 +95,7 @@ function LanguageRow({
         <Text className="text-base text-ink-900 dark:text-ink-50">{option.label}</Text>
       </View>
       <View
-        className={`h-5 w-5 items-center justify-center rounded-full border-2 ${active ? 'border-income-500' : 'border-ink-300 dark:border-ink-600'}`}
+        className={`h-5 w-5 items-center justify-center rounded-full border-2 ${active ? 'border-income-500' : 'border-ink-300 dark:border-ink-500'}`}
       >
         {active ? <View className="h-2.5 w-2.5 rounded-full bg-income-500" /> : null}
       </View>

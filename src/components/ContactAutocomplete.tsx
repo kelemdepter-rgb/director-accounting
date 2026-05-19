@@ -6,7 +6,7 @@ import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-nativ
 import { colors } from '@/constants/theme';
 import { useCreateContact, useContacts } from '@/hooks/useContacts';
 import { usePhoneContacts } from '@/hooks/usePhoneContacts';
-import type { PhoneContact } from '@/lib/contacts';
+import { addContactToDevice, type PhoneContact } from '@/lib/contacts';
 import { useAuthStore } from '@/stores/authStore';
 import type { ContactRow } from '@/types/database';
 
@@ -23,11 +23,13 @@ export interface ContactAutocompleteProps {
 
 interface SuggestionItem {
   key: string;
-  kind: 'saved' | 'phone';
+  kind: 'saved' | 'phone' | 'create';
   label: string;
   sublabel?: string | null;
   saved?: ContactRow;
   phone?: PhoneContact;
+  /** For `create` rows, the raw typed name to seed the new contact with. */
+  newName?: string;
 }
 
 const MIN_QUERY_LEN = 2;
@@ -82,8 +84,36 @@ export function ContactAutocomplete({
       }
     }
 
-    return items.slice(0, MAX_RESULTS);
-  }, [enableSearch, savedContacts.data, phone, query]);
+    const trimmedQuery = query.trim();
+    // The "+ Add" fallback fires only when the saved-contacts query has
+    // actually settled (so we don't flash it while results are still loading)
+    // and there is no exact name match in either source.
+    const hasExactMatch = items.some(
+      (it) => it.label.trim().toLowerCase() === trimmedQuery.toLowerCase(),
+    );
+    if (
+      !savedContacts.isLoading &&
+      !savedContacts.isFetching &&
+      trimmedQuery.length >= MIN_QUERY_LEN &&
+      !hasExactMatch
+    ) {
+      items.push({
+        key: `create:${trimmedQuery.toLowerCase()}`,
+        kind: 'create',
+        label: trimmedQuery,
+        newName: trimmedQuery,
+      });
+    }
+
+    return items.slice(0, MAX_RESULTS + 1);
+  }, [
+    enableSearch,
+    savedContacts.data,
+    savedContacts.isLoading,
+    savedContacts.isFetching,
+    phone,
+    query,
+  ]);
 
   const onPickSaved = (contact: ContactRow) => {
     setQuery('');
@@ -104,6 +134,28 @@ export function ContactAutocomplete({
       onChange(created);
     } catch {
       // The mutation surfaces error state via TanStack; UI shows it.
+    }
+  };
+
+  const onPickCreate = async (newName: string) => {
+    if (!userId) return;
+    const trimmed = newName.trim();
+    if (trimmed.length === 0) return;
+    try {
+      const created = await createContact.mutateAsync({
+        user_id: userId,
+        full_name: trimmed,
+        phone_number: null,
+      });
+      setQuery('');
+      setFocused(false);
+      onChange(created);
+      // Mirror to the device address book when the OS supports it and the
+      // user has already granted permission. Silent on failure: the in-app
+      // save has already succeeded.
+      void addContactToDevice({ name: trimmed });
+    } catch {
+      // Error surface handled by the mutation; selection just won't happen.
     }
   };
 
@@ -181,41 +233,61 @@ export function ContactAutocomplete({
             <View className="items-center justify-center px-3 py-4">
               <ActivityIndicator color="#4f46e5" />
             </View>
-          ) : suggestions.length === 0 ? (
-            <View className="px-3 py-4">
-              <Text className="text-sm text-ink-500 dark:text-ink-300">
-                {t('contacts.noMatches')}
-              </Text>
-            </View>
           ) : (
-            suggestions.map((item) => (
-              <Pressable
-                key={item.key}
-                accessibilityRole="button"
-                accessibilityLabel={`${item.label}${item.sublabel ? `, ${item.sublabel}` : ''}`}
-                onPress={() => {
-                  if (item.kind === 'saved' && item.saved) onPickSaved(item.saved);
-                  else if (item.kind === 'phone' && item.phone) void onPickPhone(item.phone);
-                }}
-                className="flex-row items-center justify-between border-b border-ink-100 px-3 py-3 last:border-b-0 active:bg-ink-50 dark:border-ink-700 dark:active:bg-ink-700"
-              >
-                <View className="flex-1 pr-2">
-                  <Text className="text-base text-ink-900 dark:text-ink-100">
-                    {item.label}
-                  </Text>
-                  {item.sublabel ? (
-                    <Text className="text-xs text-ink-500 dark:text-ink-300">
-                      {item.sublabel}
-                    </Text>
-                  ) : null}
-                </View>
-                <Text
-                  className={`text-xs font-semibold ${item.kind === 'phone' ? 'text-payable' : 'text-brand-600 dark:text-brand-300'}`}
+            suggestions.map((item) => {
+              const isCreate = item.kind === 'create';
+              const tagText = isCreate
+                ? t('contacts.addInlineTag')
+                : item.kind === 'phone'
+                  ? t('contacts.fromPhoneTag')
+                  : t('contacts.savedTag');
+              const tagClass = isCreate
+                ? 'text-income-600 dark:text-income-100'
+                : item.kind === 'phone'
+                  ? 'text-payable'
+                  : 'text-brand-600 dark:text-brand-300';
+              const labelClass = isCreate
+                ? 'text-base font-semibold text-income-700 dark:text-income-200'
+                : 'text-base text-ink-900 dark:text-ink-100';
+              const labelText = isCreate
+                ? t('contacts.addInline', { name: item.label })
+                : item.label;
+              const a11yLabel = isCreate
+                ? t('contacts.addInline', { name: item.label })
+                : `${item.label}${item.sublabel ? `, ${item.sublabel}` : ''}`;
+
+              return (
+                <Pressable
+                  key={item.key}
+                  accessibilityRole="button"
+                  accessibilityLabel={a11yLabel}
+                  onPress={() => {
+                    if (item.kind === 'saved' && item.saved) onPickSaved(item.saved);
+                    else if (item.kind === 'phone' && item.phone) void onPickPhone(item.phone);
+                    else if (item.kind === 'create' && item.newName)
+                      void onPickCreate(item.newName);
+                  }}
+                  disabled={isCreate && createContact.isPending}
+                  className="flex-row items-center justify-between border-b border-ink-100 px-3 py-3 last:border-b-0 active:bg-ink-50 dark:border-ink-700 dark:active:bg-ink-700"
                 >
-                  {item.kind === 'phone' ? t('contacts.fromPhoneTag') : t('contacts.savedTag')}
-                </Text>
-              </Pressable>
-            ))
+                  <View className="flex-1 pr-2">
+                    <Text className={labelClass} numberOfLines={1}>
+                      {labelText}
+                    </Text>
+                    {item.sublabel ? (
+                      <Text className="text-xs text-ink-500 dark:text-ink-300">
+                        {item.sublabel}
+                      </Text>
+                    ) : null}
+                  </View>
+                  {isCreate && createContact.isPending ? (
+                    <ActivityIndicator color={colors.income} />
+                  ) : (
+                    <Text className={`text-xs font-semibold ${tagClass}`}>{tagText}</Text>
+                  )}
+                </Pressable>
+              );
+            })
           )}
         </View>
       ) : null}

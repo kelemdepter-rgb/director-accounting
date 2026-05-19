@@ -72,3 +72,45 @@ export function filterPhoneContacts(
   }
   return result;
 }
+
+/**
+ * Write a contact to the device address book (iOS / Android only).
+ *
+ * Returns true if the OS accepted the entry, false on any error or when the
+ * platform doesn't support it. Errors are swallowed because failing to mirror
+ * the contact to the device should never block the in-app save — the prompt
+ * explicitly says "skip silently".
+ */
+export async function addContactToDevice(input: {
+  name: string;
+  phoneNumber?: string | null;
+}): Promise<boolean> {
+  if (!isPhoneContactsSupported()) return false;
+  try {
+    const { status } = await Contacts.getPermissionsAsync();
+    if (status !== 'granted') return false;
+    const trimmedName = input.name.trim();
+    if (trimmedName.length === 0) return false;
+
+    const contact: Contacts.Contact = {
+      // expo-contacts requires a contactType. Person is the universal default.
+      contactType: Contacts.ContactTypes.Person,
+      name: trimmedName,
+      firstName: trimmedName,
+    };
+
+    if (input.phoneNumber && input.phoneNumber.trim().length > 0) {
+      contact.phoneNumbers = [
+        {
+          label: 'mobile',
+          number: input.phoneNumber.trim(),
+        },
+      ];
+    }
+
+    await Contacts.addContactAsync(contact);
+    return true;
+  } catch {
+    return false;
+  }
+}

@@ -126,6 +126,8 @@
     "fromPhone": "Telefon rehberinden",
     "fromPhoneTag": "Rehber",
     "savedTag": "Kayıtlı",
+    "addInline": "+ \"{{name}}\" kişisini ekle",
+    "addInlineTag": "Yeni",
     "permissionTitle": "Rehbere erişim",
     "permissionExplain": "Telefon rehberinizi yalnızca işlem yaptığınız kişileri hızlı bulmanız için kullanırız. Siz açıkça eklemeden hiçbir kayıt sunucuya gönderilmez.",
     "permissionGrant": "İzin ver",

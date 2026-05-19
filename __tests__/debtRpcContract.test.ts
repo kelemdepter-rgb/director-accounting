@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { buildCreateDebtRpcParams } from '@/lib/debtRpcParams';
+
 /**
  * The Postgres RPCs `record_debt_payment` and `create_debt_with_cashflow` are
  * the boundary between the app and the database. We type the *return* shape
@@ -66,8 +68,6 @@ describe('create_debt_with_cashflow RPC contract', () => {
  * migration) re-introduces the production "function not found in schema
  * cache" bug, so this test is the early-warning trip wire.
  */
-import { buildCreateDebtRpcParams } from '@/lib/debtRpcParams';
-
 describe('create_debt_with_cashflow argument names', () => {
   it('omits p_occurred_at when occurred_at is undefined', () => {
     const params = buildCreateDebtRpcParams({

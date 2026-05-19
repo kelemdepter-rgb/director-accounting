@@ -15,6 +15,7 @@ import { useColorScheme } from 'nativewind';
 import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Platform, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { colors } from '@/constants/theme';
@@ -178,37 +179,33 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <SettingsBridge />
-      <RealtimeBridge />
-      <StatusBar style={isDark ? 'light' : 'dark'} />
-      <RootBoundary>
-        <ThemeProvider value={navTheme}>
-          {/*
-            Bare View with an explicit theme-coloured bg sits underneath
-            every screen. This is the layer that fixes "main content area
-            renders white in dark mode" — it gives every gap a dark surface
-            to fall through to, regardless of NativeWind class timing.
-          */}
-          <View style={{ flex: 1, backgroundColor: themeBg }}>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: themeBg },
-              }}
-            >
-              <Stack.Screen name="index" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="contact/new" options={{ presentation: 'modal' }} />
-              <Stack.Screen name="contact/[id]" />
-              <Stack.Screen name="debt/[id]" />
-              <Stack.Screen name="transaction/[id]" />
-              <Stack.Screen name="transactions" />
-            </Stack>
-          </View>
-        </ThemeProvider>
-      </RootBoundary>
-    </QueryClientProvider>
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <SettingsBridge />
+        <RealtimeBridge />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
+        <RootBoundary>
+          <ThemeProvider value={navTheme}>
+            <View style={{ flex: 1, backgroundColor: themeBg }}>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: themeBg },
+                }}
+              >
+                <Stack.Screen name="index" />
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="contact/new" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="contact/[id]" />
+                <Stack.Screen name="debt/[id]" />
+                <Stack.Screen name="transaction/[id]" />
+                <Stack.Screen name="transactions" />
+              </Stack>
+            </View>
+          </ThemeProvider>
+        </RootBoundary>
+      </QueryClientProvider>
+    </SafeAreaProvider>
   );
 }

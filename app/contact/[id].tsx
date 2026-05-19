@@ -6,11 +6,11 @@ import {
   ActivityIndicator,
   Linking,
   Pressable,
-  SafeAreaView,
   ScrollView,
   Text,
   View,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ContactForm } from '@/components/ContactForm';
 import { DebtCard } from '@/components/DebtCard';
@@ -36,6 +36,7 @@ export default function ContactDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const defaultCurrency = useSettingsStore((s) => s.defaultCurrency);
+  const insets = useSafeAreaInsets();
 
   const contactQ = useContact(id);
   const updateContact = useUpdateContact();
@@ -57,7 +58,7 @@ export default function ContactDetailScreen() {
 
   if (contactQ.isLoading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-ink-50 dark:bg-ink-900">
+      <SafeAreaView edges={['top']} className="flex-1 items-center justify-center bg-ink-50 dark:bg-ink-900">
         <ActivityIndicator size="large" color={colors.brand[500]} />
       </SafeAreaView>
     );
@@ -65,7 +66,7 @@ export default function ContactDetailScreen() {
 
   if (contactQ.isError || !contactQ.data) {
     return (
-      <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-900">
+      <SafeAreaView edges={['top']} className="flex-1 bg-ink-50 dark:bg-ink-900">
         <EmptyState
           icon="❓"
           title={t('contacts.notFound')}
@@ -101,8 +102,13 @@ export default function ContactDetailScreen() {
     }
   };
 
+  // Bottom padding under the scroll content must clear the FAB (h-14 at
+  // bottom-6 ≈ 80px), give breathing room for the last row, and respect
+  // the device's safe-area gesture bar inset on Android / notch on iOS.
+  const scrollPaddingBottom = 96 + insets.bottom;
+
   return (
-    <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-900">
+    <SafeAreaView edges={['top']} className="flex-1 bg-ink-50 dark:bg-ink-900">
       {/* Hero header */}
       <View className="px-5 py-3" style={{ backgroundColor: heroColor }}>
         <View className="flex-row items-center justify-between">
@@ -158,8 +164,11 @@ export default function ContactDetailScreen() {
       </View>
 
       <ScrollView
-        contentContainerClassName="px-5 py-5 gap-5 pb-32"
+        className="flex-1"
+        contentContainerClassName="px-5 py-5 gap-5"
+        contentContainerStyle={{ paddingBottom: scrollPaddingBottom }}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         {editing ? (
           <Card className="p-4">

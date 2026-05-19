@@ -7,6 +7,12 @@ dist/
 web-build/
 expo-env.d.ts
 
+# Vercel
+.vercel/
+
+# local source-export archives (handy for sharing, never committed)
+*.zip
+
 # Native
 .kotlin/
 *.orig.*

@@ -35,11 +35,13 @@ website — open `dist/index.html` in your browser to sanity-check it.
 
 1. Sign in at https://vercel.com (the Hobby plan is free).
 2. Click **Add New → Project**, pick your GitHub repo, and click **Import**.
-3. Configure:
-   - **Framework Preset:** **Other** (Vercel doesn't auto-detect Expo).
-   - **Build Command:** `npx expo export --platform web`
-   - **Output Directory:** `dist`
-   - **Install Command:** leave default (`npm install`).
+3. **Build settings** — the project ships a [`vercel.json`](./vercel.json), so
+   Vercel will pick these up automatically. You don't need to fill anything
+   in here unless you want to override:
+   - Build command: `npx expo export --platform web`
+   - Output directory: `dist`
+   - Install command: `npm install --legacy-peer-deps`
+     (needed for a pre-existing React peer-dep mismatch.)
 4. Open the **Environment Variables** section and add — copy the values from
    your local `.env`:
    - `EXPO_PUBLIC_SUPABASE_URL`

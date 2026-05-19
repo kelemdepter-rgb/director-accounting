@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { buildCreateDebtRpcParams } from '@/lib/debtRpcParams';
 import { supabase } from '@/lib/supabase';
 import type {
   DebtPaymentRow,
@@ -97,14 +98,7 @@ export function useCreateDebt() {
   return useMutation({
     mutationFn: async (input: CreateDebtArgs): Promise<CreatedDebtWithCashflow> => {
       const { data, error } = await supabase
-        .rpc('create_debt_with_cashflow', {
-          p_contact_id: input.contact_id,
-          p_type: input.type,
-          p_principal_amount: input.principal_amount,
-          p_currency: input.currency,
-          p_description: input.description,
-          p_occurred_at: input.occurred_at,
-        })
+        .rpc('create_debt_with_cashflow', buildCreateDebtRpcParams(input))
         .single();
       if (error) throw error;
       const row = data as { debt_id: string; transaction_id: string };

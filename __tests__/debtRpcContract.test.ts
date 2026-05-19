@@ -59,3 +59,54 @@ describe('create_debt_with_cashflow RPC contract', () => {
     expect(Object.keys(sample).sort()).toEqual(['debt_id', 'transaction_id']);
   });
 });
+
+/**
+ * Pin the parameter names the frontend sends to PostgREST. Drift between
+ * these names and the function signature in migration 011 (or any future
+ * migration) re-introduces the production "function not found in schema
+ * cache" bug, so this test is the early-warning trip wire.
+ */
+import { buildCreateDebtRpcParams } from '@/lib/debtRpcParams';
+
+describe('create_debt_with_cashflow argument names', () => {
+  it('omits p_occurred_at when occurred_at is undefined', () => {
+    const params = buildCreateDebtRpcParams({
+      contact_id: 'c1',
+      type: 'receivable',
+      principal_amount: 100,
+      currency: 'TRY',
+      description: null,
+    });
+    expect(Object.keys(params).sort()).toEqual([
+      'p_contact_id',
+      'p_currency',
+      'p_description',
+      'p_principal_amount',
+      'p_type',
+    ]);
+    // Critically: the key must NOT be present, not just undefined-valued.
+    // PostgREST resolves overloads by exact key set, so an undefined value
+    // would survive JSON.stringify on some clients and break the lookup.
+    expect('p_occurred_at' in params).toBe(false);
+  });
+
+  it('emits p_occurred_at when occurred_at is provided', () => {
+    const params = buildCreateDebtRpcParams({
+      contact_id: 'c1',
+      type: 'payable',
+      principal_amount: 50,
+      currency: 'USD',
+      description: 'Vize',
+      occurred_at: '2025-01-02T03:04:05.000Z',
+    });
+    expect(Object.keys(params).sort()).toEqual([
+      'p_contact_id',
+      'p_currency',
+      'p_description',
+      'p_occurred_at',
+      'p_principal_amount',
+      'p_type',
+    ]);
+    expect(params.p_occurred_at).toBe('2025-01-02T03:04:05.000Z');
+  });
+});

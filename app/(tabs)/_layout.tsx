@@ -25,18 +25,22 @@ export default function TabsLayout() {
   // so we feed them explicit hex values keyed off the current colour scheme.
   const headerBg = isDark ? colors.ink[900] : '#FFFFFF';
   const headerText = isDark ? colors.ink[50] : colors.ink[900];
+  const sceneBg = isDark ? colors.ink[900] : colors.ink[50];
   const tabBarBg = isWide
     ? colors.brand[500]
     : isDark
       ? colors.ink[800]
       : '#FFFFFF';
   const tabBarBorder = isDark ? colors.ink[700] : colors.ink[100];
-  const tabBarActive = isWide ? '#FFFFFF' : colors.brand[500];
-  const tabBarInactive = isWide
-    ? colors.ink[300]
+  // Narrow + dark used to be brand-500 on ink-800 — both deep navies, the
+  // active item was effectively invisible. Use the income green there
+  // instead so the selected tab stands out.
+  const tabBarActive = isWide
+    ? '#FFFFFF'
     : isDark
-      ? colors.ink[400]
-      : colors.ink[400];
+      ? colors.income
+      : colors.brand[500];
+  const tabBarInactive = isWide ? colors.ink[300] : colors.ink[400];
 
   return (
     <Tabs
@@ -51,6 +55,7 @@ export default function TabsLayout() {
           color: headerText,
         },
         headerShadowVisible: false,
+        sceneStyle: { backgroundColor: sceneBg },
         tabBarActiveTintColor: tabBarActive,
         tabBarInactiveTintColor: tabBarInactive,
         tabBarPosition: isWide ? 'left' : 'bottom',

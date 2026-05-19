@@ -3,20 +3,50 @@
 @tailwind utilities;
 
 /*
- * Pre-React paint on web: prevent the white flash on dark-mode systems by
- * giving html/body the same neutral background colours the app uses once
- * NativeWind takes over. Native targets ignore this stylesheet entirely.
+ * Pre-React paint on web. NativeWind toggles a `dark` class on <html> via
+ * the explicit effect in app/_layout.tsx; we drive the pre-mount background
+ * off the same class so the user's chosen app theme (which can disagree
+ * with the OS preference — light system + dark app, or vice versa) wins.
+ * prefers-color-scheme is kept only as a first-time hint before any JS runs.
+ * Native targets ignore this stylesheet entirely.
  */
+:root {
+  color-scheme: light dark;
+}
+
 html,
 body,
 #root {
   background-color: #f8fafc; /* matches ink-50 */
+  margin: 0;
+  min-height: 100%;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 @media (prefers-color-scheme: dark) {
-  html,
-  body,
-  #root {
+  html:not(.light),
+  html:not(.light) body,
+  html:not(.light) #root {
     background-color: #0f172a; /* matches ink-900 */
   }
+}
+
+/* The user-chosen theme (set by the root layout's effect) wins over the
+   system preference. Order matters: these come after the media query so
+   they have at least equal specificity and live later in the cascade. */
+html.dark,
+html.dark body,
+html.dark #root {
+  background-color: #0f172a;
+}
+
+html.light,
+html.light body,
+html.light #root {
+  background-color: #f8fafc;
 }

@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  aggregateContactBalance,
   aggregateOutstandingByCurrency,
   isSettled,
   paymentProgress,
   remainingAmount,
   totalPaid,
   validatePayment,
+  type ContactCashflowLike,
   type DebtLike,
 } from '@/utils/debtCalculation';
 
@@ -202,5 +204,97 @@ describe('aggregateOutstandingByCurrency', () => {
 
   it('returns an empty object for an empty list', () => {
     expect(aggregateOutstandingByCurrency([])).toEqual({});
+  });
+});
+
+describe('aggregateContactBalance', () => {
+  it('matches the prompt example: lend 15k alacak + borç 20k + manual cash movements', () => {
+    // From the spec: a contact with TRY 20,000 borç (payable) and TRY 15,000
+    // alacak (receivable), plus a manual cash inflow of TRY 2,358 and a
+    // manual cash outflow of TRY 2,385. Auto-generated mirrors of the debt
+    // creation MUST be ignored so they don't double-count.
+    const debts: DebtLike[] = [
+      {
+        type: 'receivable',
+        status: 'active',
+        currency: 'TRY',
+        principal_amount: 15000,
+        remaining_amount: 15000,
+      },
+      {
+        type: 'payable',
+        status: 'active',
+        currency: 'TRY',
+        principal_amount: 20000,
+        remaining_amount: 20000,
+      },
+    ];
+    const transactions: ContactCashflowLike[] = [
+      { type: 'income', currency: 'TRY', amount: 2358, auto_generated: false },
+      { type: 'expense', currency: 'TRY', amount: 2385, auto_generated: false },
+      // These ones came from the create_debt_with_cashflow RPC. They must NOT
+      // bump the totals because the debt rows already represent them.
+      { type: 'expense', currency: 'TRY', amount: 15000, auto_generated: true },
+      { type: 'income', currency: 'TRY', amount: 20000, auto_generated: true },
+    ];
+
+    const result = aggregateContactBalance(debts, transactions);
+    expect(result.TRY).toEqual({
+      receivable: 17358,
+      payable: 22385,
+      net: -5027,
+    });
+  });
+
+  it('ignores auto-generated rows entirely', () => {
+    const debts: DebtLike[] = [
+      {
+        type: 'receivable',
+        status: 'active',
+        currency: 'USD',
+        principal_amount: 100,
+        remaining_amount: 100,
+      },
+    ];
+    const noManual = aggregateContactBalance(debts, [
+      { type: 'income', currency: 'USD', amount: 30, auto_generated: true },
+      { type: 'expense', currency: 'USD', amount: 50, auto_generated: true },
+    ]);
+    expect(noManual.USD).toEqual({ receivable: 100, payable: 0, net: 100 });
+  });
+
+  it('handles per-currency segregation', () => {
+    const result = aggregateContactBalance(
+      [
+        {
+          type: 'receivable',
+          status: 'active',
+          currency: 'USD',
+          principal_amount: 100,
+          remaining_amount: 100,
+        },
+      ],
+      [
+        { type: 'income', currency: 'EUR', amount: 40, auto_generated: false },
+        { type: 'expense', currency: 'USD', amount: 25, auto_generated: false },
+      ],
+    );
+    expect(result.USD).toEqual({ receivable: 100, payable: 25, net: 75 });
+    expect(result.EUR).toEqual({ receivable: 40, payable: 0, net: 40 });
+  });
+
+  it('produces a currency entry when only manual transactions exist', () => {
+    const result = aggregateContactBalance([], [
+      { type: 'income', currency: 'CNY', amount: '125.50', auto_generated: false },
+    ]);
+    expect(result.CNY).toEqual({ receivable: 125.5, payable: 0, net: 125.5 });
+  });
+
+  it('skips zero / negative manual amounts', () => {
+    const result = aggregateContactBalance([], [
+      { type: 'income', currency: 'USD', amount: 0, auto_generated: false },
+      { type: 'expense', currency: 'USD', amount: -10, auto_generated: false },
+    ]);
+    expect(result).toEqual({});
   });
 });

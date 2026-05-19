@@ -144,3 +144,51 @@ export function aggregateOutstandingByCurrency(
 
   return acc;
 }
+
+export interface ContactCashflowLike {
+  type: 'income' | 'expense';
+  currency: string;
+  amount: number | string;
+  /** Auto-generated rows (debt-creation / payment mirrors) are excluded from
+   *  the running balance because the debt's own remaining_amount already
+   *  reflects them. Only manual cash movements should bump the totals. */
+  auto_generated: boolean;
+}
+
+/**
+ * Per-currency balance for a single contact, combining open debts with manual
+ * cash movements (rows the user entered by hand, not the ones the system
+ * mirrors from debt creation or payment recording).
+ *
+ *   receivable side = Σ active receivable remaining + Σ manual income
+ *   payable side    = Σ active payable    remaining + Σ manual expense
+ *
+ * The "remaining" side already accounts for partial payments via
+ * debts_with_balance.remaining_amount, so a partial payback shrinks the
+ * receivable principal directly. Free-form cash inflows the user logged
+ * without tying them to a specific debt still need to land somewhere, and
+ * the convention in this app is: income from a contact widens the
+ * receivable column, expense to a contact widens the payable column.
+ */
+export function aggregateContactBalance(
+  debts: readonly DebtLike[],
+  transactions: readonly ContactCashflowLike[],
+): Record<string, CurrencyTotals> {
+  const acc = aggregateOutstandingByCurrency(debts);
+
+  for (const tx of transactions) {
+    if (tx.auto_generated) continue;
+    const amount = toNumber(tx.amount);
+    if (amount <= 0) continue;
+    const slot = acc[tx.currency] ?? { receivable: 0, payable: 0, net: 0 };
+    if (tx.type === 'income') {
+      slot.receivable = roundMoney(slot.receivable + amount);
+    } else {
+      slot.payable = roundMoney(slot.payable + amount);
+    }
+    slot.net = roundMoney(slot.receivable - slot.payable);
+    acc[tx.currency] = slot;
+  }
+
+  return acc;
+}

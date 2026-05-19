@@ -29,7 +29,7 @@ import { confirm, notify } from '@/lib/confirm';
 import { contactSchema } from '@/schemas/contact';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { formatMoney } from '@/utils/currency';
-import { aggregateOutstandingByCurrency } from '@/utils/debtCalculation';
+import { aggregateContactBalance } from '@/utils/debtCalculation';
 
 export default function ContactDetailScreen() {
   const { t } = useTranslation();
@@ -52,8 +52,8 @@ export default function ContactDetailScreen() {
     [debtsQ.data],
   );
   const balances = useMemo(
-    () => aggregateOutstandingByCurrency(debtsQ.data ?? []),
-    [debtsQ.data],
+    () => aggregateContactBalance(debtsQ.data ?? [], txnQ.data ?? []),
+    [debtsQ.data, txnQ.data],
   );
 
   if (contactQ.isLoading) {

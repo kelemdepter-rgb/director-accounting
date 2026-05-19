@@ -50,6 +50,7 @@ export default function NewContactScreen() {
                 phone_number: parsed.data.phone_number,
                 occupation: parsed.data.occupation,
                 notes: parsed.data.notes,
+                service_type: parsed.data.service_type,
               });
               router.back();
             } catch (err) {

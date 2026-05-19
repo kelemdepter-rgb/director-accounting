@@ -138,7 +138,11 @@
     "balanceHeading": "Açık bakiye",
     "noActiveDebts": "Bu kişiyle açık bir bakiye yok.",
     "transactionHistory": "İşlem geçmişi",
-    "noTransactions": "Bu kişiyle henüz işlem yapılmadı."
+    "noTransactions": "Bu kişiyle henüz işlem yapılmadı.",
+    "serviceType": "Hizmet türü",
+    "serviceTypeVize": "Vize",
+    "serviceTypeBilet": "Bilet",
+    "serviceTypeBiletVeVize": "Bilet ve Vize"
   },
   "settings": {
     "account": "Hesap",

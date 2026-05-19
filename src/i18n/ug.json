@@ -138,7 +138,11 @@
     "balanceHeading": "تۆلەنمىگەن قالدۇق",
     "noActiveDebts": "بۇ كىشى بىلەن تۆلەنمىگەن قالدۇق يوق.",
     "transactionHistory": "سودا تارىخى",
-    "noTransactions": "بۇ كىشى بىلەن تېخى سودا قىلىنمىغان."
+    "noTransactions": "بۇ كىشى بىلەن تېخى سودا قىلىنمىغان.",
+    "serviceType": "مۇلازىمەت تۈرى",
+    "serviceTypeVize": "ۋىزا",
+    "serviceTypeBilet": "بىلەت",
+    "serviceTypeBiletVeVize": "بىلەت ۋە ۋىزا"
   },
   "settings": {
     "account": "ھېسابات",

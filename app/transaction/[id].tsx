@@ -16,6 +16,7 @@ import { useDeleteTransaction } from '@/hooks/useTransactions';
 import { confirm, notify } from '@/lib/confirm';
 import { supabase } from '@/lib/supabase';
 import type { TransactionRow } from '@/types/database';
+import { displayContact } from '@/utils/contact';
 import { formatMoney, parseLocaleAmount } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
 
@@ -234,13 +235,13 @@ export default function TransactionDetailScreen() {
           <>
             {contact ? (
               <Card className="flex-row items-center gap-3 p-4">
-                <Avatar name={contact.full_name} size={40} />
+                <Avatar name={displayContact(contact)} size={40} />
                 <View className="flex-1">
                   <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-300">
                     {t('contacts.fullName')}
                   </Text>
                   <Text className="mt-0.5 text-base text-ink-900 dark:text-ink-50">
-                    {contact.full_name}
+                    {displayContact(contact)}
                   </Text>
                 </View>
               </Card>

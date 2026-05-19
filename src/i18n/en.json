@@ -138,7 +138,11 @@
     "balanceHeading": "Outstanding balance",
     "noActiveDebts": "No outstanding balance with this contact.",
     "transactionHistory": "Transaction history",
-    "noTransactions": "No transactions yet with this contact."
+    "noTransactions": "No transactions yet with this contact.",
+    "serviceType": "Service type",
+    "serviceTypeVize": "Visa",
+    "serviceTypeBilet": "Ticket",
+    "serviceTypeBiletVeVize": "Ticket & Visa"
   },
   "settings": {
     "account": "Account",

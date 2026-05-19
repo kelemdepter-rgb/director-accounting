@@ -1,9 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { contactSchema, type ContactFormValues } from '@/schemas/contact';
+import type { ContactServiceType } from '@/types/database';
 
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -21,7 +22,14 @@ const EMPTY_DEFAULTS: ContactFormValues = {
   phone_number: '',
   occupation: '',
   notes: '',
+  service_type: null,
 };
+
+const SERVICE_TYPE_OPTIONS: { value: ContactServiceType; labelKey: string }[] = [
+  { value: 'vize', labelKey: 'contacts.serviceTypeVize' },
+  { value: 'bilet', labelKey: 'contacts.serviceTypeBilet' },
+  { value: 'bilet_ve_vize', labelKey: 'contacts.serviceTypeBiletVeVize' },
+];
 
 export function ContactForm({
   initialValues,
@@ -44,16 +52,23 @@ export function ContactForm({
 
   return (
     <View className="gap-4">
+      {/*
+        Phone moves to the top of the form because it is the only required
+        field. The asterisk in the label matches the convention used by the
+        auth screens.
+      */}
       <Controller
         control={control}
-        name="full_name"
+        name="phone_number"
         render={({ field, fieldState }) => (
           <Input
-            label={t('contacts.fullName')}
+            label={`${t('contacts.phoneNumber')} *`}
             value={field.value ?? ''}
             onChangeText={field.onChange}
             onBlur={field.onBlur}
-            autoCapitalize="words"
+            keyboardType="phone-pad"
+            autoComplete="tel"
+            textContentType="telephoneNumber"
             error={
               fieldState.error
                 ? t(fieldState.error.message ?? 'errors.unknown')
@@ -65,16 +80,14 @@ export function ContactForm({
 
       <Controller
         control={control}
-        name="phone_number"
+        name="full_name"
         render={({ field, fieldState }) => (
           <Input
-            label={t('contacts.phoneNumber')}
+            label={t('contacts.fullName')}
             value={field.value ?? ''}
             onChangeText={field.onChange}
             onBlur={field.onBlur}
-            keyboardType="phone-pad"
-            autoComplete="tel"
-            textContentType="telephoneNumber"
+            autoCapitalize="words"
             error={
               fieldState.error
                 ? t(fieldState.error.message ?? 'errors.unknown')
@@ -100,6 +113,54 @@ export function ContactForm({
             }
           />
         )}
+      />
+
+      {/*
+        Service type — a single-select pill group matching the currency
+        pill style used throughout the app. Tapping the same pill again
+        clears the selection (NULL is a valid state).
+      */}
+      <Controller
+        control={control}
+        name="service_type"
+        render={({ field }) => {
+          const current = field.value ?? null;
+          return (
+            <View>
+              <Text className="mb-1.5 text-sm font-medium text-ink-700 dark:text-ink-300">
+                {t('contacts.serviceType')}
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {SERVICE_TYPE_OPTIONS.map((opt) => {
+                  const active = current === opt.value;
+                  return (
+                    <Pressable
+                      key={opt.value}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      onPress={() => field.onChange(active ? null : opt.value)}
+                      className={`rounded-full px-4 py-2 ${
+                        active
+                          ? 'bg-brand-500'
+                          : 'bg-ink-100 dark:bg-ink-700'
+                      }`}
+                    >
+                      <Text
+                        className={`text-sm font-semibold ${
+                          active
+                            ? 'text-white'
+                            : 'text-ink-700 dark:text-ink-200'
+                        }`}
+                      >
+                        {t(opt.labelKey)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          );
+        }}
       />
 
       <Controller

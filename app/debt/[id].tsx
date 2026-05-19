@@ -22,6 +22,7 @@ import {
 } from '@/hooks/useDebts';
 import { confirm, notify } from '@/lib/confirm';
 import type { DebtPaymentRow } from '@/types/database';
+import { displayContact } from '@/utils/contact';
 import { formatMoney, parseLocaleAmount } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
 import { paymentProgress, validatePayment } from '@/utils/debtCalculation';
@@ -242,7 +243,7 @@ export default function DebtDetailScreen() {
 
         <View className="mt-4 items-center">
           <Text className="text-xs uppercase tracking-widest text-white/70">
-            {contactQ.data?.full_name ?? '—'}
+            {displayContact(contactQ.data ?? null)}
           </Text>
           <Text
             className="mt-1 text-4xl font-extrabold text-white"

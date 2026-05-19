@@ -17,6 +17,7 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import type { ContactRow } from '@/types/database';
+import { displayContact } from '@/utils/contact';
 import { formatMoney } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
 import { currentGreetingKey } from '@/utils/greeting';
@@ -147,7 +148,9 @@ export default function HomeScreen() {
               <TransactionListItem
                 transaction={item}
                 contactName={
-                  item.contact_id ? contactById.get(item.contact_id)?.full_name : null
+                  item.contact_id
+                    ? displayContact(contactById.get(item.contact_id) ?? null)
+                    : null
                 }
                 onPress={(tx) =>
                   tx.auto_generated && tx.debt_id

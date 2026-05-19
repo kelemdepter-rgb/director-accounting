@@ -8,25 +8,33 @@ const trimmedNullable = (max: number) =>
     .optional()
     .transform((v) => (v && v.length > 0 ? v : null));
 
+/**
+ * Contact form schema.
+ *
+ * Per spec the ONLY required field is `phone_number`: the user enters a
+ * person's phone, optionally fills in a name, and we save. Everything else
+ * — name, occupation, notes, service_type — is nullable both in the DB
+ * (see migration 012) and in this validator.
+ *
+ * Phone must look phone-y: 3..30 characters of digits / spaces / + - ( ).
+ */
 export const contactSchema = z.object({
-  full_name: z
-    .string()
-    .trim()
-    .min(1, { message: 'validation.required' })
-    .max(200, { message: 'validation.tooLong' }),
+  full_name: trimmedNullable(200),
   phone_number: z
     .string()
     .trim()
+    .min(3, { message: 'validation.phoneInvalid' })
     .max(30, { message: 'validation.tooLong' })
-    .optional()
-    .transform((v) => (v && v.length >= 3 ? v : v && v.length === 0 ? null : v ?? null))
-    .refine(
-      (v) => v === null || (typeof v === 'string' && v.length >= 3 && v.length <= 30),
-      { message: 'validation.phoneInvalid' },
-    ),
+    .regex(/^[+0-9 ()\-]+$/, { message: 'validation.phoneInvalid' }),
   occupation: trimmedNullable(200),
   notes: trimmedNullable(2000),
+  service_type: z
+    .enum(['vize', 'bilet', 'bilet_ve_vize'])
+    .nullable()
+    .optional()
+    .transform((v) => v ?? null),
 });
 
 export type ContactFormValues = z.input<typeof contactSchema>;
 export type ContactValues = z.output<typeof contactSchema>;
+export type ContactServiceType = 'vize' | 'bilet' | 'bilet_ve_vize';

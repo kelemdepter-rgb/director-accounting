@@ -17,7 +17,14 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { colors } from '@/constants/theme';
 import { useContacts } from '@/hooks/useContacts';
-import type { ContactRow } from '@/types/database';
+import type { ContactRow, ContactServiceType } from '@/types/database';
+import { displayContact } from '@/utils/contact';
+
+const SERVICE_TYPE_LABEL_KEY: Record<ContactServiceType, string> = {
+  vize: 'contacts.serviceTypeVize',
+  bilet: 'contacts.serviceTypeBilet',
+  bilet_ve_vize: 'contacts.serviceTypeBiletVeVize',
+};
 
 function ContactRowItem({
   contact,
@@ -26,19 +33,37 @@ function ContactRowItem({
   contact: ContactRow;
   onPress: (c: ContactRow) => void;
 }) {
-  const subtitle = [contact.occupation, contact.phone_number].filter(Boolean).join(' · ');
+  const { t } = useTranslation();
+  const label = displayContact(contact);
+  const hasName = !!contact.full_name?.trim();
+  // When the name is the phone, omit it from the subtitle to avoid showing
+  // the same string twice.
+  const subtitleParts = [contact.occupation, hasName ? contact.phone_number : null].filter(Boolean);
+  const subtitle = subtitleParts.join(' · ');
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${contact.full_name}${contact.phone_number ? `, ${contact.phone_number}` : ''}`}
+      accessibilityLabel={`${label}${hasName && contact.phone_number ? `, ${contact.phone_number}` : ''}`}
       onPress={() => onPress(contact)}
       className="mx-5 mb-2 flex-row items-center gap-3 rounded-2xl border border-ink-100 bg-white p-3 active:bg-ink-50 dark:border-ink-700 dark:bg-ink-800 dark:active:bg-ink-700"
     >
-      <Avatar name={contact.full_name} size={44} />
+      <Avatar name={label} size={44} />
       <View className="flex-1">
-        <Text className="text-base font-semibold text-ink-900 dark:text-ink-50">
-          {contact.full_name}
-        </Text>
+        <View className="flex-row items-center gap-2">
+          <Text
+            className="flex-shrink text-base font-semibold text-ink-900 dark:text-ink-50"
+            numberOfLines={1}
+          >
+            {label}
+          </Text>
+          {contact.service_type ? (
+            <View className="rounded-full bg-brand-50 px-2 py-0.5 dark:bg-brand-900/40">
+              <Text className="text-[10px] font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-200">
+                {t(SERVICE_TYPE_LABEL_KEY[contact.service_type])}
+              </Text>
+            </View>
+          ) : null}
+        </View>
         {subtitle ? (
           <Text className="mt-0.5 text-xs text-ink-500 dark:text-ink-300" numberOfLines={1}>
             {subtitle}

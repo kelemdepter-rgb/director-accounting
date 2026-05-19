@@ -28,6 +28,7 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { confirm, notify } from '@/lib/confirm';
 import { contactSchema } from '@/schemas/contact';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { displayContact } from '@/utils/contact';
 import { formatMoney } from '@/utils/currency';
 import { aggregateContactBalance } from '@/utils/debtCalculation';
 
@@ -77,7 +78,8 @@ export default function ContactDetailScreen() {
   }
 
   const contact = contactQ.data;
-  const heroColor = avatarColor(contact.full_name);
+  const displayName = displayContact(contact);
+  const heroColor = avatarColor(displayName);
 
   const onDelete = async () => {
     const ok = await confirm({
@@ -138,11 +140,24 @@ export default function ContactDetailScreen() {
 
         <View className="items-center pb-6 pt-2">
           <View className="rounded-full bg-white/20 p-1">
-            <Avatar name={contact.full_name} size={72} color="#FFFFFF22" />
+            <Avatar name={displayName} size={72} color="#FFFFFF22" />
           </View>
-          <Text className="mt-3 text-2xl font-bold text-white">{contact.full_name}</Text>
+          <Text className="mt-3 text-2xl font-bold text-white">{displayName}</Text>
           {contact.occupation ? (
             <Text className="mt-1 text-sm text-white/80">{contact.occupation}</Text>
+          ) : null}
+          {contact.service_type ? (
+            <View className="mt-2 rounded-full bg-white/20 px-3 py-1">
+              <Text className="text-xs font-semibold uppercase tracking-widest text-white">
+                {t(`contacts.serviceType${
+                  contact.service_type === 'bilet_ve_vize'
+                    ? 'BiletVeVize'
+                    : contact.service_type === 'bilet'
+                      ? 'Bilet'
+                      : 'Vize'
+                }`)}
+              </Text>
+            </View>
           ) : null}
           {contact.phone_number ? (
             <Pressable
@@ -174,10 +189,11 @@ export default function ContactDetailScreen() {
           <Card className="p-4">
             <ContactForm
               initialValues={{
-                full_name: contact.full_name,
+                full_name: contact.full_name ?? '',
                 phone_number: contact.phone_number ?? '',
                 occupation: contact.occupation ?? '',
                 notes: contact.notes ?? '',
+                service_type: contact.service_type ?? null,
               }}
               submitLabel={t('common.save')}
               submitting={updateContact.isPending}
@@ -193,6 +209,7 @@ export default function ContactDetailScreen() {
                       phone_number: parsed.data.phone_number,
                       occupation: parsed.data.occupation,
                       notes: parsed.data.notes,
+                      service_type: parsed.data.service_type,
                     },
                   });
                   setEditing(false);

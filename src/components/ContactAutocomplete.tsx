@@ -9,6 +9,7 @@ import { usePhoneContacts } from '@/hooks/usePhoneContacts';
 import { addContactToDevice, type PhoneContact } from '@/lib/contacts';
 import { useAuthStore } from '@/stores/authStore';
 import type { ContactRow } from '@/types/database';
+import { displayContact } from '@/utils/contact';
 
 import { PermissionModal } from './PermissionModal';
 import { PhoneContactsModal } from './PhoneContactsModal';
@@ -60,17 +61,23 @@ export function ContactAutocomplete({
     const items: SuggestionItem[] = [];
 
     for (const c of savedContacts.data ?? []) {
+      const label = displayContact(c);
       items.push({
         key: `saved:${c.id}`,
         kind: 'saved',
-        label: c.full_name,
-        sublabel: c.phone_number,
+        label,
+        // Don't echo the phone twice when it's already the label.
+        sublabel: c.full_name?.trim() ? c.phone_number : null,
         saved: c,
       });
     }
 
     if (phone.permission === 'granted') {
-      const savedNames = new Set((savedContacts.data ?? []).map((c) => c.full_name.toLowerCase()));
+      const savedNames = new Set(
+        (savedContacts.data ?? [])
+          .map((c) => c.full_name?.trim()?.toLowerCase())
+          .filter((name): name is string => !!name),
+      );
       for (const p of phone.search(query, MAX_RESULTS)) {
         if (!savedNames.has(p.name.toLowerCase())) {
           items.push({
@@ -190,7 +197,7 @@ export function ContactAutocomplete({
         >
           <TextInput
             accessibilityLabel={label ?? t('contacts.searchPlaceholder')}
-            placeholder={placeholder ?? (value ? value.full_name : t('contacts.searchPlaceholder'))}
+            placeholder={placeholder ?? (value ? displayContact(value) : t('contacts.searchPlaceholder'))}
             placeholderTextColor={isDark ? colors.ink[500] : colors.ink[400]}
             value={query}
             onChangeText={setQuery}
@@ -216,9 +223,9 @@ export function ContactAutocomplete({
         <View className="mt-2 flex-row items-center justify-between rounded-lg bg-brand-50 px-3 py-2 dark:bg-brand-900/30">
           <View>
             <Text className="text-sm font-medium text-brand-900 dark:text-brand-100">
-              {value.full_name}
+              {displayContact(value)}
             </Text>
-            {value.phone_number ? (
+            {value.full_name?.trim() && value.phone_number ? (
               <Text className="text-xs text-brand-700 dark:text-brand-300">
                 {value.phone_number}
               </Text>

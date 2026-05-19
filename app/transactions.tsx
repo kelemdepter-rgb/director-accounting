@@ -19,6 +19,7 @@ import { useContacts } from '@/hooks/useContacts';
 import { useTransactions } from '@/hooks/useTransactions';
 import { notify } from '@/lib/confirm';
 import type { ContactRow, TransactionRow, TransactionType } from '@/types/database';
+import { displayContact } from '@/utils/contact';
 import { downloadCsv, toCsv } from '@/utils/csv';
 import { formatDate } from '@/utils/date';
 
@@ -55,7 +56,8 @@ export default function TransactionsScreen() {
     return list.filter((tx) => {
       const contact = tx.contact_id ? contactById.get(tx.contact_id) : null;
       return (
-        (contact?.full_name.toLowerCase().includes(q) ?? false) ||
+        (contact?.full_name?.toLowerCase().includes(q) ?? false) ||
+        (contact?.phone_number?.toLowerCase().includes(q) ?? false) ||
         (tx.description?.toLowerCase().includes(q) ?? false) ||
         tx.amount.includes(q) ||
         tx.currency.toLowerCase().includes(q)
@@ -75,7 +77,8 @@ export default function TransactionsScreen() {
       { header: 'Currency', value: (r) => r.currency },
       {
         header: 'Contact',
-        value: (r) => (r.contact_id ? contactById.get(r.contact_id)?.full_name ?? '' : ''),
+        value: (r) =>
+          r.contact_id ? displayContact(contactById.get(r.contact_id) ?? null) : '',
       },
       { header: 'Description', value: (r) => r.description ?? '' },
     ]);
@@ -194,7 +197,9 @@ export default function TransactionsScreen() {
                 <TransactionListItem
                   transaction={item}
                   contactName={
-                    item.contact_id ? contactById.get(item.contact_id)?.full_name : null
+                    item.contact_id
+                      ? displayContact(contactById.get(item.contact_id) ?? null)
+                      : null
                   }
                   onPress={(tx) =>
                     tx.auto_generated && tx.debt_id

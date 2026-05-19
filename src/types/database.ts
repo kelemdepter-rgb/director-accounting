@@ -3,13 +3,20 @@
  * These are the canonical "row" types we work with on the client.
  */
 
+export type ContactServiceType = 'vize' | 'bilet' | 'bilet_ve_vize';
+
 export interface ContactRow {
   id: string;
   user_id: string;
-  full_name: string;
+  /**
+   * Display name. NULL when the user only recorded a phone number — the UI
+   * falls back to the phone number in that case (see `displayContact`).
+   */
+  full_name: string | null;
   phone_number: string | null;
   occupation: string | null;
   notes: string | null;
+  service_type: ContactServiceType | null;
   created_at: string;
   updated_at: string;
 }
@@ -65,7 +72,14 @@ export interface DebtPaymentRow {
   edited_count: number;
 }
 
-export type ContactInsert = Pick<ContactRow, 'full_name'> &
-  Partial<Pick<ContactRow, 'phone_number' | 'occupation' | 'notes'>>;
+/**
+ * Insert shape — only the phone number is mandatory, everything else can be
+ * left blank or null. Mirrors the validation in `src/schemas/contact.ts` and
+ * the DB constraints in migration 012.
+ */
+export type ContactInsert = Pick<ContactRow, 'phone_number'> &
+  Partial<Pick<ContactRow, 'full_name' | 'occupation' | 'notes' | 'service_type'>>;
 
-export type ContactUpdate = Partial<ContactInsert>;
+export type ContactUpdate = Partial<
+  Pick<ContactRow, 'full_name' | 'phone_number' | 'occupation' | 'notes' | 'service_type'>
+>;

@@ -28,6 +28,8 @@ vi.mock('nativewind', () => ({
 
 vi.mock('@/hooks/useDebts', () => ({
   useCreateDebt: () => ({ mutateAsync: createDebtMutation, isPending: false }),
+  useDebts: () => ({ data: [], isLoading: false }),
+  DEBTS_KEY: ['debts'],
 }));
 
 vi.mock('@/hooks/useTransactions', () => ({
@@ -35,6 +37,8 @@ vi.mock('@/hooks/useTransactions', () => ({
     mutateAsync: createTransactionMutation,
     isPending: false,
   }),
+  useTransactions: () => ({ data: [], isLoading: false }),
+  TRANSACTIONS_KEY: ['transactions'],
 }));
 
 vi.mock('@/stores/authStore', () => ({

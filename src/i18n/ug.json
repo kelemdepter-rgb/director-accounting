@@ -54,7 +54,21 @@
     "description": "ئىزاھات",
     "descriptionPlaceholder": "ئىختىيارى",
     "contactRequired": "ئالاقىلەشكۈچى (تەلەپ قىلىنىدۇ)",
-    "contactOptional": "ئالاقىلەشكۈچى (ئىختىيارى)"
+    "contactOptional": "ئالاقىلەشكۈچى (ئىختىيارى)",
+    "summaryHeading": "مۇئامىلە خۇلاسىسى",
+    "summaryReceivable": "بۇ كىشىنىڭ سىزگە قەرزى",
+    "summaryPayable": "سىزنىڭ بۇ كىشىگە قەرزىڭىز",
+    "summaryUnchanged": "(ئۆزگەرمىدى)",
+    "card": {
+      "lent_title": "بۇ كىشىگە قەرز بەردىم",
+      "lent_subtitle": "يېڭى ئالاقاك يارىتىلىدۇ. بۇ كىشى پۇلنى قايتۇرىدۇ.",
+      "borrowed_title": "بۇ كىشىدىن قەرز ئالدىم",
+      "borrowed_subtitle": "يېڭى قەرز يارىتىلىدۇ. مەن بۇ كىشىگە قايتۇرىمەن.",
+      "received_title": "بۇ كىشىدىن پۇل ئالدىم",
+      "received_subtitle": "يېڭى قەرز ئەمەس. مەۋجۇت قەرز/ئالاقاكنى ئازايتىدۇ.",
+      "paid_title": "بۇ كىشىگە پۇل بەردىم",
+      "paid_subtitle": "يېڭى قەرز ئەمەس. مەۋجۇت قەرز/ئالاقاكنى ئازايتىدۇ."
+    }
   },
   "debts": {
     "receivable": "تاپشۇرىدىغان",

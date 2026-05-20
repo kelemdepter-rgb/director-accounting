@@ -54,7 +54,21 @@
     "description": "Note",
     "descriptionPlaceholder": "Optional",
     "contactRequired": "Contact (required)",
-    "contactOptional": "Contact (optional)"
+    "contactOptional": "Contact (optional)",
+    "summaryHeading": "Transaction summary",
+    "summaryReceivable": "This person owes you",
+    "summaryPayable": "You owe this person",
+    "summaryUnchanged": "(unchanged)",
+    "card": {
+      "lent_title": "I lent money to this person",
+      "lent_subtitle": "A new receivable is created. This person will repay me.",
+      "borrowed_title": "I borrowed money from this person",
+      "borrowed_subtitle": "A new debt is created. I will repay this person.",
+      "received_title": "I received money from this person",
+      "received_subtitle": "Not a new loan. Reduces existing debt/credit, or stands as a free collection.",
+      "paid_title": "I gave money to this person",
+      "paid_subtitle": "Not a new loan. Reduces existing debt/credit, or stands as a free payment."
+    }
   },
   "debts": {
     "receivable": "Receivable",

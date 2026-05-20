@@ -9,12 +9,13 @@ import { Button } from '@/components/ui/Button';
 import { DateField } from '@/components/ui/DateField';
 import { Input } from '@/components/ui/Input';
 import { colors } from '@/constants/theme';
-import { useCreateDebt } from '@/hooks/useDebts';
-import { useCreateTransaction } from '@/hooks/useTransactions';
+import { useCreateDebt, useDebts } from '@/hooks/useDebts';
+import { useCreateTransaction, useTransactions } from '@/hooks/useTransactions';
 import { notify } from '@/lib/confirm';
 import { useAuthStore } from '@/stores/authStore';
 import type { ContactRow } from '@/types/database';
-import { SUPPORTED_CURRENCIES } from '@/utils/currency';
+import { formatMoney, SUPPORTED_CURRENCIES } from '@/utils/currency';
+import { aggregateContactBalance } from '@/utils/debtCalculation';
 import {
   formatAmountInput,
   parseAmount,
@@ -128,6 +129,25 @@ export function QuickAddSheet({
   const [occurredAt, setOccurredAt] = useState<Date>(new Date());
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // The "İşlem özeti" preview needs the contact's current balances. Only
+  // fetch once a contact has been picked — we don't want to fire two
+  // queries every time the FAB opens without one.
+  const previewDebtsQ = useDebts({
+    contactId: contact?.id,
+    enabled: !!contact?.id && visible,
+  });
+  const previewTxnQ = useTransactions({
+    contactId: contact?.id,
+    enabled: !!contact?.id && visible,
+  });
+  const currentBalances = useMemo(() => {
+    if (!contact) return {};
+    return aggregateContactBalance(
+      previewDebtsQ.data ?? [],
+      previewTxnQ.data ?? [],
+    );
+  }, [contact, previewDebtsQ.data, previewTxnQ.data]);
 
   // Reset form whenever the sheet is reopened.
   useEffect(() => {
@@ -299,6 +319,65 @@ export function QuickAddSheet({
           multiline
           numberOfLines={2}
         />
+
+        {/* Live "İşlem özeti" preview — shows how the selected mode +
+            typed amount will change this contact's balance. Only render
+            when both a contact and a positive amount are present, since
+            the projection is meaningless otherwise. */}
+        {(() => {
+          const numeric = parseAmount(amount);
+          if (!contact || numeric === null || numeric <= 0) return null;
+          const current = currentBalances[currency] ?? {
+            receivable: 0,
+            payable: 0,
+            net: 0,
+          };
+          // Backend convention (mirrors aggregateContactBalance):
+          //   lend / income  → receivable += amount
+          //   borrow / expense → payable += amount
+          const addsToReceivable = mode === 'lend' || mode === 'income';
+          const nextReceivable = addsToReceivable
+            ? current.receivable + numeric
+            : current.receivable;
+          const nextPayable = !addsToReceivable
+            ? current.payable + numeric
+            : current.payable;
+          return (
+            <View className="rounded-xl border border-ink-200 bg-ink-50 p-3 dark:border-ink-700 dark:bg-ink-700/40">
+              <Text className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-300">
+                {t('quickAdd.summaryHeading')}
+              </Text>
+              <View className="gap-1">
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-sm text-ink-700 dark:text-ink-200">
+                    {t('quickAdd.summaryReceivable')}
+                  </Text>
+                  <Text
+                    className="text-sm font-semibold text-ink-900 dark:text-ink-50"
+                    style={{ fontVariant: ['tabular-nums'] }}
+                  >
+                    {addsToReceivable
+                      ? `${formatMoney(current.receivable, currency, locale)} → ${formatMoney(nextReceivable, currency, locale)}`
+                      : `${formatMoney(current.receivable, currency, locale)} ${t('quickAdd.summaryUnchanged')}`}
+                  </Text>
+                </View>
+                <View className="flex-row items-center justify-between">
+                  <Text className="text-sm text-ink-700 dark:text-ink-200">
+                    {t('quickAdd.summaryPayable')}
+                  </Text>
+                  <Text
+                    className="text-sm font-semibold text-ink-900 dark:text-ink-50"
+                    style={{ fontVariant: ['tabular-nums'] }}
+                  >
+                    {!addsToReceivable
+                      ? `${formatMoney(current.payable, currency, locale)} → ${formatMoney(nextPayable, currency, locale)}`
+                      : `${formatMoney(current.payable, currency, locale)} ${t('quickAdd.summaryUnchanged')}`}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          );
+        })()}
 
         {error ? (
           <View

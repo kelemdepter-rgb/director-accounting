@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -11,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { colors } from '@/constants/theme';
 import { notify } from '@/lib/confirm';
+import { zodResolver } from '@/lib/zodResolver';
 import { signUpSchema, type SignUpValues } from '@/schemas/auth';
 import { useAuthStore } from '@/stores/authStore';
 

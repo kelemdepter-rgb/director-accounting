@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -10,6 +9,7 @@ import { AuthScaffold } from '@/components/AuthScaffold';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { colors } from '@/constants/theme';
+import { zodResolver } from '@/lib/zodResolver';
 import { resetPasswordSchema, type ResetPasswordValues } from '@/schemas/auth';
 import { useAuthStore } from '@/stores/authStore';
 

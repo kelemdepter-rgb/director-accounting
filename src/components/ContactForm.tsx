@@ -1,9 +1,13 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 
-import { contactSchema, type ContactFormValues } from '@/schemas/contact';
+import { zodResolver } from '@/lib/zodResolver';
+import {
+  contactSchema,
+  type ContactFormValues,
+  type ContactValues,
+} from '@/schemas/contact';
 import type { ContactServiceType } from '@/types/database';
 
 import { Button } from './ui/Button';
@@ -12,7 +16,11 @@ import { Input } from './ui/Input';
 export interface ContactFormProps {
   initialValues?: Partial<ContactFormValues>;
   submitLabel: string;
-  onSubmit: (values: ContactFormValues) => Promise<void> | void;
+  /**
+   * Called with the schema *output* (after trim + null-transform), so
+   * consumers can persist `values` straight to the DB without re-parsing.
+   */
+  onSubmit: (values: ContactValues) => Promise<void> | void;
   onCancel?: () => void;
   submitting?: boolean;
 }
@@ -40,7 +48,11 @@ export function ContactForm({
 }: ContactFormProps) {
   const { t } = useTranslation();
 
-  const { control, handleSubmit, formState } = useForm<ContactFormValues>({
+  const { control, handleSubmit, formState } = useForm<
+    ContactFormValues,
+    unknown,
+    ContactValues
+  >({
     resolver: zodResolver(contactSchema),
     defaultValues: { ...EMPTY_DEFAULTS, ...initialValues },
     mode: 'onTouched',

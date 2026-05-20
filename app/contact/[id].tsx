@@ -26,7 +26,6 @@ import { useContact, useDeleteContact, useUpdateContact } from '@/hooks/useConta
 import { useDebts } from '@/hooks/useDebts';
 import { useTransactions } from '@/hooks/useTransactions';
 import { confirm, notify } from '@/lib/confirm';
-import { contactSchema } from '@/schemas/contact';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { displayContact } from '@/utils/contact';
 import { formatMoney } from '@/utils/currency';
@@ -202,18 +201,20 @@ export default function ContactDetailScreen() {
               submitLabel={t('common.save')}
               submitting={updateContact.isPending}
               onCancel={() => setEditing(false)}
-              onSubmit={async (rawValues) => {
-                const parsed = contactSchema.safeParse(rawValues);
-                if (!parsed.success) return;
+              onSubmit={async (values) => {
+                // RHF + zodResolver already validated and transformed.
+                // The double-parse from Round 1 (re-running safeParse on
+                // already-transformed values) is what made the "only
+                // Telefon required" fix not stick — it choked on nulls.
                 try {
                   await updateContact.mutateAsync({
                     id: contact.id,
                     patch: {
-                      full_name: parsed.data.full_name,
-                      phone_number: parsed.data.phone_number,
-                      occupation: parsed.data.occupation,
-                      notes: parsed.data.notes,
-                      service_type: parsed.data.service_type,
+                      full_name: values.full_name ?? null,
+                      phone_number: values.phone_number,
+                      occupation: values.occupation ?? null,
+                      notes: values.notes ?? null,
+                      service_type: values.service_type ?? null,
                     },
                   });
                   setEditing(false);

@@ -6,7 +6,6 @@ import { ContactForm } from '@/components/ContactForm';
 import { Button } from '@/components/ui/Button';
 import { useCreateContact } from '@/hooks/useContacts';
 import { notify } from '@/lib/confirm';
-import { contactSchema } from '@/schemas/contact';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function NewContactScreen() {
@@ -36,21 +35,24 @@ export default function NewContactScreen() {
         <ContactForm
           submitLabel={t('common.save')}
           submitting={createContact.isPending}
-          onSubmit={async (rawValues) => {
+          onSubmit={async (values) => {
+            // `values` has already been parsed & transformed by the form's
+            // zodResolver. Re-running safeParse here is what made the
+            // previous round's "only Telefon required" fix not stick — the
+            // re-parse choked on the transformed nulls and silently
+            // returned. Trust RHF's output and pass it straight through.
             if (!userId) {
               notify(t('app.name'), t('errors.unknown'));
               return;
             }
-            const parsed = contactSchema.safeParse(rawValues);
-            if (!parsed.success) return; // form-level errors already shown
             try {
               await createContact.mutateAsync({
                 user_id: userId,
-                full_name: parsed.data.full_name,
-                phone_number: parsed.data.phone_number,
-                occupation: parsed.data.occupation,
-                notes: parsed.data.notes,
-                service_type: parsed.data.service_type,
+                full_name: values.full_name ?? null,
+                phone_number: values.phone_number,
+                occupation: values.occupation ?? null,
+                notes: values.notes ?? null,
+                service_type: values.service_type ?? null,
               });
               router.back();
             } catch (err) {

@@ -157,7 +157,10 @@
     "serviceType": "مۇلازىمەت تۈرى",
     "serviceTypeVize": "ۋىزا",
     "serviceTypeBilet": "بىلەت",
-    "serviceTypeBiletVeVize": "بىلەت ۋە ۋىزا"
+    "serviceTypeBiletVeVize": "بىلەت ۋە ۋىزا",
+    "serviceTypeOther": "باشقا",
+    "serviceTypeOtherLabel": "مۇلازىمەت چۈشەنچىسى",
+    "serviceTypeOtherPlaceholder": "مەسىلەن: مېھمانخانا تاپشۇرۇقى"
   },
   "settings": {
     "account": "ھېسابات",
@@ -184,7 +187,8 @@
     "amountInvalid": "مۇسبەت سومما كىرگۈزۈڭ، مەسىلەن 1.234,56",
     "amountMustBePositive": "سومما 0 دىن چوڭ بولۇشى كېرەك.",
     "currencyInvalid": "پۇل بىرلىكى 3 ھەرپلىك كود بولۇشى لازىم.",
-    "contactRequired": "بۇ قەرز ئۈچۈن ئالاقىلەشكۈچى تاللاڭ."
+    "contactRequired": "بۇ قەرز ئۈچۈن ئالاقىلەشكۈچى تاللاڭ.",
+    "serviceTypeOtherRequired": "مۇلازىمەت چۈشەنچىسى تەلەپ قىلىنىدۇ."
   },
   "errors": {
     "unknown": "بىر يېرى خاتالاشتى. قايتىدىن سىناڭ.",

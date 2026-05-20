@@ -61,6 +61,7 @@ describe('ContactForm — smoke', () => {
       occupation: null,
       notes: null,
       service_type: null,
+      service_type_other: null,
     });
   });
 
@@ -77,6 +78,77 @@ describe('ContactForm — smoke', () => {
     // promise to settle before asserting.
     await new Promise((r) => setTimeout(r, 50));
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+});
+
+describe('ContactForm — Başka service type (R3 §4)', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('renders the four pills including Başka', () => {
+    render(<ContactForm submitLabel="common.save" onSubmit={() => {}} />);
+    expect(screen.getByText('contacts.serviceTypeVize')).toBeTruthy();
+    expect(screen.getByText('contacts.serviceTypeBilet')).toBeTruthy();
+    expect(screen.getByText('contacts.serviceTypeBiletVeVize')).toBeTruthy();
+    expect(screen.getByText('contacts.serviceTypeOther')).toBeTruthy();
+  });
+
+  it('reveals the free-text input only when Başka is selected', async () => {
+    render(<ContactForm submitLabel="common.save" onSubmit={() => {}} />);
+    // Initially hidden.
+    expect(screen.queryByLabelText('contacts.serviceTypeOtherLabel *')).toBeNull();
+
+    fireEvent.click(screen.getByText('contacts.serviceTypeOther'));
+    await waitFor(() => {
+      expect(screen.getByLabelText('contacts.serviceTypeOtherLabel *')).toBeTruthy();
+    });
+
+    // Toggle off — should hide again.
+    fireEvent.click(screen.getByText('contacts.serviceTypeOther'));
+    await waitFor(() => {
+      expect(screen.queryByLabelText('contacts.serviceTypeOtherLabel *')).toBeNull();
+    });
+  });
+});
+
+describe('contactSchema — Başka refinement (R3 §4)', () => {
+  it('requires service_type_other when service_type is other', () => {
+    const result = contactSchema.safeParse({
+      phone_number: '5551234567',
+      service_type: 'other',
+      service_type_other: '',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const otherErr = result.error.issues.find((i) => i.path[0] === 'service_type_other');
+      expect(otherErr).toBeDefined();
+    }
+  });
+
+  it('accepts other + non-empty description', () => {
+    const result = contactSchema.safeParse({
+      phone_number: '5551234567',
+      service_type: 'other',
+      service_type_other: 'Otel rezervasyonu',
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.service_type).toBe('other');
+      expect(result.data.service_type_other).toBe('Otel rezervasyonu');
+    }
+  });
+
+  it('normalises stale free-text when service_type is not other', () => {
+    const result = contactSchema.safeParse({
+      phone_number: '5551234567',
+      service_type: 'vize',
+      service_type_other: 'leftover',
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.service_type_other).toBeNull();
+    }
   });
 });
 

@@ -24,7 +24,10 @@ const SERVICE_TYPE_LABEL_KEY: Record<ContactServiceType, string> = {
   vize: 'contacts.serviceTypeVize',
   bilet: 'contacts.serviceTypeBilet',
   bilet_ve_vize: 'contacts.serviceTypeBiletVeVize',
+  other: 'contacts.serviceTypeOther',
 };
+
+const SERVICE_TYPE_BADGE_MAX = 24;
 
 function ContactRowItem({
   contact,
@@ -59,7 +62,17 @@ function ContactRowItem({
           {contact.service_type ? (
             <View className="rounded-full bg-brand-50 px-2 py-0.5 dark:bg-brand-900/40">
               <Text className="text-[10px] font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-200">
-                {t(SERVICE_TYPE_LABEL_KEY[contact.service_type])}
+                {(() => {
+                  if (contact.service_type === 'other') {
+                    const raw =
+                      contact.service_type_other?.trim() ||
+                      t(SERVICE_TYPE_LABEL_KEY.other);
+                    return raw.length > SERVICE_TYPE_BADGE_MAX
+                      ? `${raw.slice(0, SERVICE_TYPE_BADGE_MAX - 1)}…`
+                      : raw;
+                  }
+                  return t(SERVICE_TYPE_LABEL_KEY[contact.service_type]);
+                })()}
               </Text>
             </View>
           ) : null}

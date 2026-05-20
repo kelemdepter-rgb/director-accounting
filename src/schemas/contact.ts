@@ -34,23 +34,43 @@ const trimmedNullable = (max: number) =>
  * Phone min length is 7 (shortest realistic dialable number), max 30 to
  * match the DB constraint in 001_initial_schema.sql.
  */
-export const contactSchema = z.object({
-  full_name: trimmedNullable(200),
-  phone_number: z
-    .string()
-    .trim()
-    .min(7, { message: 'validation.phoneInvalid' })
-    .max(30, { message: 'validation.tooLong' })
-    .regex(/^[+0-9 ()\-]+$/, { message: 'validation.phoneInvalid' }),
-  occupation: trimmedNullable(200),
-  notes: trimmedNullable(2000),
-  service_type: z.preprocess(
-    (v) => (v == null || v === '' ? null : v),
-    z.enum(['vize', 'bilet', 'bilet_ve_vize']).nullable(),
-  ),
-});
+export const contactSchema = z
+  .object({
+    full_name: trimmedNullable(200),
+    phone_number: z
+      .string()
+      .trim()
+      .min(7, { message: 'validation.phoneInvalid' })
+      .max(30, { message: 'validation.tooLong' })
+      .regex(/^[+0-9 ()\-]+$/, { message: 'validation.phoneInvalid' }),
+    occupation: trimmedNullable(200),
+    notes: trimmedNullable(2000),
+    service_type: z.preprocess(
+      (v) => (v == null || v === '' ? null : v),
+      z.enum(['vize', 'bilet', 'bilet_ve_vize', 'other']).nullable(),
+    ),
+    service_type_other: trimmedNullable(200),
+  })
+  // Mirror the DB CHECK from migration 016: the free-text label is
+  // required when, and only when, the pill says "other". Surface the
+  // error on the field so RHF can render it under the input.
+  .superRefine((value, ctx) => {
+    if (value.service_type === 'other' && !value.service_type_other) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['service_type_other'],
+        message: 'validation.serviceTypeOtherRequired',
+      });
+    }
+    if (value.service_type !== 'other' && value.service_type_other) {
+      // Defensive: if the user toggled away from "other" but the text
+      // lingered, normalise to null rather than rejecting — RHF clears
+      // the field client-side too.
+      value.service_type_other = null;
+    }
+  });
 
-export type ContactServiceType = 'vize' | 'bilet' | 'bilet_ve_vize';
+export type ContactServiceType = 'vize' | 'bilet' | 'bilet_ve_vize' | 'other';
 
 /**
  * Shape the form passes around while the user is typing. Because the
@@ -65,6 +85,7 @@ export interface ContactFormValues {
   occupation: string | null;
   notes: string | null;
   service_type: ContactServiceType | null;
+  service_type_other: string | null;
 }
 
 /** Shape returned by `contactSchema.parse(...)` — what the DB sees. */

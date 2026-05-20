@@ -3,7 +3,7 @@
  * These are the canonical "row" types we work with on the client.
  */
 
-export type ContactServiceType = 'vize' | 'bilet' | 'bilet_ve_vize';
+export type ContactServiceType = 'vize' | 'bilet' | 'bilet_ve_vize' | 'other';
 
 export interface ContactRow {
   id: string;
@@ -17,6 +17,12 @@ export interface ContactRow {
   occupation: string | null;
   notes: string | null;
   service_type: ContactServiceType | null;
+  /**
+   * Free-text label shown alongside the "other" pill. Always null when
+   * service_type !== 'other'; required (1..200 chars) when it is.
+   * Enforced at the DB layer by contacts_service_type_other_xor.
+   */
+  service_type_other: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -78,8 +84,21 @@ export interface DebtPaymentRow {
  * the DB constraints in migration 012.
  */
 export type ContactInsert = Pick<ContactRow, 'phone_number'> &
-  Partial<Pick<ContactRow, 'full_name' | 'occupation' | 'notes' | 'service_type'>>;
+  Partial<
+    Pick<
+      ContactRow,
+      'full_name' | 'occupation' | 'notes' | 'service_type' | 'service_type_other'
+    >
+  >;
 
 export type ContactUpdate = Partial<
-  Pick<ContactRow, 'full_name' | 'phone_number' | 'occupation' | 'notes' | 'service_type'>
+  Pick<
+    ContactRow,
+    | 'full_name'
+    | 'phone_number'
+    | 'occupation'
+    | 'notes'
+    | 'service_type'
+    | 'service_type_other'
+  >
 >;

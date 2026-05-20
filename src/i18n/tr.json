@@ -157,7 +157,10 @@
     "serviceType": "Hizmet türü",
     "serviceTypeVize": "Vize",
     "serviceTypeBilet": "Bilet",
-    "serviceTypeBiletVeVize": "Bilet ve Vize"
+    "serviceTypeBiletVeVize": "Bilet ve Vize",
+    "serviceTypeOther": "Başka",
+    "serviceTypeOtherLabel": "Hizmet açıklaması",
+    "serviceTypeOtherPlaceholder": "ör: Otel rezervasyonu"
   },
   "settings": {
     "account": "Hesap",
@@ -184,7 +187,8 @@
     "amountInvalid": "Pozitif bir tutar girin, örn. 1.234,56",
     "amountMustBePositive": "Tutar 0'dan büyük olmalı.",
     "currencyInvalid": "Para birimi 3 harfli kod olmalıdır.",
-    "contactRequired": "Bu borç için bir kişi seçin."
+    "contactRequired": "Bu borç için bir kişi seçin.",
+    "serviceTypeOtherRequired": "Hizmet açıklaması gerekli."
   },
   "errors": {
     "unknown": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",

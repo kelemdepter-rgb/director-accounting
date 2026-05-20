@@ -1,4 +1,4 @@
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 
@@ -31,12 +31,14 @@ const EMPTY_DEFAULTS: ContactFormValues = {
   occupation: '',
   notes: '',
   service_type: null,
+  service_type_other: null,
 };
 
 const SERVICE_TYPE_OPTIONS: { value: ContactServiceType; labelKey: string }[] = [
   { value: 'vize', labelKey: 'contacts.serviceTypeVize' },
   { value: 'bilet', labelKey: 'contacts.serviceTypeBilet' },
   { value: 'bilet_ve_vize', labelKey: 'contacts.serviceTypeBiletVeVize' },
+  { value: 'other', labelKey: 'contacts.serviceTypeOther' },
 ];
 
 export function ContactForm({
@@ -48,7 +50,7 @@ export function ContactForm({
 }: ContactFormProps) {
   const { t } = useTranslation();
 
-  const { control, handleSubmit, formState } = useForm<
+  const { control, handleSubmit, formState, setValue } = useForm<
     ContactFormValues,
     unknown,
     ContactValues
@@ -57,6 +59,12 @@ export function ContactForm({
     defaultValues: { ...EMPTY_DEFAULTS, ...initialValues },
     mode: 'onTouched',
   });
+
+  // Watch the pill choice so the "other" branch can show/hide the
+  // free-text input. useWatch is preferred over field.value at this
+  // level because Controller's value is only available inside its
+  // render prop — and we need to gate a sibling input.
+  const currentServiceType = useWatch({ control, name: 'service_type' });
 
   const submit = handleSubmit(async (values) => {
     await onSubmit(values);
@@ -150,7 +158,18 @@ export function ContactForm({
                       key={opt.value}
                       accessibilityRole="button"
                       accessibilityState={{ selected: active }}
-                      onPress={() => field.onChange(active ? null : opt.value)}
+                      onPress={() => {
+                        const next = active ? null : opt.value;
+                        field.onChange(next);
+                        // Round 3 §4: toggling away from "other" clears
+                        // the free-text label so the next save doesn't
+                        // round-trip stale text through the DB CHECK.
+                        if (next !== 'other') {
+                          setValue('service_type_other', null, {
+                            shouldValidate: true,
+                          });
+                        }
+                      }}
                       className={`rounded-full px-4 py-2 ${
                         active
                           ? 'bg-brand-500'
@@ -174,6 +193,27 @@ export function ContactForm({
           );
         }}
       />
+
+      {currentServiceType === 'other' ? (
+        <Controller
+          control={control}
+          name="service_type_other"
+          render={({ field, fieldState }) => (
+            <Input
+              label={`${t('contacts.serviceTypeOtherLabel')} *`}
+              value={field.value ?? ''}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              placeholder={t('contacts.serviceTypeOtherPlaceholder')}
+              error={
+                fieldState.error
+                  ? t(fieldState.error.message ?? 'errors.unknown')
+                  : undefined
+              }
+            />
+          )}
+        />
+      ) : null}
 
       <Controller
         control={control}

@@ -157,7 +157,10 @@
     "serviceType": "Service type",
     "serviceTypeVize": "Visa",
     "serviceTypeBilet": "Ticket",
-    "serviceTypeBiletVeVize": "Ticket & Visa"
+    "serviceTypeBiletVeVize": "Ticket & Visa",
+    "serviceTypeOther": "Other",
+    "serviceTypeOtherLabel": "Service description",
+    "serviceTypeOtherPlaceholder": "e.g. hotel booking"
   },
   "settings": {
     "account": "Account",
@@ -184,7 +187,8 @@
     "amountInvalid": "Enter a positive amount, e.g. 1,234.56",
     "amountMustBePositive": "Amount must be greater than 0.",
     "currencyInvalid": "Currency must be a 3-letter code.",
-    "contactRequired": "Pick a contact for this debt."
+    "contactRequired": "Pick a contact for this debt.",
+    "serviceTypeOtherRequired": "Service description is required."
   },
   "errors": {
     "unknown": "Something went wrong. Please try again.",

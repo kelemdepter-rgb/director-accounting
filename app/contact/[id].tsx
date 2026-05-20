@@ -152,13 +152,20 @@ export default function ContactDetailScreen() {
           {contact.service_type ? (
             <View className="mt-2 rounded-full bg-white/20 px-3 py-1">
               <Text className="text-xs font-semibold uppercase tracking-widest text-white">
-                {t(`contacts.serviceType${
-                  contact.service_type === 'bilet_ve_vize'
-                    ? 'BiletVeVize'
-                    : contact.service_type === 'bilet'
-                      ? 'Bilet'
-                      : 'Vize'
-                }`)}
+                {/* For service_type === 'other', show the user's free-text
+                    label instead of the literal "Başka". Other pills get
+                    the canonical translation. */}
+                {contact.service_type === 'other'
+                  ? (contact.service_type_other ?? t('contacts.serviceTypeOther'))
+                  : t(
+                      `contacts.serviceType${
+                        contact.service_type === 'bilet_ve_vize'
+                          ? 'BiletVeVize'
+                          : contact.service_type === 'bilet'
+                            ? 'Bilet'
+                            : 'Vize'
+                      }`,
+                    )}
               </Text>
             </View>
           ) : null}
@@ -197,6 +204,7 @@ export default function ContactDetailScreen() {
                 occupation: contact.occupation ?? '',
                 notes: contact.notes ?? '',
                 service_type: contact.service_type ?? null,
+                service_type_other: contact.service_type_other ?? null,
               }}
               submitLabel={t('common.save')}
               submitting={updateContact.isPending}
@@ -215,6 +223,7 @@ export default function ContactDetailScreen() {
                       occupation: values.occupation ?? null,
                       notes: values.notes ?? null,
                       service_type: values.service_type ?? null,
+                      service_type_other: values.service_type_other ?? null,
                     },
                   });
                   setEditing(false);

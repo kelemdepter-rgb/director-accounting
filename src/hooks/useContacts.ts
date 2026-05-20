@@ -4,6 +4,9 @@ import { supabase } from '@/lib/supabase';
 import type { ContactInsert, ContactRow, ContactUpdate } from '@/types/database';
 
 const CONTACTS_KEY = ['contacts'] as const;
+const DEBTS_KEY = ['debts'] as const;
+const TRANSACTIONS_KEY = ['transactions'] as const;
+const SUMMARY_KEY = ['summary'] as const;
 
 export interface UseContactsOptions {
   /** Free-text filter applied server-side via ILIKE on full_name. */
@@ -98,13 +101,42 @@ export function useUpdateContact() {
 export function useDeleteContact() {
   const qc = useQueryClient();
   return useMutation({
+    // `id` is passed explicitly to the mutation function and threaded
+    // through onSuccess via the second argument so the post-mutation
+    // cleanup can never reference a stale closure variable.
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('contacts').delete().eq('id', id);
-      if (error) throw error;
+      // Migration 014 introduced `public.delete_contact(p_id uuid)` which
+      // wraps the delete in a transaction, verifies ownership, and removes
+      // every child row before the contact itself. We RPC into that
+      // function instead of issuing a raw `.delete()` so the FK-cascade
+      // path is the same across schema versions.
+      const { error: rpcError } = await supabase.rpc('delete_contact', { p_id: id });
+      if (rpcError) {
+        // If the function isn't deployed yet (e.g. 014 hasn't been applied),
+        // PostgREST returns `PGRST202` — fall back to the raw delete so the
+        // app keeps working until the migration lands.
+        if (rpcError.code === 'PGRST202' || rpcError.code === '404') {
+          const { error: fallbackError } = await supabase
+            .from('contacts')
+            .delete()
+            .eq('id', id);
+          if (fallbackError) throw fallbackError;
+        } else {
+          throw rpcError;
+        }
+      }
       return id;
     },
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
+      // Drop the detail entry outright — invalidating would leave it
+      // hanging with `isError: true` from the next refetch.
+      qc.removeQueries({ queryKey: [...CONTACTS_KEY, 'detail', id] });
       void qc.invalidateQueries({ queryKey: CONTACTS_KEY });
+      // The RPC also deletes the contact's debts + transactions, so any
+      // open list that's filtered by contact_id needs to refresh too.
+      void qc.invalidateQueries({ queryKey: DEBTS_KEY });
+      void qc.invalidateQueries({ queryKey: TRANSACTIONS_KEY });
+      void qc.invalidateQueries({ queryKey: SUMMARY_KEY });
     },
   });
 }

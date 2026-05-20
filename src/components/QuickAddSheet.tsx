@@ -228,7 +228,12 @@ export function QuickAddSheet({
   };
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} closeLabel={t('common.cancel')}>
+    <BottomSheet
+      visible={visible}
+      onClose={onClose}
+      closeLabel={t('common.cancel')}
+      scrollable
+    >
       <View className="gap-5">
         {/* Type pill badge */}
         <View className={`self-start rounded-full px-3 py-1.5 ${theme.pill}`}>

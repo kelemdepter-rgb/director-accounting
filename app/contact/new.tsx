@@ -1,8 +1,9 @@
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView, Text, View } from 'react-native';
 
 import { ContactForm } from '@/components/ContactForm';
+import { ScreenScroll } from '@/components/ScreenScroll';
 import { Button } from '@/components/ui/Button';
 import { useCreateContact } from '@/hooks/useContacts';
 import { notify } from '@/lib/confirm';
@@ -31,7 +32,10 @@ export default function NewContactScreen() {
         />
       </View>
 
-      <ScrollView contentContainerClassName="px-5 py-6" keyboardShouldPersistTaps="handled">
+      <ScreenScroll
+        insideTabs={false}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 24 }}
+      >
         <ContactForm
           submitLabel={t('common.save')}
           submitting={createContact.isPending}
@@ -60,7 +64,7 @@ export default function NewContactScreen() {
             }
           }}
         />
-      </ScrollView>
+      </ScreenScroll>
     </SafeAreaView>
   );
 }

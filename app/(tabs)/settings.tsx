@@ -2,9 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { Pressable, SafeAreaView, Text, View } from 'react-native';
 
 import { CurrencyPicker } from '@/components/CurrencyPicker';
+import { ScreenScroll } from '@/components/ScreenScroll';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -138,7 +139,9 @@ export default function SettingsTab() {
 
   return (
     <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-900">
-      <ScrollView contentContainerClassName="px-5 py-6 gap-3">
+      <ScreenScroll
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 24, gap: 12 }}
+      >
         {/* Account hero */}
         <Card className="flex-row items-center gap-3 p-4" elevation="card">
           <Avatar name={user?.email ?? ''} size={48} />
@@ -208,7 +211,7 @@ export default function SettingsTab() {
         <Text className="mt-6 text-center text-xs text-ink-400 dark:text-ink-500">
           {t('app.name')} · v{appVersion}
         </Text>
-      </ScrollView>
+      </ScreenScroll>
     </SafeAreaView>
   );
 }

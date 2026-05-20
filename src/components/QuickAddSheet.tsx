@@ -14,7 +14,14 @@ import { useCreateTransaction } from '@/hooks/useTransactions';
 import { notify } from '@/lib/confirm';
 import { useAuthStore } from '@/stores/authStore';
 import type { ContactRow } from '@/types/database';
-import { parseLocaleAmount, SUPPORTED_CURRENCIES } from '@/utils/currency';
+import { SUPPORTED_CURRENCIES } from '@/utils/currency';
+import {
+  formatAmountInput,
+  parseAmount,
+  spellAmount,
+  type SpellCurrency,
+  type SpellLocale,
+} from '@/utils/formatAmount';
 
 /** Four entry points the FAB exposes. */
 export type QuickAddMode = 'income' | 'expense' | 'lend' | 'borrow';
@@ -82,6 +89,21 @@ function localeFor(language: string): string {
   return I18N_TO_LOCALE[language] ?? language;
 }
 
+const SPELL_LOCALES: readonly SpellLocale[] = ['tr', 'en', 'ug'];
+const SPELL_CURRENCIES: readonly SpellCurrency[] = ['TRY', 'USD', 'EUR', 'CNY'];
+
+function spellLocaleFor(language: string): SpellLocale {
+  return SPELL_LOCALES.includes(language as SpellLocale)
+    ? (language as SpellLocale)
+    : 'en';
+}
+
+function spellCurrencyFor(code: string): SpellCurrency | null {
+  return SPELL_CURRENCIES.includes(code as SpellCurrency)
+    ? (code as SpellCurrency)
+    : null;
+}
+
 export function QuickAddSheet({
   visible,
   mode,
@@ -97,12 +119,10 @@ export function QuickAddSheet({
   const createDebt = useCreateDebt();
 
   const locale = useMemo(() => localeFor(i18n.language), [i18n.language]);
+  const spellLocale = useMemo(() => spellLocaleFor(i18n.language), [i18n.language]);
 
   const [contact, setContact] = useState<ContactRow | null>(initialContact);
   const [amount, setAmount] = useState('');
-  // Raw input (without thousands separators) so re-focusing the field is
-  // comfortable to edit — we only show the formatted version on blur.
-  const [amountRaw, setAmountRaw] = useState('');
   const [currency, setCurrency] = useState(defaultCurrency);
   const [description, setDescription] = useState('');
   const [occurredAt, setOccurredAt] = useState<Date>(new Date());
@@ -114,7 +134,6 @@ export function QuickAddSheet({
     if (visible) {
       setContact(initialContact);
       setAmount('');
-      setAmountRaw('');
       setCurrency(defaultCurrency);
       setDescription('');
       setOccurredAt(new Date());
@@ -140,9 +159,13 @@ export function QuickAddSheet({
       setError(t('errors.unknown'));
       return;
     }
-    const parsedAmount = parseLocaleAmount(amount)?.value ?? null;
-    if (parsedAmount === null) {
-      setError(t('validation.amountInvalid'));
+    const parsedAmount = parseAmount(amount);
+    // Per the Round 2 prompt, the only amount-related warning we surface
+    // is "must be > 0". The earlier "amountInvalid" warning that appeared
+    // mid-typing is gone — formatAmountInput already coerces whatever the
+    // user types into a valid representation.
+    if (parsedAmount === null || parsedAmount <= 0) {
+      setError(t('validation.amountMustBePositive'));
       return;
     }
     if (requiresContact && !contact) {
@@ -194,7 +217,7 @@ export function QuickAddSheet({
           </Text>
         </View>
 
-        {/* Big centered amount */}
+        {/* Big centered amount with live formatting + spell-out below */}
         <View className="items-center">
           <TextInput
             accessibilityLabel={t('quickAdd.amount')}
@@ -202,32 +225,35 @@ export function QuickAddSheet({
             placeholderTextColor={isDark ? colors.ink[600] : colors.ink[300]}
             value={amount}
             onChangeText={(text) => {
-              setAmount(text);
-              setAmountRaw(text);
-            }}
-            onFocus={() => {
-              // Restore the raw user-entered string so editing isn't fighting
-              // against thousands separators we just inserted on blur.
-              if (amountRaw && amountRaw !== amount) setAmount(amountRaw);
-            }}
-            onBlur={() => {
-              const parsed = parseLocaleAmount(amount);
-              if (!parsed) return;
-              try {
-                const formatted = new Intl.NumberFormat(locale, {
-                  maximumFractionDigits: 2,
-                  minimumFractionDigits: parsed.value % 1 === 0 ? 0 : 2,
-                }).format(parsed.value);
-                setAmount(formatted);
-              } catch {
-                // Locale not supported by ICU build → leave the raw value.
-              }
+              // Live-format every keystroke so the user always sees the
+              // canonical thousand-separated representation. The previous
+              // behaviour deferred this to blur, but that allowed
+              // "invalid amount" warnings to appear mid-typing — the
+              // Round 2 prompt wants those gone.
+              setAmount(formatAmountInput(text, locale));
             }}
             keyboardType="decimal-pad"
             autoFocus
             className={`text-center text-5xl font-extrabold ${amount ? theme.amountColor : 'text-ink-300 dark:text-ink-600'} dark:text-ink-50`}
             style={{ fontVariant: ['tabular-nums'], minWidth: 140 }}
           />
+          {/* Spell-out — empty until the user has typed a non-zero value
+              with a supported currency. Falls back to silence for
+              currencies we don't have words for (e.g. GBP). */}
+          {(() => {
+            const numeric = parseAmount(amount);
+            const sc = spellCurrencyFor(currency);
+            if (numeric === null || numeric <= 0 || sc === null) return null;
+            const phrase = spellAmount(numeric, sc, spellLocale);
+            return (
+              <Text
+                accessibilityLiveRegion="polite"
+                className="mt-1 text-center text-xs text-ink-500 dark:text-ink-300"
+              >
+                {phrase}
+              </Text>
+            );
+          })()}
           <View className="mt-2 flex-row gap-2">
             {pillSet.map((code) => {
               const active = code === currency;

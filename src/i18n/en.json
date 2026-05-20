@@ -167,6 +167,7 @@
     "tooLong": "This is too long.",
     "phoneInvalid": "Phone must be between 3 and 30 characters.",
     "amountInvalid": "Enter a positive amount, e.g. 1,234.56",
+    "amountMustBePositive": "Amount must be greater than 0.",
     "currencyInvalid": "Currency must be a 3-letter code.",
     "contactRequired": "Pick a contact for this debt."
   },

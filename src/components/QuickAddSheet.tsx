@@ -20,6 +20,7 @@ import {
   formatAmountInput,
   parseAmount,
   spellAmount,
+  type AppLocale,
   type SpellCurrency,
   type SpellLocale,
 } from '@/utils/formatAmount';
@@ -90,8 +91,15 @@ function localeFor(language: string): string {
   return I18N_TO_LOCALE[language] ?? language;
 }
 
+const APP_LOCALES: readonly AppLocale[] = ['tr', 'en', 'ug'];
 const SPELL_LOCALES: readonly SpellLocale[] = ['tr', 'en', 'ug'];
 const SPELL_CURRENCIES: readonly SpellCurrency[] = ['TRY', 'USD', 'EUR', 'CNY'];
+
+function appLocaleFor(language: string): AppLocale {
+  return APP_LOCALES.includes(language as AppLocale)
+    ? (language as AppLocale)
+    : 'en';
+}
 
 function spellLocaleFor(language: string): SpellLocale {
   return SPELL_LOCALES.includes(language as SpellLocale)
@@ -120,6 +128,7 @@ export function QuickAddSheet({
   const createDebt = useCreateDebt();
 
   const locale = useMemo(() => localeFor(i18n.language), [i18n.language]);
+  const appLocale = useMemo(() => appLocaleFor(i18n.language), [i18n.language]);
   const spellLocale = useMemo(() => spellLocaleFor(i18n.language), [i18n.language]);
 
   const [contact, setContact] = useState<ContactRow | null>(initialContact);
@@ -179,7 +188,7 @@ export function QuickAddSheet({
       setError(t('errors.unknown'));
       return;
     }
-    const parsedAmount = parseAmount(amount);
+    const parsedAmount = parseAmount(amount, appLocale);
     // Per the Round 2 prompt, the only amount-related warning we surface
     // is "must be > 0". The earlier "amountInvalid" warning that appeared
     // mid-typing is gone — formatAmountInput already coerces whatever the
@@ -255,7 +264,7 @@ export function QuickAddSheet({
               // behaviour deferred this to blur, but that allowed
               // "invalid amount" warnings to appear mid-typing — the
               // Round 2 prompt wants those gone.
-              setAmount(formatAmountInput(text, locale));
+              setAmount(formatAmountInput(text, appLocale));
             }}
             keyboardType="decimal-pad"
             autoFocus
@@ -266,7 +275,7 @@ export function QuickAddSheet({
               with a supported currency. Falls back to silence for
               currencies we don't have words for (e.g. GBP). */}
           {(() => {
-            const numeric = parseAmount(amount);
+            const numeric = parseAmount(amount, appLocale);
             const sc = spellCurrencyFor(currency);
             if (numeric === null || numeric <= 0 || sc === null) return null;
             const phrase = spellAmount(numeric, sc, spellLocale);
@@ -330,7 +339,7 @@ export function QuickAddSheet({
             when both a contact and a positive amount are present, since
             the projection is meaningless otherwise. */}
         {(() => {
-          const numeric = parseAmount(amount);
+          const numeric = parseAmount(amount, appLocale);
           if (!contact || numeric === null || numeric <= 0) return null;
           const current = currentBalances[currency] ?? {
             receivable: 0,

@@ -1,57 +1,120 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatAmountInput, parseAmount, spellAmount } from '@/utils/formatAmount';
+import {
+  formatAmountInput,
+  formatAmountInputWithCursor,
+  parseAmount,
+  spellAmount,
+} from '@/utils/formatAmount';
 
 describe('formatAmountInput', () => {
-  it('groups thousands in tr-TR with dots', () => {
-    expect(formatAmountInput('520000', 'tr-TR')).toBe('520.000');
+  it('inserts tr thousand separators', () => {
+    expect(formatAmountInput('28000', 'tr')).toBe('28.000');
+    expect(formatAmountInput('2800000', 'tr')).toBe('2.800.000');
+    expect(formatAmountInput('999', 'tr')).toBe('999');
+    expect(formatAmountInput('1000', 'tr')).toBe('1.000');
   });
 
-  it('groups thousands in en-US with commas', () => {
-    expect(formatAmountInput('520000', 'en-US')).toBe('520,000');
+  it('inserts en thousand separators', () => {
+    expect(formatAmountInput('28000', 'en')).toBe('28,000');
+    expect(formatAmountInput('2800000', 'en')).toBe('2,800,000');
   });
 
   it('strips leading zeros (007 → 7)', () => {
-    expect(formatAmountInput('007', 'tr-TR')).toBe('7');
+    expect(formatAmountInput('007', 'tr')).toBe('7');
   });
 
-  it('preserves a leading 0. for sub-unit values', () => {
-    expect(formatAmountInput('0.5', 'tr-TR')).toBe('0,5');
-    expect(formatAmountInput('0.50', 'en-US')).toBe('0.50');
+  it('preserves "0," / "0." for sub-unit values', () => {
+    expect(formatAmountInput('0,5', 'tr')).toBe('0,5');
+    expect(formatAmountInput('0.50', 'en')).toBe('0.50');
+    expect(formatAmountInput('0', 'tr')).toBe('0');
   });
 
   it('caps the fractional part at 2 digits', () => {
-    expect(formatAmountInput('12385.65', 'tr-TR')).toBe('12.385,65');
-    expect(formatAmountInput('12385.65', 'en-US')).toBe('12,385.65');
+    expect(formatAmountInput('28000,567', 'tr')).toBe('28.000,56');
+    expect(formatAmountInput('12385.6543', 'en')).toBe('12,385.65');
   });
 
   it('keeps a trailing separator so the user can keep typing', () => {
-    expect(formatAmountInput('1', 'tr-TR')).toBe('1');
-    expect(formatAmountInput('1,', 'tr-TR')).toBe('1,');
-    expect(formatAmountInput('1.', 'en-US')).toBe('1.');
+    expect(formatAmountInput('28000,', 'tr')).toBe('28.000,');
+    expect(formatAmountInput('28000,5', 'tr')).toBe('28.000,5');
+    expect(formatAmountInput('1.', 'en')).toBe('1.');
   });
 
-  it('discards everything except digits and separators', () => {
-    expect(formatAmountInput('abc1,234.5xyz%', 'en-US')).toBe('1,234.5');
-    expect(formatAmountInput('₺  520 000', 'tr-TR')).toBe('520.000');
+  it('discards characters that are not digits or the locale decimal sep', () => {
+    // In tr, dot is the thousand grouper — it is dropped on input and
+    // re-inserted by the grouping pass, so abc1.234,5xyz% → 1.234,5.
+    expect(formatAmountInput('abc1.234,5xyz%', 'tr')).toBe('1.234,5');
+    expect(formatAmountInput('abc1,234.5xyz%', 'en')).toBe('1,234.5');
   });
 
-  it('handles paste of "12.385,65" in tr-TR', () => {
-    // The user pastes a tr-TR-formatted value back in; we should still
-    // produce a canonical formatted output.
-    expect(formatAmountInput('12.385,65', 'tr-TR')).toBe('12.385,65');
+  it('handles paste of an already-formatted value (idempotent)', () => {
+    expect(formatAmountInput('12.385,65', 'tr')).toBe('12.385,65');
+    expect(formatAmountInput('12,385.65', 'en')).toBe('12,385.65');
   });
 });
 
 describe('parseAmount', () => {
-  it('parses formatted tr-TR strings', () => {
-    expect(parseAmount('12.385,65')).toBe(12385.65);
+  it('parses tr thousand separators correctly — the V3 regression', () => {
+    // Round 2 returned null here because the parser thought ".000" was
+    // a 3-digit fractional → "more than 2 decimal digits" → reject.
+    expect(parseAmount('28.000', 'tr')).toBe(28000);
+    expect(parseAmount('2.800.000', 'tr')).toBe(2_800_000);
+    expect(parseAmount('1.000.000.000', 'tr')).toBe(1_000_000_000);
   });
-  it('parses formatted en-US strings', () => {
-    expect(parseAmount('12,385.65')).toBe(12385.65);
+
+  it('parses tr decimal correctly', () => {
+    expect(parseAmount('28.000,50', 'tr')).toBe(28000.5);
+    expect(parseAmount('0,5', 'tr')).toBe(0.5);
   });
-  it('returns null on garbage', () => {
-    expect(parseAmount('abc')).toBeNull();
+
+  it('rejects mixed / ambiguous tr input', () => {
+    expect(parseAmount('0.5', 'tr')).toBeNull(); // dot is thousand sep here
+    expect(parseAmount('28,000.5', 'tr')).toBeNull();
+    expect(parseAmount('abc', 'tr')).toBeNull();
+    expect(parseAmount('', 'tr')).toBeNull();
+    expect(parseAmount(null, 'tr')).toBeNull();
+  });
+
+  it('parses en correctly (dot IS decimal)', () => {
+    expect(parseAmount('28,000', 'en')).toBe(28000);
+    expect(parseAmount('28,000.50', 'en')).toBe(28000.5);
+    // 28.000 in en means "28 with three trailing zeros after the
+    // decimal" — V3 explicitly asserts this parses to 28.
+    expect(parseAmount('28.000', 'en')).toBe(28);
+  });
+
+  it('round-trips with formatAmountInput', () => {
+    // This is the exact bug the user reported: format then parse must
+    // return the original value.
+    const formatted = formatAmountInput('28000', 'tr');
+    expect(formatted).toBe('28.000');
+    expect(parseAmount(formatted, 'tr')).toBe(28000);
+
+    // In tr, the user's keyboard produces a comma for the decimal.
+    const formatted2 = formatAmountInput('12385,65', 'tr');
+    expect(formatted2).toBe('12.385,65');
+    expect(parseAmount(formatted2, 'tr')).toBe(12385.65);
+  });
+});
+
+describe('formatAmountInputWithCursor', () => {
+  it('keeps the caret past the same digit-count after reformat', () => {
+    // User types "28000|" (caret at position 5, after the last 0).
+    // After format: "28.000|" — caret should land after the last 0,
+    // i.e. position 6.
+    const { value, caret } = formatAmountInputWithCursor('28000', 5, 'tr');
+    expect(value).toBe('28.000');
+    expect(caret).toBe(6);
+  });
+
+  it('handles caret in the middle of the integer part', () => {
+    // User types "28000" then moves caret to position 2 ("28|000").
+    // Reformat gives "28.000"; caret should land after digit-count 2,
+    // which is "28|" — position 2.
+    const { value, caret } = formatAmountInputWithCursor('28000', 2, 'tr');
+    expect(value).toBe('28.000');
+    expect(caret).toBe(2);
   });
 });
 

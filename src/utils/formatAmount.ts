@@ -1,145 +1,215 @@
 /**
  * Locale-aware money input formatter and spell-out helper.
  *
- * Three exports:
- *   - formatAmountInput(raw, locale): canonicalises whatever the user typed
- *     into a thousand-grouped string matching the locale (tr-TR / en-US / ug
- *     style). Used by the controlled <TextInput> in QuickAddSheet so the
- *     value the user sees is always grouped.
- *   - parseAmount(formatted): re-exported from parseLocaleAmount. Returns
- *     the numeric value or null.
- *   - spellAmount(amount, currency, locale): renders a phrase such as
- *     "beş yüz yirmi bin lira" for 520000 in TRY/tr — no npm deps; the
- *     digit/tens/scale tables are inlined per language.
+ * Why this file was rewritten in Round 3:
+ *
+ *   Round 2's `parseAmount` round-tripped via `parseLocaleAmount` — an
+ *   ambiguity-tolerant parser that tries to guess which character is the
+ *   decimal vs. the thousand separator from the input alone. That meant
+ *   `parseAmount("28.000")` returned `null` (single dot + three trailing
+ *   digits = "more than 2 fractional digits" → reject) even though
+ *   `formatAmountInput("28000", "tr-TR")` produced exactly that string.
+ *   On the live site the user typed `28000`, the input displayed
+ *   `28.000`, and Kaydet fired "Tutar 0'dan büyük olmalı" because the
+ *   parser refused its own formatter's output.
+ *
+ *   The fix is to make BOTH functions take an explicit `AppLocale` and
+ *   decide which character is the decimal / thousand separator from the
+ *   locale, not from the input. This is the V3 §2 plan.
+ *
+ * Exports:
+ *   - formatAmountInput(raw, locale): canonicalises raw input into the
+ *     locale's grouped representation.
+ *   - parseAmount(input, locale): inverse of formatAmountInput. Returns
+ *     null on empty / invalid input.
+ *   - spellAmount(amount, currency, locale): unchanged — phrase
+ *     generation in tr/en/ug × TRY/USD/EUR/CNY.
  */
-
-import { parseLocaleAmount } from '@/utils/parseLocaleAmount';
 
 export type SpellLocale = 'tr' | 'en' | 'ug';
 export type SpellCurrency = 'TRY' | 'USD' | 'EUR' | 'CNY';
 
-// -----------------------------------------------------------------------------
-// formatAmountInput
-// -----------------------------------------------------------------------------
+/** Short locale used for amount parsing/formatting. */
+export type AppLocale = 'tr' | 'en' | 'ug';
 
 interface LocaleSeparators {
+  thousand: string;
   decimal: string;
-  group: string;
 }
 
 /**
- * Pull the decimal and group separators the platform uses for the given
- * locale via Intl.NumberFormat#formatToParts. Cached because we re-derive
- * them on every keystroke otherwise.
+ * The user-visible convention in this app. Uyghur input shares Turkish
+ * grouping (dot thousand, comma decimal) per the user's confirmation in
+ * Round 3 — switch to `, .` here if that proves wrong.
  */
-const SEP_CACHE = new Map<string, LocaleSeparators>();
+const SEPARATORS: Record<AppLocale, LocaleSeparators> = {
+  tr: { thousand: '.', decimal: ',' },
+  en: { thousand: ',', decimal: '.' },
+  ug: { thousand: '.', decimal: ',' },
+};
 
-function separatorsFor(locale: string): LocaleSeparators {
-  const cached = SEP_CACHE.get(locale);
-  if (cached) return cached;
-  try {
-    const parts = new Intl.NumberFormat(locale).formatToParts(1234567.89);
-    const decimal = parts.find((p) => p.type === 'decimal')?.value ?? '.';
-    const group = parts.find((p) => p.type === 'group')?.value ?? ',';
-    const seps = { decimal, group };
-    SEP_CACHE.set(locale, seps);
-    return seps;
-  } catch {
-    const fallback = { decimal: '.', group: ',' };
-    SEP_CACHE.set(locale, fallback);
-    return fallback;
-  }
-}
-
-/**
- * Format raw user input into a locale-appropriate, thousand-grouped
- * representation. Discards anything that isn't a digit or separator,
- * keeps at most one decimal point, caps the fractional part at 2 digits,
- * strips leading zeros (unless the value starts with `0.`), and preserves
- * a trailing decimal separator so the user can type "1." without it
- * vanishing on the next keystroke.
- */
-export function formatAmountInput(raw: string, locale: string): string {
-  if (raw == null) return '';
-  // Strip everything except digits and the two possible decimal characters.
-  // We accept both `.` and `,` regardless of locale so a paste from any
-  // source still works.
-  let cleaned = String(raw).replace(/[^0-9.,]/g, '');
-  if (!cleaned) return '';
-
-  const lastDot = cleaned.lastIndexOf('.');
-  const lastComma = cleaned.lastIndexOf(',');
-  const sepIdx = Math.max(lastDot, lastComma);
-
-  let integerPart: string;
-  let fractionalPart: string | null = null;
-  let trailingSep = false;
-
-  if (sepIdx === -1) {
-    integerPart = cleaned.replace(/\D/g, '');
-  } else {
-    const before = cleaned.slice(0, sepIdx).replace(/\D/g, '');
-    const after = cleaned.slice(sepIdx + 1).replace(/\D/g, '');
-
-    // Treat the last `.` or `,` as the decimal point as long as the user
-    // typed at most 2 trailing digits. More than 2 trailing digits → the
-    // separator is almost certainly a thousand grouper they typed in
-    // mid-paste; flatten the whole thing into an integer.
-    if (after.length === 0) {
-      integerPart = before;
-      fractionalPart = '';
-      trailingSep = true;
-    } else if (after.length <= 2) {
-      integerPart = before;
-      fractionalPart = after;
-    } else {
-      integerPart = before + after;
-    }
-  }
-
-  // Leading-zero strip unless the value is "0" itself or starts with "0.".
-  integerPart = integerPart.replace(/^0+(?=\d)/, '');
-  if (integerPart === '') integerPart = '0';
-
-  const { decimal, group } = separatorsFor(locale);
-
-  // Format the integer side with the locale's grouping rules.
-  let formattedInteger: string;
-  try {
-    formattedInteger = new Intl.NumberFormat(locale, {
-      useGrouping: true,
-      maximumFractionDigits: 0,
-    }).format(Number(integerPart));
-  } catch {
-    formattedInteger = manualGroup(integerPart, group);
-  }
-
-  if (fractionalPart === null) return formattedInteger;
-  if (fractionalPart === '' && trailingSep) {
-    return `${formattedInteger}${decimal}`;
-  }
-  return `${formattedInteger}${decimal}${fractionalPart}`;
-}
-
-function manualGroup(digits: string, sep: string): string {
-  if (digits.length <= 3) return digits;
-  const out: string[] = [];
-  let i = digits.length;
-  while (i > 3) {
-    out.unshift(digits.slice(i - 3, i));
-    i -= 3;
-  }
-  out.unshift(digits.slice(0, i));
-  return out.join(sep);
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 // -----------------------------------------------------------------------------
 // parseAmount
 // -----------------------------------------------------------------------------
 
-/** Parse a formatted-or-raw money string. Returns null on invalid input. */
-export function parseAmount(formatted: string): number | null {
-  return parseLocaleAmount(formatted)?.value ?? null;
+/**
+ * Parse a locale-formatted amount string into a number.
+ *
+ * Examples (tr):
+ *   parseAmount("28.000",   'tr') === 28000
+ *   parseAmount("28.000,5", 'tr') === 28000.5
+ *   parseAmount("0,5",      'tr') === 0.5
+ *   parseAmount("0.5",      'tr') === null    // decimal sep is ','
+ *   parseAmount("",         'tr') === null
+ *   parseAmount("abc",      'tr') === null
+ *   parseAmount("28,000.5", 'tr') === null    // wrong separators
+ *
+ * en uses the inverse — dot is decimal, comma is thousand.
+ */
+export function parseAmount(input: string | null | undefined, locale: AppLocale): number | null {
+  if (input == null) return null;
+  const trimmed = String(input).trim();
+  if (trimmed === '') return null;
+
+  const { thousand, decimal } = SEPARATORS[locale];
+  // Only digits and the two locale separators are allowed. A leading minus
+  // would be rejected — amounts in this app are always positive.
+  const allowed = new RegExp(`^[0-9${escapeRegex(thousand)}${escapeRegex(decimal)}]+$`);
+  if (!allowed.test(trimmed)) return null;
+
+  // Split on the decimal separator first; at most one occurrence allowed.
+  const decimalIdx = trimmed.indexOf(decimal);
+  const lastDecimalIdx = trimmed.lastIndexOf(decimal);
+  if (decimalIdx !== lastDecimalIdx) return null;
+
+  const intPart = decimalIdx === -1 ? trimmed : trimmed.slice(0, decimalIdx);
+  const fracPart = decimalIdx === -1 ? '' : trimmed.slice(decimalIdx + 1);
+
+  // The fractional part is digits only — no thousand separators inside.
+  if (fracPart && !/^\d+$/.test(fracPart)) return null;
+
+  // Validate thousand grouping in the integer side. Groups after the first
+  // must be exactly 3 digits; the first group is 1-3. "0.5" in tr fails
+  // here because the second group is one digit.
+  if (intPart.includes(thousand)) {
+    const groups = intPart.split(thousand);
+    if (groups.length < 2) return null;
+    const [first, ...rest] = groups;
+    if (!first || !/^\d{1,3}$/.test(first)) return null;
+    for (const g of rest) {
+      if (!g || !/^\d{3}$/.test(g)) return null;
+    }
+  } else if (!/^\d+$/.test(intPart)) {
+    return null;
+  }
+
+  const normalized = `${intPart.split(thousand).join('')}${fracPart ? '.' + fracPart : ''}`;
+  if (normalized === '' || normalized === '.') return null;
+
+  const value = Number(normalized);
+  if (!Number.isFinite(value)) return null;
+  // Drop float noise so 28000.50 doesn't round-trip to 28000.4999999…
+  return Math.round(value * 100) / 100;
+}
+
+// -----------------------------------------------------------------------------
+// formatAmountInput
+// -----------------------------------------------------------------------------
+
+/**
+ * Reformat raw user input into the locale's canonical thousand-grouped
+ * representation. Applied on every keystroke from the controlled
+ * <TextInput> in QuickAddSheet.
+ *
+ *   1. Strip every character that isn't a digit or the locale decimal sep
+ *      (existing thousand separators in the input are no-ops; we re-insert
+ *      them at the end).
+ *   2. Keep only the first decimal separator; everything after the second
+ *      one is dropped so the user can't paste "1,2,3".
+ *   3. Cap the fractional part at 2 digits.
+ *   4. Strip leading zeros except when the integer is exactly "0" (so the
+ *      user can still type a "0,xx" sub-unit value).
+ *   5. Insert the locale's thousand separator every 3 digits from the
+ *      right of the integer part.
+ *   6. Preserve a trailing decimal separator so "1," doesn't immediately
+ *      reflow to "1".
+ */
+export function formatAmountInput(raw: string | null | undefined, locale: AppLocale): string {
+  if (raw == null) return '';
+  const { thousand, decimal } = SEPARATORS[locale];
+
+  // Drop the existing thousand separator first — it will be reinserted.
+  // Anything that isn't a digit or the decimal separator is rejected.
+  const cleaned = String(raw)
+    .split('')
+    .filter((c) => /[0-9]/.test(c) || c === decimal)
+    .join('');
+  if (cleaned === '') return '';
+
+  // Keep only the first decimal separator.
+  const firstDecimal = cleaned.indexOf(decimal);
+  let canonical: string;
+  if (firstDecimal === -1) {
+    canonical = cleaned;
+  } else {
+    canonical =
+      cleaned.slice(0, firstDecimal + 1) +
+      cleaned.slice(firstDecimal + 1).split(decimal).join('');
+  }
+
+  const hasDecimal = canonical.includes(decimal);
+  const [intPartRaw, fracPartRaw = ''] = canonical.split(decimal);
+  const intPart = (intPartRaw ?? '').replace(/^0+(?=\d)/, '') || '0';
+  const fracPart = fracPartRaw.slice(0, 2);
+
+  const intWithGroups = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, thousand);
+
+  if (hasDecimal) return `${intWithGroups}${decimal}${fracPart}`;
+  return intWithGroups;
+}
+
+/**
+ * Format + return a new caret position so a controlled input can preserve
+ * the user's place after reformatting. The strategy is digit-count: count
+ * how many digits were left of the caret in the raw input, then put the
+ * caret after the same number of digits in the formatted output. This is
+ * the standard recipe for thousand-grouped number inputs; ported from the
+ * widely-cited example at
+ * https://github.com/s-yadav/react-number-format/blob/master/src/utils.ts.
+ */
+export function formatAmountInputWithCursor(
+  raw: string,
+  caret: number,
+  locale: AppLocale,
+): { value: string; caret: number } {
+  const value = formatAmountInput(raw, locale);
+  const { thousand } = SEPARATORS[locale];
+
+  // Count digits in raw up to caret.
+  let digitsLeft = 0;
+  for (let i = 0; i < Math.min(caret, raw.length); i++) {
+    const ch = raw.charAt(i);
+    if (ch >= '0' && ch <= '9') digitsLeft += 1;
+  }
+
+  // Walk the formatted output, advancing caret past digits + thousand-sep
+  // until we've matched `digitsLeft` digits. (Decimal separator counts as
+  // its own non-digit character, advanced through transparently.)
+  let newCaret = 0;
+  let seenDigits = 0;
+  while (newCaret < value.length && seenDigits < digitsLeft) {
+    const ch = value.charAt(newCaret);
+    if (ch >= '0' && ch <= '9') seenDigits += 1;
+    if (ch === thousand) {
+      // Skip past the grouping char silently.
+    }
+    newCaret += 1;
+  }
+  return { value, caret: newCaret };
 }
 
 // -----------------------------------------------------------------------------

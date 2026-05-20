@@ -78,6 +78,52 @@ export function useCreateContact() {
   });
 }
 
+/**
+ * Minimal "create from autocomplete fallback" path: phone (required-ish)
+ * and an optional name. Calls migration 015's `create_contact_minimal`
+ * RPC which is idempotent on duplicate phone — if the user types a phone
+ * that's already on file, they get back the existing contact and the
+ * autocomplete selects it rather than throwing 23505. Falls back to the
+ * raw insert if the RPC isn't deployed yet (PGRST202).
+ */
+export function useCreateMinimalContact() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (
+      input: { phone: string | null; name: string | null; userId: string },
+    ) => {
+      const { data, error } = await supabase
+        .rpc('create_contact_minimal', {
+          p_phone: input.phone,
+          p_name: input.name,
+        })
+        .single();
+      if (error) {
+        // Backwards compat: until 015 is applied, fall through to .insert()
+        // so the UX keeps working. Once 015 lands, this branch never fires.
+        if (error.code === 'PGRST202' || error.code === '404') {
+          const { data: row, error: insertErr } = await supabase
+            .from('contacts')
+            .insert({
+              user_id: input.userId,
+              phone_number: input.phone,
+              full_name: input.name,
+            })
+            .select()
+            .single();
+          if (insertErr) throw insertErr;
+          return row as ContactRow;
+        }
+        throw error;
+      }
+      return data as ContactRow;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: CONTACTS_KEY });
+    },
+  });
+}
+
 export function useUpdateContact() {
   const qc = useQueryClient();
   return useMutation({

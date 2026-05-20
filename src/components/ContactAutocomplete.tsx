@@ -7,10 +7,12 @@ import { colors } from '@/constants/theme';
 import { useCreateContact, useContacts } from '@/hooks/useContacts';
 import { usePhoneContacts } from '@/hooks/usePhoneContacts';
 import { addContactToDevice, type PhoneContact } from '@/lib/contacts';
+import { notify } from '@/lib/confirm';
 import { useAuthStore } from '@/stores/authStore';
 import type { ContactRow } from '@/types/database';
 import { displayContact } from '@/utils/contact';
 
+import { AddContactSheet } from './AddContactSheet';
 import { PermissionModal } from './PermissionModal';
 import { PhoneContactsModal } from './PhoneContactsModal';
 
@@ -50,6 +52,10 @@ export function ContactAutocomplete({
   const [focused, setFocused] = useState(false);
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [showPhoneList, setShowPhoneList] = useState(false);
+  // The "+ Ekle" row opens this sheet so the user can review/edit name
+  // and phone before saving. Used to insert directly with bare catch{};
+  // see Round 3 §3.
+  const [addSheetPrefill, setAddSheetPrefill] = useState<string | null>(null);
 
   const enableSearch = query.trim().length >= MIN_QUERY_LEN;
   const savedContacts = useContacts({ search: query, enabled: enableSearch });
@@ -139,31 +145,23 @@ export function ContactAutocomplete({
       setQuery('');
       setFocused(false);
       onChange(created);
-    } catch {
-      // The mutation surfaces error state via TanStack; UI shows it.
+    } catch (err) {
+      // Round 3 §3: previously this catch was bare. Surface the actual
+      // failure (RLS / partial-unique conflict) so the user knows why
+      // their tap appeared to do nothing.
+      notify(t('app.name'), (err as Error).message ?? t('errors.unknown'));
     }
   };
 
-  const onPickCreate = async (newName: string) => {
-    if (!userId) return;
+  const onPickCreate = (newName: string) => {
     const trimmed = newName.trim();
     if (trimmed.length === 0) return;
-    try {
-      const created = await createContact.mutateAsync({
-        user_id: userId,
-        full_name: trimmed,
-        phone_number: null,
-      });
-      setQuery('');
-      setFocused(false);
-      onChange(created);
-      // Mirror to the device address book when the OS supports it and the
-      // user has already granted permission. Silent on failure: the in-app
-      // save has already succeeded.
-      void addContactToDevice({ name: trimmed });
-    } catch {
-      // Error surface handled by the mutation; selection just won't happen.
-    }
+    // Round 3 §3: defer to AddContactSheet so the user can review the
+    // phone field BEFORE the insert. The old direct-insert path stuffed
+    // whatever the user typed (often a phone number) into full_name,
+    // which left the row shaped opposite to the rest of the app's
+    // schema (phone-primary) and looked like "the contact wasn't added".
+    setAddSheetPrefill(trimmed);
   };
 
   const openPhoneList = async () => {
@@ -311,6 +309,22 @@ export function ContactAutocomplete({
         contacts={phone.contacts}
         loading={phone.loading}
         onSelect={(p) => void onPickPhone(p)}
+      />
+      <AddContactSheet
+        visible={addSheetPrefill !== null}
+        prefill={addSheetPrefill ?? ''}
+        onClose={() => setAddSheetPrefill(null)}
+        onCreated={(created) => {
+          setAddSheetPrefill(null);
+          setQuery('');
+          setFocused(false);
+          onChange(created);
+          // Mirror to the device address book if granted. Silent on
+          // failure — the in-app save already succeeded.
+          if (created.full_name) {
+            void addContactToDevice({ name: created.full_name });
+          }
+        }}
       />
     </View>
   );

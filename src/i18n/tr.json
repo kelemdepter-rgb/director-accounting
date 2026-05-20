@@ -142,6 +142,7 @@
     "savedTag": "Kayıtlı",
     "addInline": "+ \"{{name}}\" kişisini ekle",
     "addInlineTag": "Yeni",
+    "addInlineNeedsValue": "Telefon ya da ad alanlarından en az birini doldurun.",
     "permissionTitle": "Rehbere erişim",
     "permissionExplain": "Telefon rehberinizi yalnızca işlem yaptığınız kişileri hızlı bulmanız için kullanırız. Siz açıkça eklemeden hiçbir kayıt sunucuya gönderilmez.",
     "permissionGrant": "İzin ver",

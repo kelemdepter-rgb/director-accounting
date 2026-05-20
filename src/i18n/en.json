@@ -142,6 +142,7 @@
     "savedTag": "Saved",
     "addInline": "+ Add \"{{name}}\"",
     "addInlineTag": "New",
+    "addInlineNeedsValue": "Fill in at least a phone or a name.",
     "permissionTitle": "Access your contacts",
     "permissionExplain": "We use your phone book only to help you find people you transact with. Nothing is uploaded to the server until you explicitly save a contact.",
     "permissionGrant": "Allow",

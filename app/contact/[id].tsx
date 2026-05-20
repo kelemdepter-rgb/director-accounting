@@ -104,10 +104,14 @@ export default function ContactDetailScreen() {
     }
   };
 
-  // Bottom padding under the scroll content must clear the FAB (h-14 at
-  // bottom-6 ≈ 80px), give breathing room for the last row, and respect
-  // the device's safe-area gesture bar inset on Android / notch on iOS.
-  const scrollPaddingBottom = 96 + insets.bottom;
+  // Bottom padding under the scroll content must clear the FAB AND the
+  // device safe-area inset (iOS home indicator, Android gesture bar, mobile
+  // Safari URL bar). The FAB now sits at `insets.bottom + 24` and is 56 px
+  // tall (h-14); we add 24 px of breathing room above it. Total:
+  //   insets.bottom (FAB anchor) + 24 (FAB margin) + 56 (FAB) + 24 (gap)
+  // The previous round used 96 + insets.bottom, but `insets.bottom` is 0 on
+  // web until +html.tsx ships viewport-fit=cover — see that file for why.
+  const scrollPaddingBottom = insets.bottom + 24 + 56 + 24;
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-ink-50 dark:bg-ink-900">

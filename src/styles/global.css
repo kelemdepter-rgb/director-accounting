@@ -28,6 +28,26 @@ body,
   min-height: 100vh;
 }
 
+/*
+ * Mobile Safari shrinks the visible viewport as the URL bar appears/disappears.
+ * `100vh` resolves to the *large* viewport (chrome collapsed), so on first
+ * paint the bottom of the page sits behind the URL bar — exactly the symptom
+ * the user reported on the contact detail page.
+ *
+ * `100dvh` tracks the dynamic (currently visible) viewport, which is what we
+ * want here. The @supports gate keeps the rule a progressive enhancement.
+ */
+@supports (height: 100dvh) {
+  html,
+  body,
+  #root {
+    min-height: 100dvh;
+  }
+  #root {
+    min-height: 100dvh;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   html:not(.light),
   html:not(.light) body,

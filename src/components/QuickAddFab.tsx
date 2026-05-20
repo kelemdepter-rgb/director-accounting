@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Animated, Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { shadows } from '@/constants/theme';
 
@@ -31,6 +32,10 @@ export function QuickAddFab({ onPick }: QuickAddFabProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const progress = useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
+  // Lift the FAB above the iOS home indicator / Android gesture bar.
+  // 24 (≈ bottom-6) is the visual margin we want above the inset.
+  const bottomOffset = 24 + insets.bottom;
 
   useEffect(() => {
     Animated.spring(progress, {
@@ -57,7 +62,10 @@ export function QuickAddFab({ onPick }: QuickAddFabProps) {
         />
       ) : null}
 
-      <View className="absolute bottom-6 right-6 items-end gap-3">
+      <View
+        className="absolute right-6 items-end gap-3"
+        style={{ bottom: bottomOffset }}
+      >
         {/* Stagger the chips from the FAB up to the highest one. */}
         {[...CHOICES].reverse().map((choice, idx) => {
           const fromBottom = (idx + 1) * 60;

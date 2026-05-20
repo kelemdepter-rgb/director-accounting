@@ -16,6 +16,13 @@ module.exports = defineConfig([
     },
   },
   {
-    ignores: ['dist/*', 'node_modules/*', '.expo/*', 'web-build/*', '.expo-export-check/*'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      '.expo/**',
+      'web-build/**',
+      '.expo-export-check/**',
+      '.claude/**',
+    ],
   },
 ]);

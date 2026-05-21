@@ -59,15 +59,17 @@
     "summaryReceivable": "This person owes you",
     "summaryPayable": "You owe this person",
     "summaryUnchanged": "(unchanged)",
+    "summaryOverflowToPayable": "Excess {{amount}} will be added to my debt.",
+    "summaryOverflowToReceivable": "Excess {{amount}} will be added to their debt.",
     "card": {
       "lent_title": "I lent money to this person",
-      "lent_subtitle": "A new receivable is created. This person will repay me.",
+      "lent_subtitle": "My money given to this person (my receivable) is recorded.",
       "borrowed_title": "I borrowed money from this person",
-      "borrowed_subtitle": "A new debt is created. I will repay this person.",
+      "borrowed_subtitle": "My debt to be repaid to this person is recorded.",
       "received_title": "I received money from this person",
-      "received_subtitle": "Not a new loan. Reduces existing debt/credit, or stands as a free collection.",
+      "received_subtitle": "Deducted from this person's debt to me. After their debt clears, any excess becomes my debt to them.",
       "paid_title": "I gave money to this person",
-      "paid_subtitle": "Not a new loan. Reduces existing debt/credit, or stands as a free payment."
+      "paid_subtitle": "Deducted from my debt to this person. After my debt clears, any excess becomes their debt to me."
     }
   },
   "debts": {

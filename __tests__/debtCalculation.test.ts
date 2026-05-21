@@ -239,10 +239,15 @@ describe('aggregateContactBalance', () => {
     ];
 
     const result = aggregateContactBalance(debts, transactions);
+    // Round 3 §5 flipped the cash flow direction:
+    //   gross_rec=15000, gross_pay=20000
+    //   paid_in=2358 (reduces receivable), paid_out=2385 (reduces payable)
+    //   raw_rec = 15000 - 2358 = 12642
+    //   raw_pay = 20000 - 2385 = 17615
     expect(result.TRY).toEqual({
-      receivable: 17358,
-      payable: 22385,
-      net: -5027,
+      receivable: 12642,
+      payable: 17615,
+      net: -4973,
     });
   });
 
@@ -263,7 +268,7 @@ describe('aggregateContactBalance', () => {
     expect(noManual.USD).toEqual({ receivable: 100, payable: 0, net: 100 });
   });
 
-  it('handles per-currency segregation', () => {
+  it('handles per-currency segregation under the new arithmetic', () => {
     const result = aggregateContactBalance(
       [
         {
@@ -275,19 +280,26 @@ describe('aggregateContactBalance', () => {
         },
       ],
       [
+        // EUR income with no EUR debt: raw_rec = 0 - 40 = -40, raw_pay = 0.
+        // Overflow flips: receivable=0, payable=40.
         { type: 'income', currency: 'EUR', amount: 40, auto_generated: false },
+        // USD expense reduces payable (which is 0), overflows into receivable:
+        // raw_rec = 100, raw_pay = 0 - 25 = -25 → receivable=100+25=125, payable=0.
         { type: 'expense', currency: 'USD', amount: 25, auto_generated: false },
       ],
     );
-    expect(result.USD).toEqual({ receivable: 100, payable: 25, net: 75 });
-    expect(result.EUR).toEqual({ receivable: 40, payable: 0, net: 40 });
+    expect(result.USD).toEqual({ receivable: 125, payable: 0, net: 125 });
+    expect(result.EUR).toEqual({ receivable: 0, payable: 40, net: -40 });
   });
 
-  it('produces a currency entry when only manual transactions exist', () => {
-    const result = aggregateContactBalance([], [
-      { type: 'income', currency: 'CNY', amount: '125.50', auto_generated: false },
-    ]);
-    expect(result.CNY).toEqual({ receivable: 125.5, payable: 0, net: 125.5 });
+  it('an unmatched cash_in with no debt creates payable, not receivable', () => {
+    // The Round-3 inversion: receiving money you weren't owed conceptually
+    // puts you in debt to that person, not in credit.
+    const result = aggregateContactBalance(
+      [],
+      [{ type: 'income', currency: 'CNY', amount: '125.50', auto_generated: false }],
+    );
+    expect(result.CNY).toEqual({ receivable: 0, payable: 125.5, net: -125.5 });
   });
 
   it('skips zero / negative manual amounts', () => {
@@ -296,5 +308,163 @@ describe('aggregateContactBalance', () => {
       { type: 'expense', currency: 'USD', amount: -10, auto_generated: false },
     ]);
     expect(result).toEqual({});
+  });
+});
+
+describe('aggregateContactBalance — R3 §5.5 step-by-step matrix', () => {
+  // Pinpoints the user's source-of-truth matrix. Each step is the
+  // cumulative state after applying the action. The SQL view in
+  // migration 017 mirrors this; if either drifts, both tests catch it.
+  type Step = {
+    label: string;
+    debts: DebtLike[];
+    transactions: ContactCashflowLike[];
+    expected: { receivable: number; payable: number };
+  };
+
+  const STEPS: Step[] = [
+    {
+      label: 'Step 1 — alacak 20k → (20k, 0)',
+      debts: [
+        {
+          type: 'receivable',
+          status: 'active',
+          currency: 'TRY',
+          principal_amount: 20000,
+          remaining_amount: 20000,
+        },
+      ],
+      transactions: [],
+      expected: { receivable: 20000, payable: 0 },
+    },
+    {
+      label: 'Step 2 — + borç 15k → (20k, 15k)',
+      debts: [
+        {
+          type: 'receivable',
+          status: 'active',
+          currency: 'TRY',
+          principal_amount: 20000,
+          remaining_amount: 20000,
+        },
+        {
+          type: 'payable',
+          status: 'active',
+          currency: 'TRY',
+          principal_amount: 15000,
+          remaining_amount: 15000,
+        },
+      ],
+      transactions: [],
+      expected: { receivable: 20000, payable: 15000 },
+    },
+    {
+      label: 'Step 3 — + cash_in 5k → (15k, 15k)',
+      debts: [
+        {
+          type: 'receivable',
+          status: 'active',
+          currency: 'TRY',
+          principal_amount: 20000,
+          remaining_amount: 20000,
+        },
+        {
+          type: 'payable',
+          status: 'active',
+          currency: 'TRY',
+          principal_amount: 15000,
+          remaining_amount: 15000,
+        },
+      ],
+      transactions: [
+        { type: 'income', currency: 'TRY', amount: 5000, auto_generated: false },
+      ],
+      expected: { receivable: 15000, payable: 15000 },
+    },
+    {
+      label: 'Step 4 — + cash_out 3k → (15k, 12k)',
+      debts: [
+        {
+          type: 'receivable',
+          status: 'active',
+          currency: 'TRY',
+          principal_amount: 20000,
+          remaining_amount: 20000,
+        },
+        {
+          type: 'payable',
+          status: 'active',
+          currency: 'TRY',
+          principal_amount: 15000,
+          remaining_amount: 15000,
+        },
+      ],
+      transactions: [
+        { type: 'income', currency: 'TRY', amount: 5000, auto_generated: false },
+        { type: 'expense', currency: 'TRY', amount: 3000, auto_generated: false },
+      ],
+      expected: { receivable: 15000, payable: 12000 },
+    },
+    {
+      label: 'Step 5 — + another cash_in 30k → (0, 27k) [overflow]',
+      // paid_in total = 5k + 30k = 35k; paid_out = 3k.
+      // raw_rec = 20k - 35k = -15k; raw_pay = 15k - 3k = 12k.
+      // Overflow: net_rec = 0; net_pay = 12k + 15k = 27k.
+      debts: [
+        {
+          type: 'receivable',
+          status: 'active',
+          currency: 'TRY',
+          principal_amount: 20000,
+          remaining_amount: 20000,
+        },
+        {
+          type: 'payable',
+          status: 'active',
+          currency: 'TRY',
+          principal_amount: 15000,
+          remaining_amount: 15000,
+        },
+      ],
+      transactions: [
+        { type: 'income', currency: 'TRY', amount: 5000, auto_generated: false },
+        { type: 'expense', currency: 'TRY', amount: 3000, auto_generated: false },
+        { type: 'income', currency: 'TRY', amount: 30000, auto_generated: false },
+      ],
+      expected: { receivable: 0, payable: 27000 },
+    },
+  ];
+
+  for (const step of STEPS) {
+    it(step.label, () => {
+      const result = aggregateContactBalance(step.debts, step.transactions);
+      expect(result.TRY?.receivable).toBe(step.expected.receivable);
+      expect(result.TRY?.payable).toBe(step.expected.payable);
+    });
+  }
+
+  it('symmetric overflow on cash_out exceeds payable → flips to receivable', () => {
+    // gross_rec=5k, gross_pay=10k, paid_out=15k.
+    // raw_rec = 5k, raw_pay = -5k → net_rec = 5k + 5k = 10k, net_pay = 0.
+    const result = aggregateContactBalance(
+      [
+        {
+          type: 'receivable',
+          status: 'active',
+          currency: 'TRY',
+          principal_amount: 5000,
+          remaining_amount: 5000,
+        },
+        {
+          type: 'payable',
+          status: 'active',
+          currency: 'TRY',
+          principal_amount: 10000,
+          remaining_amount: 10000,
+        },
+      ],
+      [{ type: 'expense', currency: 'TRY', amount: 15000, auto_generated: false }],
+    );
+    expect(result.TRY).toEqual({ receivable: 10000, payable: 0, net: 10000 });
   });
 });

@@ -59,15 +59,17 @@
     "summaryReceivable": "Bu kişinin size borcu",
     "summaryPayable": "Sizin bu kişiye borcunuz",
     "summaryUnchanged": "(değişmedi)",
+    "summaryOverflowToPayable": "Fazla {{amount}} bu kişiye olan borca eklenecek.",
+    "summaryOverflowToReceivable": "Fazla {{amount}} bu kişinin size olan borcuna eklenecek.",
     "card": {
       "lent_title": "Bu kişiye borç verdim",
-      "lent_subtitle": "Yeni alacak oluşur. Bu kişi paranın iadesini yapacak.",
+      "lent_subtitle": "Bu kişiye verdiğim para (alacağım) kaydedilir.",
       "borrowed_title": "Bu kişiden borç aldım",
-      "borrowed_subtitle": "Yeni borç oluşur. Bu kişiye paranın iadesini ben yapacağım.",
+      "borrowed_subtitle": "Bu kişiye geri ödeyeceğim borç kaydedilir.",
       "received_title": "Bu kişiden para aldım",
-      "received_subtitle": "Yeni borç ya da alacak değil. Mevcut borç/alacağı eksiltir, ya da serbest tahsilat olarak kalır.",
+      "received_subtitle": "Bu kişinin bana olan borcundan düşülür. Borç bittikten sonra fazlası bana olan borca eklenir.",
       "paid_title": "Bu kişiye para verdim",
-      "paid_subtitle": "Yeni borç ya da alacak değil. Mevcut borç/alacağı eksiltir, ya da serbest ödeme olarak kalır."
+      "paid_subtitle": "Bu kişiye olan borcumdan düşülür. Borç bittikten sonra fazlası bu kişiye verdiğim borca eklenir."
     }
   },
   "debts": {

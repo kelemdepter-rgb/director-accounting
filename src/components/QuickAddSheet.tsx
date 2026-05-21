@@ -341,21 +341,63 @@ export function QuickAddSheet({
         {(() => {
           const numeric = parseAmount(amount, appLocale);
           if (!contact || numeric === null || numeric <= 0) return null;
-          const current = currentBalances[currency] ?? {
-            receivable: 0,
-            payable: 0,
-            net: 0,
-          };
-          // Backend convention (mirrors aggregateContactBalance):
-          //   lend / income  → receivable += amount
-          //   borrow / expense → payable += amount
-          const addsToReceivable = mode === 'lend' || mode === 'income';
-          const nextReceivable = addsToReceivable
-            ? current.receivable + numeric
-            : current.receivable;
-          const nextPayable = !addsToReceivable
-            ? current.payable + numeric
-            : current.payable;
+
+          // Simulate the action by appending a synthetic debt or transaction
+          // and re-running aggregateContactBalance. This guarantees the
+          // preview matches exactly what the server-side view will compute,
+          // including overflow flips when cash_in exceeds receivable or
+          // cash_out exceeds payable (Round 3 §5).
+          const debts = previewDebtsQ.data ?? [];
+          const txns = previewTxnQ.data ?? [];
+          let projDebts = debts as Parameters<typeof aggregateContactBalance>[0];
+          let projTxns = txns as Parameters<typeof aggregateContactBalance>[1];
+
+          if (mode === 'lend' || mode === 'borrow') {
+            projDebts = [
+              ...debts,
+              {
+                type: mode === 'lend' ? 'receivable' : 'payable',
+                status: 'active',
+                currency,
+                principal_amount: numeric,
+                remaining_amount: numeric,
+              },
+            ];
+          } else {
+            projTxns = [
+              ...txns,
+              {
+                type: mode === 'income' ? 'income' : 'expense',
+                currency,
+                amount: numeric,
+                auto_generated: false,
+              },
+            ];
+          }
+
+          const projected = aggregateContactBalance(projDebts, projTxns);
+          const cur = currentBalances[currency] ?? { receivable: 0, payable: 0, net: 0 };
+          const next = projected[currency] ?? { receivable: 0, payable: 0, net: 0 };
+
+          const recChanged = Math.abs(next.receivable - cur.receivable) > 0.005;
+          const payChanged = Math.abs(next.payable - cur.payable) > 0.005;
+
+          // Overflow detection: a cash_in beyond receivable spills into
+          // payable; a cash_out beyond payable spills into receivable.
+          // The user sees both sides change in that case, and we tell
+          // them how much spilled over.
+          let overflow = 0;
+          if (mode === 'income') {
+            // raw_rec_after = gross_rec - (paid_in + numeric). Overflow
+            // = numeric - max(0, paid_in_room) where paid_in_room is
+            // how much of `numeric` lands on the receivable side.
+            const paidInRoom = Math.max(0, cur.receivable);
+            overflow = Math.max(0, numeric - paidInRoom);
+          } else if (mode === 'expense') {
+            const paidOutRoom = Math.max(0, cur.payable);
+            overflow = Math.max(0, numeric - paidOutRoom);
+          }
+
           return (
             <View className="rounded-xl border border-ink-200 bg-ink-50 p-3 dark:border-ink-700 dark:bg-ink-700/40">
               <Text className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-300">
@@ -370,9 +412,9 @@ export function QuickAddSheet({
                     className="text-sm font-semibold text-ink-900 dark:text-ink-50"
                     style={{ fontVariant: ['tabular-nums'] }}
                   >
-                    {addsToReceivable
-                      ? `${formatMoney(current.receivable, currency, locale)} → ${formatMoney(nextReceivable, currency, locale)}`
-                      : `${formatMoney(current.receivable, currency, locale)} ${t('quickAdd.summaryUnchanged')}`}
+                    {recChanged
+                      ? `${formatMoney(cur.receivable, currency, locale)} → ${formatMoney(next.receivable, currency, locale)}`
+                      : `${formatMoney(cur.receivable, currency, locale)} ${t('quickAdd.summaryUnchanged')}`}
                   </Text>
                 </View>
                 <View className="flex-row items-center justify-between">
@@ -383,11 +425,21 @@ export function QuickAddSheet({
                     className="text-sm font-semibold text-ink-900 dark:text-ink-50"
                     style={{ fontVariant: ['tabular-nums'] }}
                   >
-                    {!addsToReceivable
-                      ? `${formatMoney(current.payable, currency, locale)} → ${formatMoney(nextPayable, currency, locale)}`
-                      : `${formatMoney(current.payable, currency, locale)} ${t('quickAdd.summaryUnchanged')}`}
+                    {payChanged
+                      ? `${formatMoney(cur.payable, currency, locale)} → ${formatMoney(next.payable, currency, locale)}`
+                      : `${formatMoney(cur.payable, currency, locale)} ${t('quickAdd.summaryUnchanged')}`}
                   </Text>
                 </View>
+                {overflow > 0.005 ? (
+                  <Text className="mt-2 text-xs italic text-ink-500 dark:text-ink-300">
+                    {t(
+                      mode === 'income'
+                        ? 'quickAdd.summaryOverflowToPayable'
+                        : 'quickAdd.summaryOverflowToReceivable',
+                      { amount: formatMoney(overflow, currency, locale) },
+                    )}
+                  </Text>
+                ) : null}
               </View>
             </View>
           );

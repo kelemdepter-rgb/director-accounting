@@ -160,34 +160,83 @@ export interface ContactCashflowLike {
  * cash movements (rows the user entered by hand, not the ones the system
  * mirrors from debt creation or payment recording).
  *
- *   receivable side = Σ active receivable remaining + Σ manual income
- *   payable side    = Σ active payable    remaining + Σ manual expense
+ * Round 3 §5 flipped the cash flow direction from the convention introduced
+ * by Round 1's fc596ab:
  *
- * The "remaining" side already accounts for partial payments via
- * debts_with_balance.remaining_amount, so a partial payback shrinks the
- * receivable principal directly. Free-form cash inflows the user logged
- * without tying them to a specific debt still need to land somewhere, and
- * the convention in this app is: income from a contact widens the
- * receivable column, expense to a contact widens the payable column.
+ *   cash_in  ("they paid me")   reduces receivable; overflow → payable.
+ *   cash_out ("I paid them")    reduces payable;    overflow → receivable.
+ *
+ * The "gross" side already accounts for partial payments tracked via
+ * record_debt_payment (which writes an auto_generated mirror transaction
+ * we explicitly exclude here). So manual cash flows behave the same way
+ * regardless of whether they were recorded as free-form transactions or
+ * formal debt payments — both reduce the matching side.
+ *
+ * The SQL view `v_contact_balance` (migration 017) computes the same
+ * thing on the server. Tests pin the matrix from R3 §5.5 so the two
+ * implementations cannot drift.
  */
 export function aggregateContactBalance(
   debts: readonly DebtLike[],
   transactions: readonly ContactCashflowLike[],
 ): Record<string, CurrencyTotals> {
-  const acc = aggregateOutstandingByCurrency(debts);
+  // Per-currency gross debt totals (already net of formal debt_payments).
+  const grossRec: Record<string, number> = {};
+  const grossPay: Record<string, number> = {};
+  for (const d of debts) {
+    if (d.status === 'settled') continue;
+    const remaining =
+      d.remaining_amount !== undefined
+        ? toNumber(d.remaining_amount)
+        : toNumber(d.principal_amount);
+    if (remaining <= 0) continue;
+    if (d.type === 'receivable') {
+      grossRec[d.currency] = roundMoney((grossRec[d.currency] ?? 0) + remaining);
+    } else {
+      grossPay[d.currency] = roundMoney((grossPay[d.currency] ?? 0) + remaining);
+    }
+  }
 
+  // Per-currency manual cash movements. auto_generated rows mirror debt
+  // payments and are already reflected in remaining_amount above —
+  // counting them again would over-net.
+  const paidIn: Record<string, number> = {};
+  const paidOut: Record<string, number> = {};
   for (const tx of transactions) {
     if (tx.auto_generated) continue;
     const amount = toNumber(tx.amount);
     if (amount <= 0) continue;
-    const slot = acc[tx.currency] ?? { receivable: 0, payable: 0, net: 0 };
     if (tx.type === 'income') {
-      slot.receivable = roundMoney(slot.receivable + amount);
+      paidIn[tx.currency] = roundMoney((paidIn[tx.currency] ?? 0) + amount);
     } else {
-      slot.payable = roundMoney(slot.payable + amount);
+      paidOut[tx.currency] = roundMoney((paidOut[tx.currency] ?? 0) + amount);
     }
-    slot.net = roundMoney(slot.receivable - slot.payable);
-    acc[tx.currency] = slot;
+  }
+
+  const currencies = new Set<string>([
+    ...Object.keys(grossRec),
+    ...Object.keys(grossPay),
+    ...Object.keys(paidIn),
+    ...Object.keys(paidOut),
+  ]);
+
+  const acc: Record<string, CurrencyTotals> = {};
+  for (const currency of currencies) {
+    const rawRec = (grossRec[currency] ?? 0) - (paidIn[currency] ?? 0);
+    const rawPay = (grossPay[currency] ?? 0) - (paidOut[currency] ?? 0);
+
+    // Collapse: a negative raw side means the user has overpaid in that
+    // direction; the excess spills onto the opposite side. If both raw
+    // sides are negative the user has overpaid in both directions, which
+    // swaps them. Verified in the matrix test at __tests__/debtCalculation.
+    const receivable = roundMoney(Math.max(0, rawRec) + Math.max(0, -rawPay));
+    const payable = roundMoney(Math.max(0, rawPay) + Math.max(0, -rawRec));
+    const net = roundMoney(receivable - payable);
+
+    // Skip currencies where both sides round to zero — they contribute
+    // nothing visible to the UI.
+    if (receivable < 0.005 && payable < 0.005) continue;
+    acc[currency] = { receivable, payable, net };
   }
 
   return acc;

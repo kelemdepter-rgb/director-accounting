@@ -1,4 +1,5 @@
 import '@/styles/global.css';
+import '@/lib/nativewindInterop';
 import '@/i18n';
 
 import {
@@ -17,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { DebugScrollOverlay } from '@/components/DebugScrollOverlay';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { colors } from '@/constants/theme';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
@@ -202,6 +204,7 @@ export default function RootLayout() {
                 <Stack.Screen name="transaction/[id]" />
                 <Stack.Screen name="transactions" />
               </Stack>
+              <DebugScrollOverlay />
             </View>
           </ThemeProvider>
         </RootBoundary>

@@ -31,7 +31,25 @@ export default function AuthCallbackScreen() {
       const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
       if (cancelled) return;
       if (exchangeError) {
-        setError(exchangeError.message || t('errors.unknown'));
+        const msg = exchangeError.message || '';
+        const isPkceMissing = /pkce|code verifier/i.test(msg);
+        if (isPkceMissing) {
+          // Almost always means the OAuth flow began at one origin and the
+          // redirect landed at another — i.e. Supabase fell back to Site URL
+          // because the redirect_to URL is not on the dashboard allow-list.
+          const origin =
+            typeof window !== 'undefined' ? window.location.origin : '(non-web)';
+          // eslint-disable-next-line no-console
+          console.error(
+            '[auth-callback] PKCE code_verifier not found at %s. The OAuth flow likely landed here from a different origin because the Supabase Redirect URLs allow-list does not include the origin where login was initiated. Open Supabase Dashboard -> Authentication -> URL Configuration -> Redirect URLs and add a pattern that matches it (e.g. https://*.vercel.app/**).',
+            origin,
+          );
+          setError(`${msg}\n\nCurrent origin: ${origin}`);
+          return;
+        }
+        // eslint-disable-next-line no-console
+        console.error('[auth-callback] exchangeCodeForSession failed:', exchangeError);
+        setError(msg || t('errors.unknown'));
         return;
       }
       router.replace('/');

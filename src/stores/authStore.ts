@@ -186,6 +186,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // URL Configuration -> Redirect URLs must allow the matching origins
       // (e.g. `https://*.vercel.app/**` for preview deployments).
       const redirectTo = `${window.location.origin}/${GOOGLE_REDIRECT_PATH}`;
+      // Logged on every Google sign-in so the actual computed value is visible
+      // in DevTools. If a future PKCE failure happens, this is the value to
+      // verify against the Supabase Dashboard's Redirect URLs allow-list.
+      console.info('[auth] signInWithGoogle redirectTo:', redirectTo);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo },

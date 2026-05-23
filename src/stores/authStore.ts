@@ -26,13 +26,6 @@ export interface AuthState {
 }
 
 const GOOGLE_REDIRECT_PATH = 'auth-callback';
-// Implicit flow drops the access_token in the URL hash fragment, so the
-// redirect target must be a URL whose page boots Supabase (which then
-// auto-detects the fragment thanks to `detectSessionInUrl: true`). The root
-// URL works; `/auth-callback` does too — both serve a Supabase-aware bundle.
-// Hard-coded to production because Supabase requires the URL to be on the
-// allow-list configured in the dashboard.
-const GOOGLE_WEB_REDIRECT_URL = 'https://director-accounting.vercel.app';
 
 /**
  * Map Supabase auth errors to our i18n keys, falling back to a generic message.
@@ -181,9 +174,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     if (Platform.OS === 'web') {
+      // Derive the redirect from the current origin so this works on local
+      // dev (`http://localhost:8081`), Vercel preview deployments
+      // (`https://director-accounting-git-*.vercel.app`) and production
+      // alike — hardcoding production meant previews were either bounced to
+      // the live site or, when production wasn't allow-listed, fell back to
+      // Supabase's Site URL (currently localhost) and broke every login
+      // outside the live domain.
+      //
+      // For this to be honored, Supabase Dashboard -> Authentication ->
+      // URL Configuration -> Redirect URLs must allow the matching origins
+      // (e.g. `https://*.vercel.app/**` for preview deployments).
+      const redirectTo = `${window.location.origin}/${GOOGLE_REDIRECT_PATH}`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: GOOGLE_WEB_REDIRECT_URL },
+        options: { redirectTo },
       });
       if (error) {
         set({ errorKey: mapAuthError(error) });

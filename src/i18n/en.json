@@ -131,6 +131,12 @@
     "loginSubtitle": "Sign in to keep your books up to date.",
     "registerSubtitle": "It takes a minute, and your data is end-to-end protected.",
     "confirmEmailNotice": "Please confirm your email — we just sent you a link. Then come back here to sign in.",
+    "checkInboxTitle": "Check your inbox",
+    "checkInboxBody": "We sent a confirmation link to {{email}}. Tap it to finish creating your account, then come back here to sign in.",
+    "checkInboxSpamHint": "Can't find it? Wait 60 seconds, then check your spam folder.",
+    "resendConfirmation": "Resend confirmation email",
+    "resendSent": "Sent. Check your inbox again in a minute.",
+    "backToSignIn": "Back to sign in",
     "googleNotConfigured": "Google sign-in is not configured yet.",
     "brandHeadline": "Your books, finally in your pocket.",
     "brandSub": "Track income, expenses, and what people owe you — across phone, tablet, and web. Bank-grade encryption, zero spreadsheets."
@@ -209,6 +215,9 @@
     "userNotFound": "No account found with that email.",
     "rateLimited": "Too many attempts. Please wait a few minutes and try again.",
     "network": "Cannot reach the server. Check your internet connection.",
+    "emailNotConfirmed": "Please confirm your email first — check your inbox (and the spam folder) for the link.",
+    "weakPassword": "Password is too weak. Use at least 8 characters, mixing letters and numbers.",
+    "signupDisabled": "New sign-ups are temporarily disabled. Ask the admin to enable email sign-up.",
     "crashTitle": "Something broke on this screen.",
     "crashHint": "Your data is safe. Try again, and if it keeps happening, restart the app."
   },

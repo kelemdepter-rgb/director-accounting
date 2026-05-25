@@ -131,6 +131,12 @@
     "loginSubtitle": "Defterinizi güncel tutmak için giriş yapın.",
     "registerSubtitle": "Bir dakikanızı alır. Verileriniz uçtan uca koruma altındadır.",
     "confirmEmailNotice": "E-postanızı doğrulamamız için size bir bağlantı gönderdik. Doğruladıktan sonra burada giriş yapabilirsiniz.",
+    "checkInboxTitle": "Gelen kutunuzu kontrol edin",
+    "checkInboxBody": "{{email}} adresine bir doğrulama bağlantısı gönderdik. Hesabınızı oluşturmak için bağlantıya dokunun, ardından buraya dönüp giriş yapın.",
+    "checkInboxSpamHint": "Bulamıyor musunuz? 60 saniye bekleyin, sonra spam klasörünü kontrol edin.",
+    "resendConfirmation": "Doğrulama e-postasını yeniden gönder",
+    "resendSent": "Gönderildi. Birkaç dakika sonra gelen kutunuzu tekrar kontrol edin.",
+    "backToSignIn": "Giriş ekranına dön",
     "googleNotConfigured": "Google ile giriş henüz yapılandırılmamış.",
     "brandHeadline": "Defteriniz artık avucunuzda.",
     "brandSub": "Gelirinizi, giderinizi ve alacaklarınızı telefonunuzdan, tabletinizden ve web üzerinden tek bir yerden takip edin. Banka düzeyinde şifreleme; ne bir Excel ne bir kâğıt."
@@ -209,6 +215,9 @@
     "userNotFound": "Bu e-postaya kayıtlı hesap bulunamadı.",
     "rateLimited": "Çok fazla deneme yapıldı. Lütfen birkaç dakika sonra tekrar deneyin.",
     "network": "Sunucuya ulaşılamıyor. İnternet bağlantınızı kontrol edin.",
+    "emailNotConfirmed": "Önce e-postanızı doğrulayın — gelen kutunuzu (ve spam klasörünü) bağlantı için kontrol edin.",
+    "weakPassword": "Parola çok zayıf. En az 8 karakter kullanın, harf ve rakamları karıştırın.",
+    "signupDisabled": "Yeni kayıtlar geçici olarak devre dışı. Yöneticiden e-posta kaydını etkinleştirmesini isteyin.",
     "crashTitle": "Bu ekranda bir sorun oluştu.",
     "crashHint": "Verileriniz güvende. Tekrar deneyin; sorun sürerse uygulamayı yeniden başlatın."
   },

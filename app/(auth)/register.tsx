@@ -9,7 +9,6 @@ import { AuthScaffold } from '@/components/AuthScaffold';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { colors } from '@/constants/theme';
-import { notify } from '@/lib/confirm';
 import { zodResolver } from '@/lib/zodResolver';
 import { signUpSchema, type SignUpValues } from '@/schemas/auth';
 import { useAuthStore } from '@/stores/authStore';
@@ -37,8 +36,14 @@ export default function RegisterScreen() {
     try {
       const { needsEmailConfirm } = await signUp(values.email, values.password);
       if (needsEmailConfirm) {
-        notify(t('app.name'), t('auth.confirmEmailNotice'));
-        router.replace('/(auth)/login');
+        // Round 5 §3: route to the dedicated Check-Your-Inbox screen
+        // instead of bouncing back to /login with a toast. The previous
+        // flow flickered through the toast on mobile and left friends
+        // staring at the login form, certain the app had broken.
+        router.replace({
+          pathname: '/(auth)/check-inbox',
+          params: { email: values.email },
+        });
       } else {
         router.replace('/(tabs)');
       }

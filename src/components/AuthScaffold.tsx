@@ -6,7 +6,12 @@ import { Logo } from './ui/Logo';
 
 interface AuthScaffoldProps extends PropsWithChildren {
   title: string;
-  subtitle: string;
+  /**
+   * Optional supporting copy under the title. Some screens (Round 5 §3
+   * Check-Your-Inbox) prefer a single in-body paragraph instead, so
+   * this prop is omittable.
+   */
+  subtitle?: string;
 }
 
 const SPLIT_BREAKPOINT = 880;
@@ -77,9 +82,11 @@ export function AuthScaffold({ title, subtitle, children }: AuthScaffoldProps) {
           >
             {title}
           </Text>
-          <Text className="mt-2 text-base leading-relaxed text-ink-500 dark:text-ink-300">
-            {subtitle}
-          </Text>
+          {subtitle ? (
+            <Text className="mt-2 text-base leading-relaxed text-ink-500 dark:text-ink-300">
+              {subtitle}
+            </Text>
+          ) : null}
 
           <View className="mt-8 gap-4">{children}</View>
         </View>

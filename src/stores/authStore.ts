@@ -19,6 +19,13 @@ export interface AuthState {
   initialize: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<{ needsEmailConfirm: boolean }>;
+  /**
+   * Re-send the email-confirmation link for a sign-up that is still
+   * awaiting confirmation. Round 5 §3 — surfaced via the Check Your Inbox
+   * screen so users whose first email got filtered as spam have a recovery
+   * path that does not require sign-up again.
+   */
+  resendSignUpEmail: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -30,8 +37,12 @@ const GOOGLE_REDIRECT_PATH = 'auth-callback';
 /**
  * Map Supabase auth errors to our i18n keys, falling back to a generic message.
  * Supabase emits both `message` strings and (newer) machine `code` fields; we check both.
+ *
+ * Exported for unit testing.
  */
-function mapAuthError(error: AuthError | { message?: string; code?: string }): string {
+export function mapAuthError(
+  error: AuthError | { message?: string; code?: string },
+): string {
   const code = 'code' in error && typeof error.code === 'string' ? error.code : '';
   const message = (error.message ?? '').toLowerCase();
 
@@ -51,6 +62,34 @@ function mapAuthError(error: AuthError | { message?: string; code?: string }): s
   }
   if (code === 'user_not_found' || message.includes('user not found')) {
     return 'errors.userNotFound';
+  }
+  // Round 5 §3: surfaced when the user tries to sign in before clicking the
+  // confirmation link. The current code threw a generic "unknown" — friends
+  // hit it because Supabase's default email template is in English and many
+  // missed it as spam.
+  if (
+    code === 'email_not_confirmed' ||
+    message.includes('email not confirmed')
+  ) {
+    return 'errors.emailNotConfirmed';
+  }
+  // Round 5 §3: weak password feedback so the user knows what to fix.
+  if (
+    code === 'weak_password' ||
+    message.includes('password is too weak') ||
+    message.includes('password should be')
+  ) {
+    return 'errors.weakPassword';
+  }
+  // Round 5 §3: surfaced when the project disabled email sign-up (e.g. SMTP
+  // failed to send). The user should be told to ask the admin, not to retry.
+  if (
+    code === 'signup_disabled' ||
+    code === 'email_provider_disabled' ||
+    message.includes('signups not allowed') ||
+    message.includes('signup is disabled')
+  ) {
+    return 'errors.signupDisabled';
   }
   if (
     code === 'over_request_rate_limit' ||
@@ -139,6 +178,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     // When email confirmation is required, session is null until the user clicks the link.
     return { needsEmailConfirm: data.session === null };
+  },
+
+  resendSignUpEmail: async (email) => {
+    set({ errorKey: null });
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo: buildRedirectUri('email-confirmed'),
+      },
+    });
+    if (error) {
+      set({ errorKey: mapAuthError(error) });
+      throw error;
+    }
   },
 
   signOut: async () => {

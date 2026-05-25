@@ -20,7 +20,15 @@
     "greetingMorning": "ئەتىگەنلىكىڭىزگە خەيرلىك",
     "greetingAfternoon": "كۈنلۈكىڭىزگە خەيرلىك",
     "greetingEvening": "كەچلىكىڭىزگە خەيرلىك",
-    "greetingNight": "ئاخشاملىقىڭىزگە خەيرلىك"
+    "greetingNight": "ئاخشاملىقىڭىزگە خەيرلىك",
+    "subtitle": "ئوچۇق قالدۇقلار",
+    "sectionReceivable": "ماڭا قەرزدار كىشىلەر",
+    "sectionPayable": "مەن قەرزدار بولغان كىشىلەر",
+    "emptyReceivable": "ھازىر ھېچكىم سىزگە قەرزدار ئەمەس.",
+    "emptyPayable": "ھازىر سىز ھېچكىمگە قەرزدار ئەمەس.",
+    "section_summary": "{{count}} · {{total}}",
+    "section_summary_multi_currency": "{{count}} · {{total}} +{{n}} يەنە",
+    "statsLink": "ستاتىستىكا"
   },
   "transactions": {
     "title": "بارلىق ھەرىكەتلەر",

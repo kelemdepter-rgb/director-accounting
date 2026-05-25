@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { HOME_LIST_KEY } from '@/hooks/useHomeList';
 import { buildCreateDebtRpcParams } from '@/lib/debtRpcParams';
 import { supabase } from '@/lib/supabase';
 import type {
@@ -111,6 +112,7 @@ export function useCreateDebt() {
       void qc.invalidateQueries({ queryKey: DEBTS_KEY });
       void qc.invalidateQueries({ queryKey: ['transactions'] });
       void qc.invalidateQueries({ queryKey: ['summary'] });
+      void qc.invalidateQueries({ queryKey: HOME_LIST_KEY });
     },
   });
 }
@@ -163,6 +165,7 @@ export function useCreatePayment() {
       void qc.invalidateQueries({ queryKey: [...DEBTS_KEY, 'payments', result.debt_id] });
       void qc.invalidateQueries({ queryKey: ['transactions'] });
       void qc.invalidateQueries({ queryKey: ['summary'] });
+      void qc.invalidateQueries({ queryKey: HOME_LIST_KEY });
     },
   });
 }
@@ -181,6 +184,7 @@ function invalidatePaymentRelated(qc: ReturnType<typeof useQueryClient>, debtId:
   void qc.invalidateQueries({ queryKey: [...DEBTS_KEY, 'payments', debtId] });
   void qc.invalidateQueries({ queryKey: ['transactions'] });
   void qc.invalidateQueries({ queryKey: ['summary'] });
+  void qc.invalidateQueries({ queryKey: HOME_LIST_KEY });
 }
 
 export function useUpdatePayment() {
@@ -231,6 +235,7 @@ export function useDeleteDebt() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: DEBTS_KEY });
       void qc.invalidateQueries({ queryKey: ['summary'] });
+      void qc.invalidateQueries({ queryKey: HOME_LIST_KEY });
     },
   });
 }

@@ -203,6 +203,7 @@ export default function RootLayout() {
                 <Stack.Screen name="debt/[id]" />
                 <Stack.Screen name="transaction/[id]" />
                 <Stack.Screen name="transactions" />
+                <Stack.Screen name="stats" />
               </Stack>
               <DebugScrollOverlay />
             </View>

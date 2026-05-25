@@ -1,267 +1,144 @@
+/**
+ * Round 5 §2 — home page rewrite.
+ *
+ * The previous home was three KPI cards (today's income / today's expense
+ * / outstanding balance). Two of them were almost always empty because
+ * the user rarely records multiple transactions on the same day, and the
+ * third buried "who owes me what" behind a single signed number. The
+ * user's restated request: "at a glance, very clearly, show who owes me
+ * how much, who I owe how much, on what dates — as a list."
+ *
+ * This screen renders two list sections (receivables / payables), one row
+ * per (contact, currency) with an open balance. The KPI cards moved to a
+ * separate Statistics sub-page reachable from the header — they're still
+ * useful, just not the primary surface.
+ *
+ * Data comes from `v_home_list` (migration 020) via `useHomeList`, which
+ * is invalidated by every mutation that can change a balance.
+ */
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, Pressable, SafeAreaView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, SafeAreaView, Text, View } from 'react-native';
 
+import { HomeSection } from '@/components/HomeSection';
 import { QuickAddFab } from '@/components/QuickAddFab';
 import { QuickAddSheet, type QuickAddMode } from '@/components/QuickAddSheet';
-import { TransactionListItem } from '@/components/TransactionListItem';
-import { Card } from '@/components/ui/Card';
+import { ScreenScroll } from '@/components/ScreenScroll';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Skeleton } from '@/components/ui/Skeleton';
 import { colors } from '@/constants/theme';
-import { useContacts } from '@/hooks/useContacts';
-import { useSummary } from '@/hooks/useSummary';
-import { useTransactions } from '@/hooks/useTransactions';
+import { useHomeList } from '@/hooks/useHomeList';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
-import type { ContactRow } from '@/types/database';
-import { displayContact } from '@/utils/contact';
-import { formatMoney } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
 import { currentGreetingKey } from '@/utils/greeting';
 
-interface SummaryCardProps {
-  label: string;
-  totals: Record<string, number>;
-  toneClass: string;
-  iconBg: string;
-  iconName: keyof typeof Ionicons.glyphMap;
-  emptyText?: string;
-  signed?: boolean;
-}
+const FAB_SLOT = 72; // QuickAddFab footprint — keeps the bottom row reachable.
 
-function SummaryCard({
-  label,
-  totals,
-  toneClass,
-  iconBg,
-  iconName,
-  emptyText,
-  signed = false,
-}: SummaryCardProps) {
-  const entries = Object.entries(totals).filter(([, v]) => v !== 0);
-  return (
-    <Card elevation="card" className="w-64 p-5">
-      <View className="flex-row items-center justify-between">
-        <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-300">
-          {label}
-        </Text>
-        <View
-          className={`h-9 w-9 items-center justify-center rounded-full ${iconBg}`}
-          accessibilityElementsHidden
-        >
-          <Ionicons name={iconName} size={18} color="#fff" />
-        </View>
-      </View>
-      {entries.length === 0 ? (
-        <Text className="mt-3 text-2xl font-semibold text-ink-400 dark:text-ink-500">
-          {emptyText ?? '—'}
-        </Text>
-      ) : (
-        <View className="mt-3 gap-1">
-          {entries.map(([currency, total]) => {
-            if (signed) {
-              const positive = total > 0;
-              const cls = positive ? 'text-income-600' : 'text-payable-600';
-              return (
-                <Text
-                  key={currency}
-                  className={`text-2xl font-bold ${cls}`}
-                  style={{ fontVariant: ['tabular-nums'] }}
-                >
-                  {positive ? '+' : '−'}
-                  {formatMoney(Math.abs(total), currency)}
-                </Text>
-              );
-            }
-            return (
-              <Text
-                key={currency}
-                className={`text-2xl font-bold ${toneClass}`}
-                style={{ fontVariant: ['tabular-nums'] }}
-              >
-                {formatMoney(total, currency)}
-              </Text>
-            );
-          })}
-        </View>
-      )}
-    </Card>
-  );
-}
+const I18N_TO_LOCALE: Record<string, string> = {
+  en: 'en-US',
+  tr: 'tr-TR',
+  ug: 'ug',
+};
 
-function SummarySkeleton() {
-  return (
-    <Card elevation="card" className="w-64 p-5">
-      <View className="flex-row items-center justify-between">
-        <Skeleton width={80} height={12} />
-        <Skeleton width={36} height={36} radius={18} />
-      </View>
-      <Skeleton width={140} height={28} style={{ marginTop: 16 }} />
-    </Card>
-  );
+function localeFor(language: string): string {
+  return I18N_TO_LOCALE[language] ?? language;
 }
 
 export default function HomeScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const defaultCurrency = useSettingsStore((s) => s.defaultCurrency);
-  const summaryQ = useSummary();
-  const txnQ = useTransactions({ limit: 10 });
-  const contactsQ = useContacts({ enabled: true });
-
-  const contactById = useMemo(() => {
-    const map = new Map<string, ContactRow>();
-    for (const c of contactsQ.data ?? []) map.set(c.id, c);
-    return map;
-  }, [contactsQ.data]);
+  const homeQ = useHomeList();
 
   const [sheetMode, setSheetMode] = useState<QuickAddMode | null>(null);
 
-  const outstandingNet = useMemo(() => {
-    const out: Record<string, number> = {};
-    for (const [currency, totals] of Object.entries(summaryQ.data?.outstanding ?? {})) {
-      const value = totals.receivable - totals.payable;
-      if (value !== 0) out[currency] = value;
-    }
-    return out;
-  }, [summaryQ.data]);
+  const locale = useMemo(() => localeFor(i18n.language), [i18n.language]);
+
+  const receivables = useMemo(
+    () => (homeQ.data ?? []).filter((r) => Number(r.net_receivable) > 0),
+    [homeQ.data],
+  );
+  const payables = useMemo(
+    () => (homeQ.data ?? []).filter((r) => Number(r.net_payable) > 0),
+    [homeQ.data],
+  );
 
   const greeting = t(currentGreetingKey());
   const displayName =
     user?.user_metadata?.full_name ??
     (user?.email ? user.email.split('@')[0] : '') ??
     '';
-  const today = formatDate(new Date(), 'long');
+  const today = formatDate(new Date(), 'long', locale);
+
+  const onRowPress = (row: { contact_id: string }) =>
+    router.push({ pathname: '/contact/[id]', params: { id: row.contact_id } });
 
   return (
     <SafeAreaView className="flex-1 bg-ink-50 dark:bg-ink-900">
-      <FlatList
-        data={txnQ.data ?? []}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View className="px-5">
-            <View className="mb-2 overflow-hidden rounded-2xl border border-ink-100 bg-white dark:border-ink-700 dark:bg-ink-800">
-              <TransactionListItem
-                transaction={item}
-                contactName={
-                  item.contact_id
-                    ? displayContact(contactById.get(item.contact_id) ?? null)
-                    : null
-                }
-                onPress={(tx) =>
-                  tx.auto_generated && tx.debt_id
-                    ? router.push({ pathname: '/debt/[id]', params: { id: tx.debt_id } })
-                    : router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })
-                }
-              />
-            </View>
-          </View>
-        )}
-        contentContainerClassName="pb-32"
-        refreshing={txnQ.isFetching && !txnQ.isLoading}
-        onRefresh={() => {
-          void txnQ.refetch();
-          void summaryQ.refetch();
-        }}
-        ListHeaderComponent={
-          <View className="gap-5 px-5 py-6">
-            {/* Greeting */}
-            <View>
+      <ScreenScroll insideTabs footerHeight={FAB_SLOT}>
+        <View className="gap-5 py-6">
+          {/* Greeting + Statistics link */}
+          <View className="flex-row items-start justify-between px-5">
+            <View className="flex-1">
               <Text className="text-sm text-ink-500 dark:text-ink-300">{today}</Text>
               <Text className="mt-1 text-2xl font-bold text-ink-900 dark:text-ink-50">
                 {greeting}
                 {displayName ? `, ${displayName}` : ''} 👋
               </Text>
-            </View>
-
-            {/* Summary cards — horizontally scrollable on phones, wrap on wide screens. */}
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item) => item}
-              data={['income', 'expense', 'debt']}
-              ItemSeparatorComponent={() => <View className="w-3" />}
-              renderItem={({ item }) => {
-                if (summaryQ.isLoading) return <SummarySkeleton />;
-                if (item === 'income') {
-                  return (
-                    <SummaryCard
-                      label={t('home.todayIncome')}
-                      totals={summaryQ.data?.todayIncome ?? {}}
-                      toneClass="text-income-600"
-                      iconBg="bg-income-500"
-                      iconName="arrow-up-circle"
-                    />
-                  );
-                }
-                if (item === 'expense') {
-                  return (
-                    <SummaryCard
-                      label={t('home.todayExpense')}
-                      totals={summaryQ.data?.todayExpense ?? {}}
-                      toneClass="text-expense-600"
-                      iconBg="bg-expense-500"
-                      iconName="arrow-down-circle"
-                    />
-                  );
-                }
-                return (
-                  <SummaryCard
-                    label={t('home.outstandingDebt')}
-                    totals={outstandingNet}
-                    toneClass="text-payable-600"
-                    iconBg="bg-payable-500"
-                    iconName="time"
-                    signed
-                  />
-                );
-              }}
-            />
-
-            {/* Recent activity header */}
-            <View className="mt-2 flex-row items-center justify-between">
-              <Text className="text-base font-bold text-ink-900 dark:text-ink-50">
-                {t('home.recentTransactions')}
+              <Text className="mt-0.5 text-sm text-ink-500 dark:text-ink-300">
+                {t('home.subtitle')}
               </Text>
-              <Pressable
-                accessibilityRole="link"
-                onPress={() => router.push('/transactions')}
-                className="flex-row items-center gap-0.5"
-              >
-                <Text className="text-sm font-semibold text-brand-500 dark:text-brand-200">
-                  {t('home.seeAll')}
-                </Text>
-                <Ionicons name="chevron-forward" size={16} color={colors.brand[500]} />
-              </Pressable>
             </View>
+            <Pressable
+              accessibilityRole="link"
+              accessibilityLabel={t('home.statsLink')}
+              onPress={() => router.push('/stats')}
+              className="flex-row items-center gap-1 rounded-full bg-ink-100 px-3 py-1.5 active:opacity-70 dark:bg-ink-700"
+            >
+              <Ionicons name="stats-chart" size={14} color={colors.brand[500]} />
+              <Text className="text-xs font-semibold text-brand-500 dark:text-brand-200">
+                {t('home.statsLink')}
+              </Text>
+            </Pressable>
           </View>
-        }
-        ListEmptyComponent={
-          txnQ.isLoading ? (
-            <View className="gap-2 px-5">
-              {[0, 1, 2].map((i) => (
-                <View
-                  key={i}
-                  className="rounded-2xl border border-ink-100 bg-white p-4 dark:border-ink-700 dark:bg-ink-800"
-                >
-                  <Skeleton width="70%" height={14} />
-                  <Skeleton width="40%" height={12} style={{ marginTop: 8 }} />
-                </View>
-              ))}
+
+          {homeQ.isLoading ? (
+            <View className="items-center py-8">
+              <ActivityIndicator color={colors.brand[500]} />
             </View>
-          ) : (
+          ) : homeQ.isError ? (
             <EmptyState
-              icon="🧾"
-              title={t('home.noTransactionsYet')}
-              description={t('home.noTransactionsHint')}
+              icon="⚠️"
+              title={t('errors.unknown')}
+              action={{ label: t('common.retry'), onPress: () => void homeQ.refetch() }}
             />
-          )
-        }
-      />
+          ) : (
+            <View className="gap-6">
+              <HomeSection
+                title={t('home.sectionReceivable')}
+                tone="positive"
+                rows={receivables}
+                emptyMessage={t('home.emptyReceivable')}
+                locale={locale}
+                defaultCurrency={defaultCurrency}
+                onRowPress={onRowPress}
+              />
+              <HomeSection
+                title={t('home.sectionPayable')}
+                tone="warning"
+                rows={payables}
+                emptyMessage={t('home.emptyPayable')}
+                locale={locale}
+                defaultCurrency={defaultCurrency}
+                onRowPress={onRowPress}
+              />
+            </View>
+          )}
+        </View>
+      </ScreenScroll>
 
       <QuickAddFab onPick={(mode) => setSheetMode(mode)} />
 

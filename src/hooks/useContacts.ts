@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { HOME_LIST_KEY } from '@/hooks/useHomeList';
 import { supabase } from '@/lib/supabase';
 import type { ContactInsert, ContactRow, ContactUpdate } from '@/types/database';
 
@@ -183,6 +184,7 @@ export function useDeleteContact() {
       void qc.invalidateQueries({ queryKey: DEBTS_KEY });
       void qc.invalidateQueries({ queryKey: TRANSACTIONS_KEY });
       void qc.invalidateQueries({ queryKey: SUMMARY_KEY });
+      void qc.invalidateQueries({ queryKey: HOME_LIST_KEY });
     },
   });
 }

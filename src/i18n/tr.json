@@ -20,7 +20,15 @@
     "greetingMorning": "Günaydın",
     "greetingAfternoon": "İyi günler",
     "greetingEvening": "İyi akşamlar",
-    "greetingNight": "İyi geceler"
+    "greetingNight": "İyi geceler",
+    "subtitle": "Açık bakiyeleriniz",
+    "sectionReceivable": "Bana borçlu olanlar",
+    "sectionPayable": "Borçlu olduğum kişiler",
+    "emptyReceivable": "Şu an size borçlu kimse yok.",
+    "emptyPayable": "Şu an kimseye borcunuz yok.",
+    "section_summary": "{{count}} · {{total}}",
+    "section_summary_multi_currency": "{{count}} · {{total}} +{{n}} daha",
+    "statsLink": "İstatistikler"
   },
   "transactions": {
     "title": "Tüm hareketler",

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { HOME_LIST_KEY } from '@/hooks/useHomeList';
 import { supabase } from '@/lib/supabase';
 import type {
   ContactServiceType,
@@ -80,6 +81,7 @@ export function useCreateTransaction() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: TRANSACTIONS_KEY });
       void qc.invalidateQueries({ queryKey: ['summary'] });
+      void qc.invalidateQueries({ queryKey: HOME_LIST_KEY });
     },
   });
 }
@@ -95,6 +97,7 @@ export function useDeleteTransaction() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: TRANSACTIONS_KEY });
       void qc.invalidateQueries({ queryKey: ['summary'] });
+      void qc.invalidateQueries({ queryKey: HOME_LIST_KEY });
     },
   });
 }

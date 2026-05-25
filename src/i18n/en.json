@@ -20,7 +20,15 @@
     "greetingMorning": "Good morning",
     "greetingAfternoon": "Good afternoon",
     "greetingEvening": "Good evening",
-    "greetingNight": "Hello"
+    "greetingNight": "Hello",
+    "subtitle": "Open balances",
+    "sectionReceivable": "People who owe me",
+    "sectionPayable": "People I owe",
+    "emptyReceivable": "No one currently owes you anything.",
+    "emptyPayable": "You currently owe no one.",
+    "section_summary": "{{count}} · {{total}}",
+    "section_summary_multi_currency": "{{count}} · {{total}} +{{n}} more",
+    "statsLink": "Statistics"
   },
   "transactions": {
     "title": "All transactions",

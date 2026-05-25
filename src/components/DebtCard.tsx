@@ -3,6 +3,7 @@ import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
+import { ServiceBadge } from '@/components/ServiceBadge';
 import { PressableCard } from '@/components/ui/Card';
 import { colors } from '@/constants/theme';
 import type { DebtWithBalanceRow } from '@/types/database';
@@ -44,6 +45,10 @@ function DebtCardImpl({ debt, contactName, onPress }: DebtCardProps) {
           <Text className="text-[11px] font-semibold uppercase tracking-widest text-ink-500 dark:text-ink-300">
             {isReceivable ? t('debts.receivable') : t('debts.payable')}
           </Text>
+          <ServiceBadge
+            type={debt.service_type}
+            other={debt.service_type_other}
+          />
         </View>
         {isSettled ? (
           <View className="flex-row items-center gap-1 rounded-full bg-income-50 px-2 py-0.5 dark:bg-income-700/30">

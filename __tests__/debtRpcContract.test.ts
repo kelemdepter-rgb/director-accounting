@@ -69,7 +69,7 @@ describe('create_debt_with_cashflow RPC contract', () => {
  * cache" bug, so this test is the early-warning trip wire.
  */
 describe('create_debt_with_cashflow argument names', () => {
-  it('omits p_occurred_at when occurred_at is undefined', () => {
+  it('omits p_occurred_at when occurred_at is undefined, but always emits service-type keys', () => {
     const params = buildCreateDebtRpcParams({
       contact_id: 'c1',
       type: 'receivable',
@@ -77,17 +77,24 @@ describe('create_debt_with_cashflow argument names', () => {
       currency: 'TRY',
       description: null,
     });
+    // Round 5 §1: p_service_type and p_service_type_other are part of the
+    // new signature (migration 019) and must always be present — emitting
+    // nulls when the user didn't pick a value.
     expect(Object.keys(params).sort()).toEqual([
       'p_contact_id',
       'p_currency',
       'p_description',
       'p_principal_amount',
+      'p_service_type',
+      'p_service_type_other',
       'p_type',
     ]);
     // Critically: the key must NOT be present, not just undefined-valued.
     // PostgREST resolves overloads by exact key set, so an undefined value
     // would survive JSON.stringify on some clients and break the lookup.
     expect('p_occurred_at' in params).toBe(false);
+    expect(params.p_service_type).toBeNull();
+    expect(params.p_service_type_other).toBeNull();
   });
 
   it('emits p_occurred_at when occurred_at is provided', () => {
@@ -105,8 +112,24 @@ describe('create_debt_with_cashflow argument names', () => {
       'p_description',
       'p_occurred_at',
       'p_principal_amount',
+      'p_service_type',
+      'p_service_type_other',
       'p_type',
     ]);
     expect(params.p_occurred_at).toBe('2025-01-02T03:04:05.000Z');
+  });
+
+  it('forwards service_type and service_type_other when supplied', () => {
+    const params = buildCreateDebtRpcParams({
+      contact_id: 'c1',
+      type: 'receivable',
+      principal_amount: 200,
+      currency: 'TRY',
+      description: null,
+      service_type: 'other',
+      service_type_other: 'Otel rezervasyonu',
+    });
+    expect(params.p_service_type).toBe('other');
+    expect(params.p_service_type_other).toBe('Otel rezervasyonu');
   });
 });

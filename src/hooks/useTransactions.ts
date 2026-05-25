@@ -1,7 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
-import type { TransactionRow, TransactionType } from '@/types/database';
+import type {
+  ContactServiceType,
+  TransactionRow,
+  TransactionType,
+} from '@/types/database';
 
 export const TRANSACTIONS_KEY = ['transactions'] as const;
 
@@ -57,6 +61,8 @@ export interface CreateTransactionArgs {
   description: string | null;
   contact_id: string | null;
   occurred_at?: string;
+  service_type?: ContactServiceType | null;
+  service_type_other?: string | null;
 }
 
 export function useCreateTransaction() {

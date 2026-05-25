@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
 import { ContactAutocomplete } from '@/components/ContactAutocomplete';
+import { ServiceTypePills } from '@/components/ServiceTypePills';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { DateField } from '@/components/ui/DateField';
@@ -13,7 +14,7 @@ import { useCreateDebt, useDebts } from '@/hooks/useDebts';
 import { useCreateTransaction, useTransactions } from '@/hooks/useTransactions';
 import { notify } from '@/lib/confirm';
 import { useAuthStore } from '@/stores/authStore';
-import type { ContactRow } from '@/types/database';
+import type { ContactRow, ContactServiceType } from '@/types/database';
 import { formatMoney, SUPPORTED_CURRENCIES } from '@/utils/currency';
 import { aggregateContactBalance } from '@/utils/debtCalculation';
 import {
@@ -138,6 +139,10 @@ export function QuickAddSheet({
   const [occurredAt, setOccurredAt] = useState<Date>(new Date());
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Round 5 §1: service type lives on the transaction now. Defaults to
+  // null — the user picks per transaction, not per contact.
+  const [serviceType, setServiceType] = useState<ContactServiceType | null>(null);
+  const [serviceTypeOther, setServiceTypeOther] = useState('');
 
   // The "İşlem özeti" preview needs the contact's current balances. Only
   // fetch once a contact has been picked — we don't want to fire two
@@ -167,6 +172,8 @@ export function QuickAddSheet({
       setDescription('');
       setOccurredAt(new Date());
       setError(null);
+      setServiceType(null);
+      setServiceTypeOther('');
     }
   }, [visible, initialContact, defaultCurrency]);
 
@@ -205,9 +212,22 @@ export function QuickAddSheet({
       setError(t('validation.currencyInvalid'));
       return;
     }
+    // Round 5 §1: when the user picks "Başka", a non-empty description
+    // is required by both the Zod-style client guard here and the DB
+    // CHECK constraint on debts / transactions (migration 018).
+    const trimmedServiceOther = serviceTypeOther.trim();
+    if (serviceType === 'other' && !trimmedServiceOther) {
+      setError(t('validation.serviceTypeOtherRequired'));
+      return;
+    }
     setSubmitting(true);
     try {
       const occurredAtIso = occurredAt.toISOString();
+      const stPayload = {
+        service_type: serviceType,
+        service_type_other:
+          serviceType === 'other' ? trimmedServiceOther : null,
+      };
       if (isDebtMode) {
         await createDebt.mutateAsync({
           contact_id: contact!.id,
@@ -216,6 +236,7 @@ export function QuickAddSheet({
           currency,
           description: description.trim() ? description.trim() : null,
           occurred_at: occurredAtIso,
+          ...stPayload,
         });
       } else {
         await createTransaction.mutateAsync({
@@ -226,6 +247,7 @@ export function QuickAddSheet({
           currency,
           description: description.trim() ? description.trim() : null,
           occurred_at: occurredAtIso,
+          ...stPayload,
         });
       }
       onClose();
@@ -249,6 +271,31 @@ export function QuickAddSheet({
           <Text className={`text-xs font-semibold uppercase tracking-widest ${theme.tag}`}>
             {t(MODE_TITLES[mode])}
           </Text>
+        </View>
+
+        {/*
+          Round 5 §1: service-type pills are the first field on every entry
+          form so the user tags WHAT the money is for before they enter how
+          much. Selecting "Başka" reveals the free-text description below.
+        */}
+        <View className="gap-2">
+          <ServiceTypePills
+            value={serviceType}
+            onChange={(next) => {
+              setServiceType(next);
+              if (next !== 'other') setServiceTypeOther('');
+            }}
+            label={t('quickAdd.serviceTypeFieldLabel')}
+          />
+          {serviceType === 'other' ? (
+            <Input
+              label={`${t('contacts.serviceTypeOtherLabel')} *`}
+              value={serviceTypeOther}
+              onChangeText={setServiceTypeOther}
+              placeholder={t('contacts.serviceTypeOtherPlaceholder')}
+              maxLength={200}
+            />
+          ) : null}
         </View>
 
         {/* Big centered amount with live formatting + spell-out below */}

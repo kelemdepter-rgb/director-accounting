@@ -1,6 +1,6 @@
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Pressable, Text, View } from 'react-native';
+import { View } from 'react-native';
 
 import { zodResolver } from '@/lib/zodResolver';
 import {
@@ -8,7 +8,6 @@ import {
   type ContactFormValues,
   type ContactValues,
 } from '@/schemas/contact';
-import type { ContactServiceType } from '@/types/database';
 
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -30,16 +29,7 @@ const EMPTY_DEFAULTS: ContactFormValues = {
   phone_number: '',
   occupation: '',
   notes: '',
-  service_type: null,
-  service_type_other: null,
 };
-
-const SERVICE_TYPE_OPTIONS: { value: ContactServiceType; labelKey: string }[] = [
-  { value: 'vize', labelKey: 'contacts.serviceTypeVize' },
-  { value: 'bilet', labelKey: 'contacts.serviceTypeBilet' },
-  { value: 'bilet_ve_vize', labelKey: 'contacts.serviceTypeBiletVeVize' },
-  { value: 'other', labelKey: 'contacts.serviceTypeOther' },
-];
 
 export function ContactForm({
   initialValues,
@@ -50,7 +40,7 @@ export function ContactForm({
 }: ContactFormProps) {
   const { t } = useTranslation();
 
-  const { control, handleSubmit, formState, setValue } = useForm<
+  const { control, handleSubmit, formState } = useForm<
     ContactFormValues,
     unknown,
     ContactValues
@@ -59,12 +49,6 @@ export function ContactForm({
     defaultValues: { ...EMPTY_DEFAULTS, ...initialValues },
     mode: 'onTouched',
   });
-
-  // Watch the pill choice so the "other" branch can show/hide the
-  // free-text input. useWatch is preferred over field.value at this
-  // level because Controller's value is only available inside its
-  // render prop — and we need to gate a sibling input.
-  const currentServiceType = useWatch({ control, name: 'service_type' });
 
   const submit = handleSubmit(async (values) => {
     await onSubmit(values);
@@ -134,86 +118,6 @@ export function ContactForm({
           />
         )}
       />
-
-      {/*
-        Service type — a single-select pill group matching the currency
-        pill style used throughout the app. Tapping the same pill again
-        clears the selection (NULL is a valid state).
-      */}
-      <Controller
-        control={control}
-        name="service_type"
-        render={({ field }) => {
-          const current = field.value ?? null;
-          return (
-            <View>
-              <Text className="mb-1.5 text-sm font-medium text-ink-700 dark:text-ink-300">
-                {t('contacts.serviceType')}
-              </Text>
-              <View className="flex-row flex-wrap gap-2">
-                {SERVICE_TYPE_OPTIONS.map((opt) => {
-                  const active = current === opt.value;
-                  return (
-                    <Pressable
-                      key={opt.value}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: active }}
-                      onPress={() => {
-                        const next = active ? null : opt.value;
-                        field.onChange(next);
-                        // Round 3 §4: toggling away from "other" clears
-                        // the free-text label so the next save doesn't
-                        // round-trip stale text through the DB CHECK.
-                        if (next !== 'other') {
-                          setValue('service_type_other', null, {
-                            shouldValidate: true,
-                          });
-                        }
-                      }}
-                      className={`rounded-full px-4 py-2 ${
-                        active
-                          ? 'bg-brand-500'
-                          : 'bg-ink-100 dark:bg-ink-700'
-                      }`}
-                    >
-                      <Text
-                        className={`text-sm font-semibold ${
-                          active
-                            ? 'text-white'
-                            : 'text-ink-700 dark:text-ink-200'
-                        }`}
-                      >
-                        {t(opt.labelKey)}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-          );
-        }}
-      />
-
-      {currentServiceType === 'other' ? (
-        <Controller
-          control={control}
-          name="service_type_other"
-          render={({ field, fieldState }) => (
-            <Input
-              label={`${t('contacts.serviceTypeOtherLabel')} *`}
-              value={field.value ?? ''}
-              onChangeText={field.onChange}
-              onBlur={field.onBlur}
-              placeholder={t('contacts.serviceTypeOtherPlaceholder')}
-              error={
-                fieldState.error
-                  ? t(fieldState.error.message ?? 'errors.unknown')
-                  : undefined
-              }
-            />
-          )}
-        />
-      ) : null}
 
       <Controller
         control={control}

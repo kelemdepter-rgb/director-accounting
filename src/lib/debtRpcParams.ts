@@ -5,11 +5,11 @@
  * expo-modules-core and requires the RN runtime globals) into the test env.
  *
  * If you change anything here, also update migration
- * `supabase/migrations/011_fix_create_debt_with_cashflow.sql` and the
+ * `supabase/migrations/019_create_debt_with_service_type.sql` and the
  * contract test in `__tests__/debtRpcContract.test.ts`.
  */
 
-import type { DebtType } from '@/types/database';
+import type { ContactServiceType, DebtType } from '@/types/database';
 
 export interface CreateDebtRpcInput {
   contact_id: string;
@@ -18,6 +18,8 @@ export interface CreateDebtRpcInput {
   currency: string;
   description: string | null;
   occurred_at?: string;
+  service_type?: ContactServiceType | null;
+  service_type_other?: string | null;
 }
 
 export interface CreateDebtRpcParams {
@@ -27,6 +29,8 @@ export interface CreateDebtRpcParams {
   p_currency: string;
   p_description: string | null;
   p_occurred_at?: string;
+  p_service_type: ContactServiceType | null;
+  p_service_type_other: string | null;
 }
 
 /**
@@ -37,6 +41,12 @@ export interface CreateDebtRpcParams {
  * object to a request body and the DB then looks for an overload with that
  * argument present. When `occurred_at` is not supplied, the function's
  * default (`now()`) kicks in server-side.
+ *
+ * Round 5 §1: `p_service_type` and `p_service_type_other` are part of the
+ * new signature in migration 019 and must ALWAYS be present (with nulls
+ * when the user didn't pick a value). If we omitted them, PostgREST would
+ * still find the function (defaults supplied) but the new key-set tested
+ * by `debtRpcContract.test.ts` would not match.
  */
 export function buildCreateDebtRpcParams(input: CreateDebtRpcInput): CreateDebtRpcParams {
   const params: CreateDebtRpcParams = {
@@ -45,6 +55,8 @@ export function buildCreateDebtRpcParams(input: CreateDebtRpcInput): CreateDebtR
     p_principal_amount: input.principal_amount,
     p_currency: input.currency,
     p_description: input.description,
+    p_service_type: input.service_type ?? null,
+    p_service_type_other: input.service_type_other ?? null,
   };
   if (input.occurred_at !== undefined) {
     params.p_occurred_at = input.occurred_at;

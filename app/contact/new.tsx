@@ -56,8 +56,6 @@ export default function NewContactScreen() {
                 phone_number: values.phone_number,
                 occupation: values.occupation ?? null,
                 notes: values.notes ?? null,
-                service_type: values.service_type ?? null,
-                service_type_other: values.service_type_other ?? null,
               });
               router.back();
             } catch (err) {

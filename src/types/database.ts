@@ -16,13 +16,6 @@ export interface ContactRow {
   phone_number: string | null;
   occupation: string | null;
   notes: string | null;
-  service_type: ContactServiceType | null;
-  /**
-   * Free-text label shown alongside the "other" pill. Always null when
-   * service_type !== 'other'; required (1..200 chars) when it is.
-   * Enforced at the DB layer by contacts_service_type_other_xor.
-   */
-  service_type_other: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -42,6 +35,18 @@ export interface TransactionRow {
   debt_id: string | null;
   debt_payment_id: string | null;
   auto_generated: boolean;
+  /**
+   * Round 5 §1: which service this transaction was for. NULL for any
+   * transaction the user did not tag (including history that pre-dated
+   * migration 018 with no contact-level value to inherit).
+   */
+  service_type: ContactServiceType | null;
+  /**
+   * Free-text label for `service_type === 'other'`. Always null when the
+   * pill is not "other"; enforced at the DB layer by
+   * transactions_service_type_other_xor.
+   */
+  service_type_other: string | null;
 }
 
 export type DebtType = 'receivable' | 'payable';
@@ -58,6 +63,8 @@ export interface DebtRow {
   status: DebtStatus;
   created_at: string;
   settled_at: string | null;
+  service_type: ContactServiceType | null;
+  service_type_other: string | null;
 }
 
 export interface DebtWithBalanceRow extends DebtRow {
@@ -84,21 +91,8 @@ export interface DebtPaymentRow {
  * the DB constraints in migration 012.
  */
 export type ContactInsert = Pick<ContactRow, 'phone_number'> &
-  Partial<
-    Pick<
-      ContactRow,
-      'full_name' | 'occupation' | 'notes' | 'service_type' | 'service_type_other'
-    >
-  >;
+  Partial<Pick<ContactRow, 'full_name' | 'occupation' | 'notes'>>;
 
 export type ContactUpdate = Partial<
-  Pick<
-    ContactRow,
-    | 'full_name'
-    | 'phone_number'
-    | 'occupation'
-    | 'notes'
-    | 'service_type'
-    | 'service_type_other'
-  >
+  Pick<ContactRow, 'full_name' | 'phone_number' | 'occupation' | 'notes'>
 >;

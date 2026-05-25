@@ -17,17 +17,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { colors } from '@/constants/theme';
 import { useContacts } from '@/hooks/useContacts';
-import type { ContactRow, ContactServiceType } from '@/types/database';
+import type { ContactRow } from '@/types/database';
 import { displayContact } from '@/utils/contact';
-
-const SERVICE_TYPE_LABEL_KEY: Record<ContactServiceType, string> = {
-  vize: 'contacts.serviceTypeVize',
-  bilet: 'contacts.serviceTypeBilet',
-  bilet_ve_vize: 'contacts.serviceTypeBiletVeVize',
-  other: 'contacts.serviceTypeOther',
-};
-
-const SERVICE_TYPE_BADGE_MAX = 24;
 
 function ContactRowItem({
   contact,
@@ -36,7 +27,6 @@ function ContactRowItem({
   contact: ContactRow;
   onPress: (c: ContactRow) => void;
 }) {
-  const { t } = useTranslation();
   const label = displayContact(contact);
   const hasName = !!contact.full_name?.trim();
   // When the name is the phone, omit it from the subtitle to avoid showing
@@ -52,31 +42,12 @@ function ContactRowItem({
     >
       <Avatar name={label} size={44} />
       <View className="flex-1">
-        <View className="flex-row items-center gap-2">
-          <Text
-            className="flex-shrink text-base font-semibold text-ink-900 dark:text-ink-50"
-            numberOfLines={1}
-          >
-            {label}
-          </Text>
-          {contact.service_type ? (
-            <View className="rounded-full bg-brand-50 px-2 py-0.5 dark:bg-brand-900/40">
-              <Text className="text-[10px] font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-200">
-                {(() => {
-                  if (contact.service_type === 'other') {
-                    const raw =
-                      contact.service_type_other?.trim() ||
-                      t(SERVICE_TYPE_LABEL_KEY.other);
-                    return raw.length > SERVICE_TYPE_BADGE_MAX
-                      ? `${raw.slice(0, SERVICE_TYPE_BADGE_MAX - 1)}…`
-                      : raw;
-                  }
-                  return t(SERVICE_TYPE_LABEL_KEY[contact.service_type]);
-                })()}
-              </Text>
-            </View>
-          ) : null}
-        </View>
+        <Text
+          className="text-base font-semibold text-ink-900 dark:text-ink-50"
+          numberOfLines={1}
+        >
+          {label}
+        </Text>
         {subtitle ? (
           <Text className="mt-0.5 text-xs text-ink-500 dark:text-ink-300" numberOfLines={1}>
             {subtitle}

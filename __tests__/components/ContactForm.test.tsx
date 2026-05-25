@@ -1,12 +1,9 @@
 /**
- * Smoke tests for the Yeni Kişi form. The Round 2 spec says:
- *   1. Only `phone_number` is required.
- *   2. The three service-type pills must render.
- *   3. The schema must be idempotent — re-parsing its own output must NOT
- *      fail. The previous round regressed because the screens re-ran
- *      safeParse on already-transformed values, which produced nulls that
- *      the original `z.string()` validator rejected. The form silently
- *      bailed and the user thought "every field is required".
+ * Smoke tests for the Yeni Kişi form.
+ *
+ * Round 2 spec: only `phone_number` is required. Round 5 §1 moved the
+ * service-type pills off this form onto the transaction entry form —
+ * these tests now assert the pills are GONE from here.
  */
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
@@ -34,12 +31,13 @@ describe('ContactForm — smoke', () => {
     cleanup();
   });
 
-  it('renders the three service-type pills', () => {
+  it('does NOT render the service-type pills (moved to transaction form in R5 §1)', () => {
     render(<ContactForm submitLabel="common.save" onSubmit={() => {}} />);
 
-    expect(screen.getByText('contacts.serviceTypeVize')).toBeTruthy();
-    expect(screen.getByText('contacts.serviceTypeBilet')).toBeTruthy();
-    expect(screen.getByText('contacts.serviceTypeBiletVeVize')).toBeTruthy();
+    expect(screen.queryByText('contacts.serviceTypeVize')).toBeNull();
+    expect(screen.queryByText('contacts.serviceTypeBilet')).toBeNull();
+    expect(screen.queryByText('contacts.serviceTypeBiletVeVize')).toBeNull();
+    expect(screen.queryByText('contacts.serviceTypeOther')).toBeNull();
   });
 
   it('saves with only the phone number filled in', async () => {
@@ -60,9 +58,10 @@ describe('ContactForm — smoke', () => {
       full_name: null,
       occupation: null,
       notes: null,
-      service_type: null,
-      service_type_other: null,
     });
+    // service_type fields must not be in the payload any more.
+    expect(arg).not.toHaveProperty('service_type');
+    expect(arg).not.toHaveProperty('service_type_other');
   });
 
   it('rejects a phone number shorter than 7 chars', async () => {
@@ -81,73 +80,19 @@ describe('ContactForm — smoke', () => {
   });
 });
 
-describe('ContactForm — Başka service type (R3 §4)', () => {
-  afterEach(() => {
-    cleanup();
-  });
-
-  it('renders the four pills including Başka', () => {
-    render(<ContactForm submitLabel="common.save" onSubmit={() => {}} />);
-    expect(screen.getByText('contacts.serviceTypeVize')).toBeTruthy();
-    expect(screen.getByText('contacts.serviceTypeBilet')).toBeTruthy();
-    expect(screen.getByText('contacts.serviceTypeBiletVeVize')).toBeTruthy();
-    expect(screen.getByText('contacts.serviceTypeOther')).toBeTruthy();
-  });
-
-  it('reveals the free-text input only when Başka is selected', async () => {
-    render(<ContactForm submitLabel="common.save" onSubmit={() => {}} />);
-    // Initially hidden.
-    expect(screen.queryByLabelText('contacts.serviceTypeOtherLabel *')).toBeNull();
-
-    fireEvent.click(screen.getByText('contacts.serviceTypeOther'));
-    await waitFor(() => {
-      expect(screen.getByLabelText('contacts.serviceTypeOtherLabel *')).toBeTruthy();
-    });
-
-    // Toggle off — should hide again.
-    fireEvent.click(screen.getByText('contacts.serviceTypeOther'));
-    await waitFor(() => {
-      expect(screen.queryByLabelText('contacts.serviceTypeOtherLabel *')).toBeNull();
-    });
-  });
-});
-
-describe('contactSchema — Başka refinement (R3 §4)', () => {
-  it('requires service_type_other when service_type is other', () => {
+describe('contactSchema — service_type removed (R5 §1)', () => {
+  it('passing legacy service_type fields no longer rejects, they are silently ignored', () => {
     const result = contactSchema.safeParse({
       phone_number: '5551234567',
       service_type: 'other',
-      service_type_other: '',
-    });
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      const otherErr = result.error.issues.find((i) => i.path[0] === 'service_type_other');
-      expect(otherErr).toBeDefined();
-    }
-  });
-
-  it('accepts other + non-empty description', () => {
-    const result = contactSchema.safeParse({
-      phone_number: '5551234567',
-      service_type: 'other',
-      service_type_other: 'Otel rezervasyonu',
-    });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.service_type).toBe('other');
-      expect(result.data.service_type_other).toBe('Otel rezervasyonu');
-    }
-  });
-
-  it('normalises stale free-text when service_type is not other', () => {
-    const result = contactSchema.safeParse({
-      phone_number: '5551234567',
-      service_type: 'vize',
       service_type_other: 'leftover',
     });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.service_type_other).toBeNull();
+      // The schema is now closed on these keys — Zod strips unknowns by
+      // default, so `service_type` does not appear in the output.
+      expect('service_type' in result.data).toBe(false);
+      expect('service_type_other' in result.data).toBe(false);
     }
   });
 });
@@ -159,13 +104,11 @@ describe('contactSchema — idempotency', () => {
       full_name: '',
       occupation: '',
       notes: '',
-      service_type: '',
     });
     // Empty strings should normalise to null.
     expect(once.full_name).toBeNull();
     expect(once.occupation).toBeNull();
     expect(once.notes).toBeNull();
-    expect(once.service_type).toBeNull();
 
     // Now feed the transformed output back in. With Round 1's schema this
     // threw "Expected string, received null". With the Round 2 schema it
@@ -180,9 +123,8 @@ describe('contactSchema — idempotency', () => {
       full_name: '  Alice  ',
       occupation: 'designer',
       notes: 'Hi',
-      service_type: 'vize',
     });
     expect(out.full_name).toBe('Alice');
-    expect(out.service_type).toBe('vize');
+    expect(out.phone_number).toBe('+1 555-123-4567');
   });
 });

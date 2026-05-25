@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
 
+import { ServiceBadge } from '@/components/ServiceBadge';
 import { Avatar } from '@/components/ui/Avatar';
 import type { TransactionRow } from '@/types/database';
 import { formatMoney } from '@/utils/currency';
@@ -49,6 +50,10 @@ function TransactionListItemImpl({
               </Text>
             </View>
           ) : null}
+          <ServiceBadge
+            type={transaction.service_type}
+            other={transaction.service_type_other}
+          />
         </View>
         <Text className="mt-0.5 text-xs text-ink-500 dark:text-ink-300" numberOfLines={1}>
           {formatDate(transaction.occurred_at, 'short')}

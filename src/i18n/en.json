@@ -61,6 +61,8 @@
     "summaryUnchanged": "(unchanged)",
     "summaryOverflowToPayable": "Excess {{amount}} will be added to my debt.",
     "summaryOverflowToReceivable": "Excess {{amount}} will be added to their debt.",
+    "serviceTypeLabel": "Service type",
+    "serviceTypeFieldLabel": "What service is this transaction for?",
     "card": {
       "lent_title": "I lent money to this person",
       "lent_subtitle": "My money given to this person (my receivable) is recorded.",

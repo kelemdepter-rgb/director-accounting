@@ -61,6 +61,8 @@
     "summaryUnchanged": "(ئۆزگەرمىدى)",
     "summaryOverflowToPayable": "ئېشىپ قالغان {{amount}} بۇ كىشىگە قەرزىمگە قوشۇلىدۇ.",
     "summaryOverflowToReceivable": "ئېشىپ قالغان {{amount}} بۇ كىشىنىڭ ماڭا قەرزىگە قوشۇلىدۇ.",
+    "serviceTypeLabel": "مۇلازىمەت تۈرى",
+    "serviceTypeFieldLabel": "بۇ مۇئامىلە قايسى مۇلازىمەت ئۈچۈن؟",
     "card": {
       "lent_title": "بۇ كىشىگە پۇل بەردىم (قەرز)",
       "lent_subtitle": "مېنىڭ بۇ كىشىگە بەرگەن پۇلۇم (ئۈستىدىكى ھەققىم) يېزىلىدۇ.",

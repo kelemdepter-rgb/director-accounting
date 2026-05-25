@@ -61,6 +61,8 @@
     "summaryUnchanged": "(değişmedi)",
     "summaryOverflowToPayable": "Fazla {{amount}} bu kişiye olan borca eklenecek.",
     "summaryOverflowToReceivable": "Fazla {{amount}} bu kişinin size olan borcuna eklenecek.",
+    "serviceTypeLabel": "Hizmet türü",
+    "serviceTypeFieldLabel": "Bu işlem hangi hizmet için?",
     "card": {
       "lent_title": "Bu kişiye borç verdim",
       "lent_subtitle": "Bu kişiye verdiğim para (alacağım) kaydedilir.",

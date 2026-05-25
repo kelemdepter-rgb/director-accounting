@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { buildCreateDebtRpcParams } from '@/lib/debtRpcParams';
 import { supabase } from '@/lib/supabase';
 import type {
+  ContactServiceType,
   DebtPaymentRow,
   DebtStatus,
   DebtType,
@@ -86,6 +87,8 @@ export interface CreateDebtArgs {
   currency: string;
   description: string | null;
   occurred_at?: string;
+  service_type?: ContactServiceType | null;
+  service_type_other?: string | null;
 }
 
 export interface CreatedDebtWithCashflow {

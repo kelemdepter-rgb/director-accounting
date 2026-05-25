@@ -53,3 +53,6 @@ app-example
 
 # test output
 coverage/
+test-results/
+playwright-report/
+playwright/.cache/
